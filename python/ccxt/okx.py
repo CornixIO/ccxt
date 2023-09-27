@@ -1056,7 +1056,7 @@ class okx(Exchange):
                     'max': 60
                 },
                 'conditional_orders': {
-                    'max': 10
+                    'max': 20
                 },
             },
             'info': market,
