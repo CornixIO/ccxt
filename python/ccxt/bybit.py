@@ -5544,11 +5544,11 @@ class bybit(Exchange):
         }
         response = None
         if isUsdcSettled and not isUnifiedAccount:
-            request['leverage'] = leverage
+            request['leverage'] = long_leverage
             response = self.privatePostPerpetualUsdcOpenapiPrivateV1PositionLeverageSave(self.extend(request, params))
         else:
-            request['buyLeverage'] = leverage
-            request['sellLeverage'] = leverage
+            request['buyLeverage'] = long_leverage
+            request['sellLeverage'] = short_leverage
             if market['linear']:
                 request['category'] = 'linear'
             elif market['inverse']:
