@@ -4954,7 +4954,7 @@ class bybit(Exchange):
         #
         contract = self.safe_string(position, 'symbol')
         market = self.safe_market(contract, market, None, 'contract')
-        size = self.safe_string(position, 'size')
+        size = self.safe_number(position, 'size')
         size_abs = Precise.string_abs(self.safe_string(position, 'size'))
         side = self.safe_string(position, 'side')
         if side is not None:
@@ -4964,6 +4964,8 @@ class bybit(Exchange):
                 side = 'short'
             else:
                 side = None
+        if side == 'short' and size > 0:
+            size = self.parse_number(Precise.string_neg(size))
         notional = self.safe_string(position, 'positionValue')
         unrealisedPnl = self.omit_zero(self.safe_string(position, 'unrealisedPnl'))
         initialMarginString = self.safe_string(position, 'positionIM')
@@ -4983,7 +4985,7 @@ class bybit(Exchange):
                 #  (Entry price - Liq price) * Contracts + Maintenance Margin + (unrealised pnl) = Collateral
                 difference = Precise.string_abs(Precise.string_sub(entryPrice, liquidationPrice))
                 collateralString = Precise.string_add(
-                    Precise.string_add(Precise.string_mul(difference, size), maintenanceMarginString), unrealisedPnl)
+                    Precise.string_add(Precise.string_mul(difference, size_abs), maintenanceMarginString), unrealisedPnl)
             else:
                 bustPrice = self.safe_string(position, 'bustPrice')
                 if self.is_linear():
