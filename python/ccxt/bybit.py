@@ -5038,7 +5038,7 @@ class bybit(Exchange):
             'marginMode': marginMode,
             'margin_type': marginMode,
             'side': side,
-            'is_long': None if side == "none" else side.lower() == 'long',
+            'is_long': None if side is None else side == 'long',
             'percentage': None,
             'stopLossPrice': self.safe_number_2(position, 'stop_loss', 'stopLoss'),
             'takeProfitPrice': self.safe_number_2(position, 'take_profit', 'takeProfit'),
