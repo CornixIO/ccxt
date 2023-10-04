@@ -5184,11 +5184,11 @@ class bybit(Exchange):
         elif is_cross != _is_cross:
             result = self._change_margin_type(symbol, _id, is_cross, leverage)
             if long_leverage != short_leverage:
-                return self.set_leverage(long_leverage=long_leverage, short_leverage=short_leverage, symbol=symbol)
+                return self.set_leverage(symbol, long_leverage=long_leverage, short_leverage=short_leverage)
             else:
                 return result
         else:
-            return self.set_leverage(long_leverage=long_leverage, short_leverage=short_leverage, symbol=symbol)
+            return self.set_leverage(symbol, long_leverage=long_leverage, short_leverage=short_leverage)
 
     def set_unified_margin_mode(self, marginMode, params={}):
         self.load_markets()
@@ -5275,7 +5275,7 @@ class bybit(Exchange):
         else:
             raise NotSupported()
 
-    def set_leverage(self, long_leverage, short_leverage, symbol: Optional[str] = None, params={}):
+    def set_leverage(self, symbol, leverage=None, long_leverage=None, short_leverage=None, params={}):
         """
         set the level of leverage for a market
         see https://bybit-exchange.github.io/docs/v5/position/leverage
@@ -5296,8 +5296,9 @@ class bybit(Exchange):
         isUsdcSettled = market['settle'] == 'USDC'
         # engage in leverage setting
         # we reuse the code here instead of having two methods
-        long_leverage = self.number_to_string(long_leverage)
-        short_leverage = self.number_to_string(short_leverage)
+        leverage = self.validate_float(leverage)
+        long_leverage = self.validate_float(long_leverage) or leverage
+        short_leverage = self.validate_float(short_leverage) or leverage
         request = {
             'symbol': market['id'],
             'buyLeverage': long_leverage,
