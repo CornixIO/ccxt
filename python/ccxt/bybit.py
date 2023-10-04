@@ -5023,7 +5023,8 @@ class bybit(Exchange):
             'lastUpdateTimestamp': None,
             'initialMargin': self.parse_number(initialMarginString),
             'initialMarginPercentage': self.parse_number(Precise.string_div(initialMarginString, notional)),
-            'maintenance_margin': self.parse_number(maintenanceMarginString),
+            'maintenance_margin': self.parse_number(collateralString), # cornix "actual value"
+            'maintenanceMargin': self.parse_number(maintenanceMarginString),
             'maintenanceMarginPercentage': self.parse_number(maintenanceMarginPercentage),
             'entryPrice': self.parse_number(entryPrice),
             'notional': self.parse_number(notional),
