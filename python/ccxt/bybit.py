@@ -67,7 +67,6 @@ STATUS_MAPPING = {
 
 PERMISSION_TO_VALUE = {'spot': ['Spot'], 'futures': ['ContractTrade'],
                        'withdrawal': ['Wallet']}
-NOT_CHANGED_ERROR_CODES = {'30083', '34026', '134026', '110025'}
 MIN_HEDGE_MODE_COUNT_THRESHOLD = 3
 
 
@@ -556,7 +555,7 @@ class bybit(Exchange):
                     '110023': InvalidOrder,
                     # This contract only supports position reduction operation, please contact customer service for details
                     '110024': InvalidOrder,  # You have an existing position, so position mode cannot be switched
-                    '110025': InvalidOrder,  # Position mode is not modified
+                    '110025': NotChanged,  # Position mode is not modified
                     '110026': InvalidOrder,  # Cross/isolated margin mode is not modified
                     '110027': InvalidOrder,  # Margin is not modified
                     '110028': InvalidOrder,  # Open orders exist, so you cannot change position mode
@@ -574,7 +573,7 @@ class bybit(Exchange):
                     '110040': InvalidOrder,  # Order will trigger forced liquidation, please resubmit the order
                     '110041': InvalidOrder,  # Skip liquidation is not allowed when a position or maker order exists
                     '110042': InvalidOrder,  # Pre-delivery status can only reduce positions
-                    '110043': BadRequest,  # Set leverage not modified
+                    '110043': NotChanged,  # Set leverage not modified
                     '110044': InsufficientFunds,  # Insufficient available margin
                     '110045': InsufficientFunds,  # Insufficient wallet balance
                     '110046': BadRequest,  # Any adjustments made will trigger immediate liquidation
@@ -663,6 +662,7 @@ class bybit(Exchange):
                     '131097': ExchangeError,  # Withdrawal of self currency has been closed
                     '131098': ExchangeError,  # Withdrawal currently is not availble from new address
                     '131099': ExchangeError,  # Hot wallet status can cancel the withdraw
+                    '134026': NotChanged,
                     '140001': OrderNotFound,  # Order does not exist
                     '140003': InvalidOrder,  # Order price is out of permissible range
                     '140004': InsufficientFunds,  # Insufficient wallet balance
@@ -976,10 +976,11 @@ class bybit(Exchange):
                     '30075': InvalidOrder,
                     # can't create the stop order, because you expect the order will be triggered when the LastPrice(or IndexPrice、 MarkPrice, determined by trigger_by) is falling to stop_px, but the LastPrice(or IndexPrice、 MarkPrice) is already equal to or less than stop_px, please adjust base_price or stop_px
                     '30078': ExchangeError,
+                    '30083': NotChanged,
                     # {"ret_code":30078,"ret_msg":"","ext_code":"","ext_info":"","result":null,"time_now":"1644853040.916000","rate_limit_status":73,"rate_limit_reset_ms":1644853040912,"rate_limit":75}
                     # '30084': BadRequest,  # Isolated not modified, see handleErrors below
                     '33004': AuthenticationError,  # apikey already expired
-                    '34026': ExchangeError,  # the limit is no change
+                    '34026': NotChanged,  # the limit is no change
                     '34036': BadRequest,
                     # {"ret_code":34036,"ret_msg":"leverage not modified","ext_code":"","ext_info":"","result":null,"time_now":"1652376449.258918","rate_limit_status":74,"rate_limit_reset_ms":1652376449255,"rate_limit":75}
                     '35015': BadRequest,
@@ -5296,9 +5297,9 @@ class bybit(Exchange):
         isUsdcSettled = market['settle'] == 'USDC'
         # engage in leverage setting
         # we reuse the code here instead of having two methods
-        leverage = self.validate_float(leverage)
-        long_leverage = self.validate_float(long_leverage) or leverage
-        short_leverage = self.validate_float(short_leverage) or leverage
+        leverage = self.number_to_string(leverage)
+        long_leverage = self.number_to_string(long_leverage) if long_leverage is not None else leverage
+        short_leverage = self.number_to_string(short_leverage) if short_leverage is not None else leverage
         request = {
             'symbol': market['id'],
             'buyLeverage': long_leverage,
@@ -5317,7 +5318,10 @@ class bybit(Exchange):
                 request['category'] = 'inverse'
             else:
                 raise NotSupported(self.id + ' setLeverage() only support linear and inverse market')
-            response = self.privatePostV5PositionSetLeverage(self.extend(request, params))
+            try:
+                response = self.privatePostV5PositionSetLeverage(self.extend(request, params))
+            except NotChanged:
+                pass
         return response
 
     def set_position_mode(self, hedged, symbol: Optional[str] = None, params={}):
