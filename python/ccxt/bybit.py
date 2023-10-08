@@ -6169,8 +6169,6 @@ class bybit(Exchange):
                 feedback = self.id + ' private api uses /user/v3/private/query-api to check if you have a unified account. The API key of user id must own one of permissions: "Account Transfer", "Subaccount Transfer", "Withdrawal" ' + body
             else:
                 feedback = self.id + ' ' + body
-            if errorCode in NOT_CHANGED_ERROR_CODES:
-                raise NotChanged(feedback)
             if any(error in return_message for error in ["order not exists", "order does not exist"]):
                 raise OrderNotFound(feedback)
             if "unknown order_status" in return_message:
