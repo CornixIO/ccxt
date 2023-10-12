@@ -3090,8 +3090,8 @@ class bybit(Exchange):
     def has_stop_params_and_omit(self, params):
         isStop = self.safe_value(params, 'stop', False)
         order_type = self.safe_value(params, 'type')
-        self.omit(params, ['stop', 'type'])
-        return isStop or order_type == 'stop'
+        params = self.omit(params, ['stop', 'type'])
+        return params, isStop or order_type == 'stop'
 
     def fetch_order(self, id: str, symbol: Optional[str] = None, params={}):
         """
@@ -3392,7 +3392,7 @@ class bybit(Exchange):
         if self.is_option():
             response = self.privatePostOptionUsdcOpenapiPrivateV1ReplaceOrder(self.extend(request, params))
         else:
-            isStop = self.has_stop_params_and_omit(params)
+            params, isStop = self.has_stop_params_and_omit(params)
             triggerPrice = self.safe_value_2(params, 'stopPrice', 'triggerPrice')
             stopLossPrice = self.safe_value(params, 'stopLossPrice')
             isStopLossOrder = stopLossPrice is not None
@@ -3525,7 +3525,7 @@ class bybit(Exchange):
             # 'orderLinkId': 'string',  # one of order_id, stop_order_id or order_link_id is required
             # 'orderId': id,
         }
-        isStop = self.has_stop_params_and_omit(params)
+        params, isStop = self.has_stop_params_and_omit(params)
         if id is not None:  # The user can also use argument params["order_link_id"]
             request['orderId'] = id
         response = None
@@ -3578,7 +3578,7 @@ class bybit(Exchange):
         }
         if self.is_spot():
             # only works for spot market
-            isStop = self.has_stop_params_and_omit(params)
+            params, isStop = self.has_stop_params_and_omit(params)
             request['orderFilter'] = 'tpslOrder' if isStop else 'Order'
         if id is not None and 'orderLinkId' not in params:  # The user can also use argument params["orderLinkId"]
             request['orderId'] = id
@@ -3610,7 +3610,7 @@ class bybit(Exchange):
         if self.is_option():
             response = self.privatePostOptionUsdcOpenapiPrivateV1CancelAll(self.extend(request, params))
         else:
-            isStop = self.has_stop_params_and_omit(params)
+            params, isStop = self.has_stop_params_and_omit(params)
             if isStop:
                 request['orderFilter'] = 'StopOrder'
             else:
@@ -3673,7 +3673,7 @@ class bybit(Exchange):
             if symbol is None and baseCoin is None:
                 defaultSettle = self.safe_string(self.options, 'defaultSettle', 'USDT')
                 request['settleCoin'] = self.safe_string(params, 'settleCoin', defaultSettle)
-        isStop = self.has_stop_params_and_omit(params)
+        params, isStop = self.has_stop_params_and_omit(params)
         if isStop:
             request['orderFilter'] = 'tpslOrder'
         response = self.privatePostV5OrderCancelAll(self.extend(request, params))
@@ -3735,7 +3735,7 @@ class bybit(Exchange):
             request['category'] = 'PERPETUAL'
         else:
             request['category'] = 'OPTION'
-        isStop = self.has_stop_params_and_omit(params)
+        params, isStop = self.has_stop_params_and_omit(params)
         if isStop:
             request['orderFilter'] = 'StopOrder'
         if limit is not None:
@@ -3821,7 +3821,7 @@ class bybit(Exchange):
             return self.fetch_usdc_orders(symbol, since, limit, params)
         request['category'] = type
         origin_params = copy(params) if self.is_spot() else None
-        isStop = self.has_stop_params_and_omit(params)
+        params, isStop = self.has_stop_params_and_omit(params)
         if isStop:
             if type == 'spot':
                 request['orderFilter'] = 'tpslOrder'
@@ -4014,7 +4014,7 @@ class bybit(Exchange):
         if ((type == 'option') or isUsdcSettled) and not isUnifiedAccount:
             return self.fetch_usdc_open_orders(symbol, since, limit, params)
         request['category'] = type
-        isStop = self.has_stop_params_and_omit(params)
+        params, isStop = self.has_stop_params_and_omit(params)
         if isStop:
             if type == 'spot':
                 request['orderFilter'] = 'tpslOrder'
@@ -4167,7 +4167,7 @@ class bybit(Exchange):
         if ((type == 'option') or isUsdcSettled) and not isUnifiedAccount:
             return self.fetch_my_usdc_trades(symbol, since, limit, params)
         request['category'] = type
-        isStop = self.has_stop_params_and_omit(params)
+        params, isStop = self.has_stop_params_and_omit(params)
         params = self.omit(params, ['stop', 'type'])
         if isStop:
             if type == 'spot':
