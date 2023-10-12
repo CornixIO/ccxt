@@ -13,7 +13,7 @@ from ccxt.base.types import OrderSide
 from ccxt.base.types import OrderType
 from typing import Optional
 from typing import List
-from ccxt.base.errors import ExchangeError, NotChanged, OrderCancelled, PositionNotFound, SameLeverage
+from ccxt.base.errors import ExchangeError, NotChanged, OrderCancelled, PositionNotFound, SameLeverage, TradesNotFound
 from ccxt.base.errors import PermissionDenied
 from ccxt.base.errors import ArgumentsRequired
 from ccxt.base.errors import BadRequest
@@ -28,6 +28,8 @@ from ccxt.base.errors import RequestTimeout
 from ccxt.base.errors import AuthenticationError
 from ccxt.base.decimal_to_precision import TICK_SIZE
 from ccxt.base.precise import Precise
+
+
 
 STATUS_MAPPING = {
     # v3 spot
@@ -1299,7 +1301,7 @@ class bybit(Exchange):
                 return self.markets_by_id[symbol]
             elif (symbol.find('-C') > -1) or (symbol.find('-P') > -1):
                 return self.create_expired_option_market(symbol)
-        raise BadSymbol(self.id + ' does not have market symbol ' + symbol)
+        raise BadSymbol('{} does not have market symbol {}'.format(self.id, symbol))
 
     def safe_market(self, marketId=None, market=None, delimiter=None, marketType=None):
         isOption = (marketId is not None) and ((marketId.find('-C') > -1) or (marketId.find('-P') > -1))
@@ -2290,11 +2292,20 @@ class bybit(Exchange):
         return self.parse_ohlcvs(ohlcvs, market, timeframe, since, limit)
 
     def parse_trade(self, trade, market=None):
-        isSpotTrade = ('isBuyerMaker' in trade) or ('feeTokenId' in trade)
-        if isSpotTrade:
+        if self.is_spot():
             return self.parse_spot_trade(trade, market)
         else:
             return self.parse_contract_trade(trade, market)
+
+    def get_trade_currency(self, trade, symbol, feeCost, side, isMaker):
+        fee_cost_float = self.validate_float(feeCost)
+        if fee_cost_float > 0:
+            return self.get_currency(symbol) if side == 'buy' else self.get_pair(symbol)
+        else:
+            if isMaker:
+                return self.get_pair(symbol) if side == 'buy' else self.get_currency(symbol)
+            else:
+                return self.get_currency(symbol) if side == 'buy' else self.get_pair(symbol)
 
     def parse_spot_trade(self, trade, market=None):
         #
@@ -2326,17 +2337,9 @@ class bybit(Exchange):
         #
         timestamp = self.safe_integer_n(trade, ['time', 'creatTime'])
         takerOrMaker = None
-        side = None
-        isBuyerMaker = self.safe_integer(trade, 'isBuyerMaker')
-        if isBuyerMaker is not None:
-            # if public response
-            side = 'buy' if (isBuyerMaker == 1) else 'sell'
-        else:
-            # if private response
-            isBuyer = self.safe_integer(trade, 'isBuyer')
-            isMaker = self.safe_integer(trade, 'isMaker')
-            takerOrMaker = 'maker' if (isMaker == 0) else 'taker'
-            side = 'buy' if (isBuyer == 0) else 'sell'
+        symbol = market['symbol']
+        isMaker = self.safe_integer(trade, 'isMaker')
+        side = self.safe_string(trade, 'side')
         marketId = self.safe_string(trade, 'symbol')
         market = self.safe_market(marketId, market, None, 'spot')
         fee = None
@@ -2344,6 +2347,8 @@ class bybit(Exchange):
         if feeCost is not None:
             feeToken = self.safe_string(trade, 'feeTokenId')
             feeCurrency = self.safe_currency_code(feeToken)
+            if not feeCurrency:
+                feeCurrency = self.get_trade_currency(trade, symbol, feeCost, side, isMaker)
             fee = {
                 'cost': feeCost,
                 'currency': feeCurrency,
@@ -3015,7 +3020,7 @@ class bybit(Exchange):
         type = self.safe_string_lower(order, 'orderType')
         price = self.safe_string(order, 'price')
         amount = self.safe_string(order, 'qty')
-        cost = self.safe_string(order, 'cumExecValue')
+        cost = self.safe_string(order, 'cumExecValue') or None
         filled = self.safe_string(order, 'cumExecQty')
         remaining = self.safe_string(order, 'leavesQty')
         lastTradeTimestamp = self.safe_integer_2(order, 'updatedTime', 'updatedAt')
@@ -3058,6 +3063,7 @@ class bybit(Exchange):
             if not isAscending and (side == 'buy'):
                 # takeprofit order against a short position
                 takeProfitPrice = stopPrice
+
         return self.safe_order({
             'info': order,
             'id': id,
@@ -3087,11 +3093,50 @@ class bybit(Exchange):
             'trades': None,
         }, market)
 
-    def has_stop_params_and_omit(self, params):
+    def handle_stop_execution_order(self, func, result, symbol, is_conditional):
+        info = result['info']
+        order_status = self.safe_string(info, 'orderStatus')
+        if self.is_spot() and is_conditional and order_status == 'Triggered':
+            order_link_id = self.safe_string(info, "orderLinkId")
+            if order_link_id:
+                return func(None, symbol=symbol, params={"orderLinkId": order_link_id})
+            else:
+                raise Exception("Missing executedOrderId / orderLinkId")
+
+    def has_stop_params(self, params, should_omit=True):
         isStop = self.safe_value(params, 'stop', False)
         order_type = self.safe_value(params, 'type')
-        params = self.omit(params, ['stop', 'type'])
+        if should_omit:
+            params = self.omit(params, ['stop', 'type'])
         return params, isStop or order_type == 'stop'
+
+    def parse_trades_cost_fee(self, symbol, trades):
+        cost, fees, fee = 0., defaultdict(lambda: {'cost': 0.}), None
+        for trade in trades:
+            trade_cost = self.safe_float(trade, 'cost')
+            if trade_cost:
+                cost += trade_cost
+            trade_fee = trade['fee']
+            _fee_cost = self.safe_float(trade_fee, 'cost')
+            if _fee_cost is not None:
+                _fee_currency = trade_fee['currency']
+                fees[_fee_currency]['currency'] = _fee_currency
+                fees[_fee_currency]['cost'] += _fee_cost
+
+        if fees:
+            base_currency = self.get_currency(symbol)
+            pair = self.get_pair(symbol)
+            fee = fees.get(base_currency) or fees.get(pair)
+            if fee is None:
+                fee = list(fees.values())[0]
+        return cost, fee
+
+    def fetch_order_fee(self, _id, symbol, validate_filled=True):
+        order_trades = self.fetch_my_trades(params={"orderId": _id})
+        if validate_filled and not order_trades:
+            raise TradesNotFound("Couldn't get order's trades for external_order_id: %s" % _id)
+        _, fee = self.parse_trades_cost_fee(symbol, order_trades)
+        return fee
 
     def fetch_order(self, id: str, symbol: Optional[str] = None, params={}):
         """
@@ -3106,13 +3151,24 @@ class bybit(Exchange):
         request = {
             'orderId': id,
         }
+        params, isStop = self.has_stop_params(params, should_omit=False)
         result = self.fetch_orders(symbol, None, None, self.extend(request, params))
         length = len(result)
         if length == 0:
             raise OrderNotFound('Order ' + id + ' does not exist.')
         if length > 1:
             raise InvalidOrder(self.id + ' returned more than one order')
-        return self.safe_value(result, 0)
+        result = self.safe_value(result, 0)
+
+        parsed_order = self.handle_stop_execution_order(self.fetch_order, result, symbol, isStop)
+        if parsed_order:
+            return parsed_order
+
+        enableUnifiedMargin, enableUnifiedAccount = self.is_unified_enabled()
+        if self.is_spot() and not enableUnifiedAccount and result['fee']['cost'] is None \
+                and result['filled'] and result['filled'] > 0:
+            result['fee'] = self.fetch_order_fee(result["id"], symbol, validate_filled=True)
+        return result
 
     def create_order(self, symbol: str, type: OrderType, side: OrderSide, amount, price=None, params={}):
         """
@@ -3392,7 +3448,7 @@ class bybit(Exchange):
         if self.is_option():
             response = self.privatePostOptionUsdcOpenapiPrivateV1ReplaceOrder(self.extend(request, params))
         else:
-            params, isStop = self.has_stop_params_and_omit(params)
+            params, isStop = self.has_stop_params(params)
             triggerPrice = self.safe_value_2(params, 'stopPrice', 'triggerPrice')
             stopLossPrice = self.safe_value(params, 'stopLossPrice')
             isStopLossOrder = stopLossPrice is not None
@@ -3525,7 +3581,7 @@ class bybit(Exchange):
             # 'orderLinkId': 'string',  # one of order_id, stop_order_id or order_link_id is required
             # 'orderId': id,
         }
-        params, isStop = self.has_stop_params_and_omit(params)
+        params, isStop = self.has_stop_params(params)
         if id is not None:  # The user can also use argument params["order_link_id"]
             request['orderId'] = id
         response = None
@@ -3577,9 +3633,14 @@ class bybit(Exchange):
             # 'orderFilter': '',  # Valid for spot only. Order,tpslOrder. If not passed, Order by default
         }
         if self.is_spot():
+            # cancelling triggered order doesn't work, so we fetch it first to understand if we need to cancel it
+            # as stop or as limit
+            params, isStop = self.has_stop_params(params, should_omit=False)
+            parsed_order = self.fetch_order(id, symbol=symbol, params=params)
+            info = parsed_order['info']
+            stop_order_type = self.safe_string(info, 'stopOrderType')
             # only works for spot market
-            params, isStop = self.has_stop_params_and_omit(params)
-            request['orderFilter'] = 'tpslOrder' if isStop else 'Order'
+            request['orderFilter'] = 'tpslOrder' if stop_order_type == 'tpslOrder' else 'Order'
         if id is not None and 'orderLinkId' not in params:  # The user can also use argument params["orderLinkId"]
             request['orderId'] = id
         request['category'] = self.get_category()
@@ -3610,7 +3671,7 @@ class bybit(Exchange):
         if self.is_option():
             response = self.privatePostOptionUsdcOpenapiPrivateV1CancelAll(self.extend(request, params))
         else:
-            params, isStop = self.has_stop_params_and_omit(params)
+            params, isStop = self.has_stop_params(params)
             if isStop:
                 request['orderFilter'] = 'StopOrder'
             else:
@@ -3673,7 +3734,7 @@ class bybit(Exchange):
             if symbol is None and baseCoin is None:
                 defaultSettle = self.safe_string(self.options, 'defaultSettle', 'USDT')
                 request['settleCoin'] = self.safe_string(params, 'settleCoin', defaultSettle)
-        params, isStop = self.has_stop_params_and_omit(params)
+        params, isStop = self.has_stop_params(params)
         if isStop:
             request['orderFilter'] = 'tpslOrder'
         response = self.privatePostV5OrderCancelAll(self.extend(request, params))
@@ -3735,7 +3796,7 @@ class bybit(Exchange):
             request['category'] = 'PERPETUAL'
         else:
             request['category'] = 'OPTION'
-        params, isStop = self.has_stop_params_and_omit(params)
+        params, isStop = self.has_stop_params(params)
         if isStop:
             request['orderFilter'] = 'StopOrder'
         if limit is not None:
@@ -3821,7 +3882,7 @@ class bybit(Exchange):
             return self.fetch_usdc_orders(symbol, since, limit, params)
         request['category'] = type
         origin_params = copy(params) if self.is_spot() else None
-        params, isStop = self.has_stop_params_and_omit(params)
+        params, isStop = self.has_stop_params(params)
         if isStop:
             if type == 'spot':
                 request['orderFilter'] = 'tpslOrder'
@@ -4014,7 +4075,7 @@ class bybit(Exchange):
         if ((type == 'option') or isUsdcSettled) and not isUnifiedAccount:
             return self.fetch_usdc_open_orders(symbol, since, limit, params)
         request['category'] = type
-        params, isStop = self.has_stop_params_and_omit(params)
+        params, isStop = self.has_stop_params(params)
         if isStop:
             if type == 'spot':
                 request['orderFilter'] = 'tpslOrder'
@@ -4167,7 +4228,7 @@ class bybit(Exchange):
         if ((type == 'option') or isUsdcSettled) and not isUnifiedAccount:
             return self.fetch_my_usdc_trades(symbol, since, limit, params)
         request['category'] = type
-        params, isStop = self.has_stop_params_and_omit(params)
+        params, isStop = self.has_stop_params(params)
         params = self.omit(params, ['stop', 'type'])
         if isStop:
             if type == 'spot':
@@ -5922,7 +5983,6 @@ class bybit(Exchange):
                 return risk_limit['id']
 
     def set_risk_limit(self, symbol, is_long=None, limit=None, risk_id=None):
-        # TODO: check
         self.load_markets()
         assert limit or risk_id
         if risk_id is None:

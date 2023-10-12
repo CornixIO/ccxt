@@ -1066,6 +1066,10 @@ class Exchange(object):
         return sorted(array, key=lambda k: k[key] if k[key] is not None else "", reverse=descending)
 
     @staticmethod
+    def sort_by_2(array, key1, key2, descending=False):
+        return sorted(array, key=lambda k: (k[key1] if k[key1] is not None else "", k[key2] if k[key2] is not None else ""), reverse=descending)
+
+    @staticmethod
     def array_concat(a, b):
         return a + b
 
@@ -2281,6 +2285,16 @@ class Exchange(object):
         result = self.sort_by(result, 'timestamp')
         code = currency['code'] if currency else None
         return self.filter_by_currency_since_limit(result, code, since, limit)
+
+    def parse_trades(self, trades, market: Optional[object] = None, since: Optional[int] = None, limit: Optional[int] = None, params={}):
+        trades = self.to_array(trades)
+        result = []
+        for i in range(0, len(trades)):
+            trade = self.extend(self.parse_trade(trades[i], market), params)
+            result.append(trade)
+        result = self.sort_by_2(result, 'timestamp', 'id')
+        symbol = market['symbol'] if (market is not None) else None
+        return self.filter_by_symbol_since_limit(result, symbol, since, limit)
 
     def parse_transactions(self, transactions, currency=None, since=None, limit=None, params={}):
         array = self.to_array(transactions)
