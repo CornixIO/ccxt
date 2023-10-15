@@ -2337,7 +2337,6 @@ class bybit(Exchange):
         #
         timestamp = self.safe_integer_n(trade, ['time', 'creatTime'])
         takerOrMaker = None
-        symbol = market['symbol']
         isMaker = self.safe_integer(trade, 'isMaker')
         side = self.safe_string(trade, 'side')
         marketId = self.safe_string(trade, 'symbol')
@@ -2348,7 +2347,7 @@ class bybit(Exchange):
             feeToken = self.safe_string(trade, 'feeTokenId')
             feeCurrency = self.safe_currency_code(feeToken)
             if not feeCurrency:
-                feeCurrency = self.get_trade_currency(trade, symbol, feeCost, side, isMaker)
+                feeCurrency = self.get_trade_currency(trade, marketId, feeCost, side, isMaker)
             fee = {
                 'cost': feeCost,
                 'currency': feeCurrency,
@@ -2358,7 +2357,7 @@ class bybit(Exchange):
             'info': trade,
             'timestamp': timestamp,
             'datetime': self.iso8601(timestamp),
-            'symbol': market['symbol'],
+            'symbol': marketId,
             'order': self.safe_string(trade, 'orderId'),
             'type': None,
             'side': side,
@@ -3132,7 +3131,7 @@ class bybit(Exchange):
         return cost, fee
 
     def fetch_order_fee(self, _id, symbol, validate_filled=True):
-        order_trades = self.fetch_my_trades(params={"orderId": _id})
+        order_trades = self.fetch_my_trades(symbol, params={"orderId": _id})
         if validate_filled and not order_trades:
             raise TradesNotFound("Couldn't get order's trades for external_order_id: %s" % _id)
         _, fee = self.parse_trades_cost_fee(symbol, order_trades)
