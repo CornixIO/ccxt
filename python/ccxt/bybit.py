@@ -2358,8 +2358,9 @@ class bybit(Exchange):
             'info': trade,
             'timestamp': timestamp,
             'datetime': self.iso8601(timestamp),
-            'symbol': marketId,
+            'symbol': symbol,
             'order': self.safe_string(trade, 'orderId'),
+            'orderLinkId': self.safe_string(trade, 'orderLinkId'),
             'type': None,
             'side': side,
             'takerOrMaker': takerOrMaker,
@@ -3029,10 +3030,11 @@ class bybit(Exchange):
         side = self.safe_string_lower(order, 'side')
         fee = None
         feeCostString = self.safe_string(order, 'cumExecFee')
+        feeCurrency = self.safe_string(order, 'feeCurrency')  # ws
         if feeCostString is not None:
             fee = {
                 'cost': feeCostString,
-                'currency': market['settle'],
+                'currency': feeCurrency or market['settle'],
             }
         clientOrderId = self.safe_string(order, 'orderLinkId')
         if (clientOrderId is not None) and (len(clientOrderId) < 1):
