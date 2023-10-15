@@ -1312,8 +1312,6 @@ class bybit(Exchange):
 
     def get_bybit_type(self, method, market, params):
         type = self.get_category()
-        if type == 'option' or type == 'spot':
-            return [type, params]
         return [type, params]
 
     def fetch_time(self, params={}):
@@ -4870,7 +4868,7 @@ class bybit(Exchange):
         type, params = self.get_bybit_type('fetchPositions', market, params)
         if type == 'spot':
             raise NotSupported(self.id + ' fetchPositions() not support spot market')
-        if type == 'linear' or type == 'inverse':
+        if type == 'linear':
             baseCoin = self.safe_string(params, 'baseCoin')
             if symbol is None and baseCoin is None:
                 defaultSettle = self.safe_string(self.options, 'defaultSettle', 'USDT')
