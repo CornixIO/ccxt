@@ -2341,13 +2341,14 @@ class bybit(Exchange):
         side = self.safe_string(trade, 'side')
         marketId = self.safe_string(trade, 'symbol')
         market = self.safe_market(marketId, market, None, 'spot')
+        symbol = self.safe_string(market, 'symbol')
         fee = None
         feeCost = self.safe_string(trade, 'execFee')
         if feeCost is not None:
             feeToken = self.safe_string(trade, 'feeTokenId')
             feeCurrency = self.safe_currency_code(feeToken)
             if not feeCurrency:
-                feeCurrency = self.get_trade_currency(trade, marketId, feeCost, side, isMaker)
+                feeCurrency = self.get_trade_currency(trade, symbol, feeCost, side, isMaker)
             fee = {
                 'cost': feeCost,
                 'currency': feeCurrency,
