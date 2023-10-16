@@ -5226,8 +5226,7 @@ class bybit(Exchange):
     def change_margin_type(self, symbol, is_cross, leverage, is_long):
         self.load_markets()
         symbol = self.find_symbol(symbol)
-        _id = self.find_market(symbol)["id"]
-        return self.classify_change_margin(symbol, _id, is_long, is_cross, leverage)
+        return self.classify_change_margin(symbol, is_long, is_cross, leverage)
 
     @staticmethod
     def get_same_direction_position(positions, is_long):
@@ -5236,7 +5235,7 @@ class bybit(Exchange):
             if is_long == _is_long or _is_long is None:
                 return position
 
-    def _change_margin_type(self, symbol, _id, is_cross, leverage):
+    def change_margin_type_without_classify(self, symbol, is_cross, leverage):
         values = self.is_unified_enabled()
         isUnifiedAccount = self.safe_value(values, 1)
         if isUnifiedAccount and not self.is_inverse():
@@ -5262,7 +5261,7 @@ class bybit(Exchange):
                         short_leverage = _leverage
         return long_leverage, short_leverage
 
-    def classify_change_margin(self, symbol, _id, is_long, is_cross, leverage):
+    def classify_change_margin(self, symbol, is_long, is_cross, leverage):
         positions = self.get_positions(symbol)
         same_direction_position = self.get_same_direction_position(positions, is_long)
         if same_direction_position is None:
@@ -5276,7 +5275,7 @@ class bybit(Exchange):
         if is_cross == _is_cross and (leverage == _leverage):
             return
         elif is_cross != _is_cross:
-            result = self._change_margin_type(symbol, _id, is_cross, leverage)
+            result = self.change_margin_type_without_classify(symbol, is_cross, leverage)
             if long_leverage != short_leverage:
                 return self.set_leverage(symbol, long_leverage=long_leverage, short_leverage=short_leverage)
             else:
