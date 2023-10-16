@@ -2755,6 +2755,9 @@ class bybit(Exchange):
                         # account['used'] = self.safe_string(coinEntry, 'locked')
                         currencyId = self.safe_string(coinEntry, 'coin')
                         code = self.safe_currency_code(currencyId)
+                        if accountType == 'CONTRACT':
+                            if (self.is_linear() and code != 'USDT') or (self.is_inverse() and code == 'USDT'):
+                                continue
                         result[code] = account
                 else:
                     account = self.account()
