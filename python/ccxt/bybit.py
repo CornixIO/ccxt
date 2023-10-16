@@ -5056,7 +5056,7 @@ class bybit(Exchange):
             else:
                 side = None
         if side == 'short' and size > 0:
-            size = self.parse_number(Precise.string_neg(size))
+            size = size * -1
         notional = self.safe_string(position, 'positionValue')
         unrealisedPnl = self.omit_zero(self.safe_string(position, 'unrealisedPnl'))
         initialMarginString = self.safe_string(position, 'positionIM')
