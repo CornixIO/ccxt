@@ -2298,12 +2298,12 @@ class bybit(Exchange):
     def get_trade_currency(self, trade, symbol, feeCost, side, isMaker):
         fee_cost_float = self.validate_float(feeCost)
         if fee_cost_float > 0:
-            return self.get_currency(symbol) if side == 'buy' else self.get_pair(symbol)
+            return self.get_currency(symbol) if side == 'Buy' else self.get_pair(symbol)
         else:
             if isMaker:
-                return self.get_pair(symbol) if side == 'buy' else self.get_currency(symbol)
+                return self.get_pair(symbol) if side == 'Buy' else self.get_currency(symbol)
             else:
-                return self.get_currency(symbol) if side == 'buy' else self.get_pair(symbol)
+                return self.get_currency(symbol) if side == 'Buy' else self.get_pair(symbol)
 
     def parse_spot_trade(self, trade, market=None):
         #
