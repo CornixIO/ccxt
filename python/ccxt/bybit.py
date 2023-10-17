@@ -558,7 +558,7 @@ class bybit(Exchange):
                     # This contract only supports position reduction operation, please contact customer service for details
                     '110024': InvalidOrder,  # You have an existing position, so position mode cannot be switched
                     '110025': NotChanged,  # Position mode is not modified
-                    '110026': InvalidOrder,  # Cross/isolated margin mode is not modified
+                    '110026': NotChanged,  # Cross/isolated margin mode is not modified
                     '110027': InvalidOrder,  # Margin is not modified
                     '110028': InvalidOrder,  # Open orders exist, so you cannot change position mode
                     '110029': InvalidOrder,  # Hedge mode is not available for self symbol
