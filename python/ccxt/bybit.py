@@ -5232,10 +5232,10 @@ class bybit(Exchange):
     def get_same_direction_position(positions, is_long):
         for position in positions:
             _is_long = position["is_long"]
-            if is_long == _is_long or _is_long is None:
+            if is_long == _is_long or _is_long is None or is_long is None:
                 return position
 
-    def change_margin_type_without_classify(self, symbol, is_cross, leverage):
+    def _change_margin_type(self, symbol, is_cross, leverage):
         values = self.is_unified_enabled()
         isUnifiedAccount = self.safe_value(values, 1)
         if isUnifiedAccount and not self.is_inverse():
@@ -5246,15 +5246,16 @@ class bybit(Exchange):
             params = {'buy_leverage': leverage, 'sell_leverage': leverage}
             return self.set_derivatives_margin_mode(margin_mode, symbol=symbol, params=params)
 
-    def get_change_margin_input(self, positions, leverage, is_long):
+    @staticmethod
+    def get_change_margin_input(positions, leverage, same_direction_is_long, is_long):
         long_leverage = short_leverage = leverage
-        if is_long is not None:
+        if same_direction_is_long is not None and is_long is not None:
             for position in positions:
                 _is_long = position["is_long"]
                 _leverage = position["leverage"]
                 _is_cross = position["margin_type"] == "cross"
                 _maintenance_margin = position["maintenance_margin"]
-                if is_long != _is_long:
+                if same_direction_is_long != _is_long:
                     if _is_long:
                         long_leverage = _leverage
                     else:
@@ -5271,11 +5272,11 @@ class bybit(Exchange):
         _leverage = same_direction_position["leverage"]
         _is_cross = same_direction_position["margin_type"] == "cross"
 
-        long_leverage, short_leverage = self.get_change_margin_input(positions, leverage, _is_long)
+        long_leverage, short_leverage = self.get_change_margin_input(positions, leverage, _is_long, is_long)
         if is_cross == _is_cross and (leverage == _leverage):
             return
         elif is_cross != _is_cross:
-            result = self.change_margin_type_without_classify(symbol, is_cross, leverage)
+            result = self._change_margin_type(symbol, is_cross, leverage)
             if long_leverage != short_leverage:
                 return self.set_leverage(symbol, long_leverage=long_leverage, short_leverage=short_leverage)
             else:
