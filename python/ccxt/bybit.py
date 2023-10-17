@@ -5389,7 +5389,7 @@ class bybit(Exchange):
         isUsdcSettled = market['settle'] == 'USDC'
         # engage in leverage setting
         # we reuse the code here instead of having two methods
-        leverage = self.number_to_string(leverage)
+        leverage = self.number_to_string(leverage) if leverage is not None else leverage
         long_leverage = self.number_to_string(long_leverage) if long_leverage is not None else leverage
         short_leverage = self.number_to_string(short_leverage) if short_leverage is not None else leverage
         request = {
