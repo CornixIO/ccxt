@@ -30,7 +30,6 @@ from ccxt.base.decimal_to_precision import TICK_SIZE
 from ccxt.base.precise import Precise
 
 
-
 STATUS_MAPPING = {
     # v3 spot
     'CREATED': 'open',
@@ -1702,11 +1701,11 @@ class bybit(Exchange):
             linearFutures = (contractType == 'LinearFutures')
             linearPerpetual = (contractType == 'LinearPerpetual')
             inversePerpetual = (contractType == 'InversePerpetual')
-            if linearFutures or inverseFutures:
-                continue
             id = self.safe_string(market, 'symbol')
             baseId = self.safe_string(market, 'baseCoin')
             quoteId = self.safe_string(market, 'quoteCoin')
+            if linearFutures or inverseFutures or quoteId == 'USDC':  # no support for USDC currently
+                continue
             defaultSettledId = quoteId if linear else baseId
             settleId = self.safe_string(market, 'settleCoin', defaultSettledId)
             base = self.safe_currency_code(baseId)
