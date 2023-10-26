@@ -6200,6 +6200,9 @@ class bybit(Exchange):
                 else:
                     signature = self.hmac(self.encode(authFull), self.encode(self.secret), hashlib.sha256)
                 headers['X-BAPI-SIGN'] = signature
+                if method == 'POST':
+                    if self.partner_name:
+                        headers['Referer'] = self.partner_name
             else:
                 query = self.extend(params, {
                     'api_key': self.apiKey,
@@ -6228,13 +6231,11 @@ class bybit(Exchange):
                         headers = {
                             'Content-Type': 'application/json',
                         }
+                    if self.partner_name:
+                        headers['Referer'] = self.partner_name
                 else:
                     url += '?' + self.rawencode(sortedQuery)
                     url += '&sign=' + signature
-
-        if method == 'POST':
-            if self.partner_name:
-                headers['Referer'] = self.partner_name
         return {'url': url, 'method': method, 'body': body, 'headers': headers}
 
     def handle_errors(self, httpCode, reason, url, method, headers, body, response, requestHeaders, requestBody):
