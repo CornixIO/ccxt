@@ -5242,7 +5242,7 @@ class bybit(Exchange):
         values = self.is_unified_enabled()
         isUnifiedAccount = self.safe_value(values, 1)
         if isUnifiedAccount and not self.is_inverse():
-            margin_mode = 'REGULAR_MARGIN' if is_cross else 'ISOLATED_MARGIN'
+            margin_mode = 'cross' if is_cross else 'isolated'
             return self.set_margin_mode(margin_mode)
         else:
             margin_mode = 'CROSS' if is_cross else 'ISOLATED'
