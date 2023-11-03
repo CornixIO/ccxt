@@ -1531,6 +1531,7 @@ class bybit(Exchange):
         responseResult = self.safe_value(response, 'result', {})
         markets = self.safe_value(responseResult, 'list', [])
         result = []
+        symbol_to_unified_symbol_dict = self.get_symbol_to_unified_symbol_dict(markets)
         takerFee = self.parse_number('0.001')
         makerFee = self.parse_number('0.001')
         for i in range(0, len(markets)):
@@ -1546,6 +1547,7 @@ class bybit(Exchange):
             lotSizeFilter = self.safe_value(market, 'lotSizeFilter')
             priceFilter = self.safe_value(market, 'priceFilter')
             quotePrecision = self.safe_number(lotSizeFilter, 'quotePrecision')
+            symbol = symbol_to_unified_symbol_dict.get(symbol, symbol)
             result.append({
                 'id': id,
                 'symbol': symbol,
@@ -1625,6 +1627,9 @@ class bybit(Exchange):
         risk_limits = self.safe_value(symbol_id_to_risk_limits, _id, list())
         return self.parse_symbol_risk_limits(risk_limits)
 
+    def get_symbol_to_unified_symbol_dict(self, markets):
+        return {"GASDAO/USDT": "GAS/USDT"}
+
     def fetch_future_markets(self, params):
         params = self.extend(params)
         limit = 1000
@@ -1687,6 +1692,7 @@ class bybit(Exchange):
         #         "time": 1672712495660
         #     }
         #
+        symbol_to_unified_symbol_dict = self.get_symbol_to_unified_symbol_dict(markets)
         symbol_id_to_risk_limits = self.get_symbol_id_to_risk_limits()
         result = []
         category = self.safe_string(data, 'category')
@@ -1742,6 +1748,7 @@ class bybit(Exchange):
                 symbol = symbol + '-' + self.yymmdd(expiry)
             contractSize = self.safe_number_2(lotSizeFilter, 'minTradingQty', 'minOrderQty') if inverse else self.parse_number('1')
             risk_limits = self.get_unified_risk_limits_for_symbol(symbol_id_to_risk_limits, id)
+            symbol = symbol_to_unified_symbol_dict.get(symbol, symbol)
             result.append({
                 'id': id,
                 'symbol': symbol,
