@@ -1088,9 +1088,6 @@ class bybit(Exchange):
                     'deposit': {},
                 },
             },
-            'commonCurrencies': {
-                'GAS': 'GASDAO',
-            },
         })
 
     def nonce(self):
