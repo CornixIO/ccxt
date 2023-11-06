@@ -3166,8 +3166,7 @@ class bybit(Exchange):
         if parsed_order:
             return parsed_order
 
-        enableUnifiedMargin, enableUnifiedAccount = self.is_unified_enabled()
-        if self.is_spot() and not enableUnifiedAccount and result['fee']['cost'] is None \
+        if self.is_spot() and (result['fee']['cost'] is None or result['fee']['currency'] is None) \
                 and result['filled'] and result['filled'] > 0:
             result['fee'] = self.fetch_order_fee(result["id"], symbol, validate_filled=True)
         return result
