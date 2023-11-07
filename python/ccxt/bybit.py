@@ -13,7 +13,8 @@ from ccxt.base.types import OrderSide
 from ccxt.base.types import OrderType
 from typing import Optional
 from typing import List
-from ccxt.base.errors import ExchangeError, NotChanged, OrderCancelled, PositionNotFound, SameLeverage, TradesNotFound
+from ccxt.base.errors import ExchangeError, NotChanged, OrderCancelled, PositionNotFound, SameLeverage, TradesNotFound, \
+    AccountRateLimitExceeded
 from ccxt.base.errors import PermissionDenied
 from ccxt.base.errors import ArgumentsRequired
 from ccxt.base.errors import BadRequest
@@ -510,10 +511,10 @@ class bybit(Exchange):
                     '10003': AuthenticationError,  # Invalid apikey
                     '10004': AuthenticationError,  # invalid sign
                     '10005': PermissionDenied,  # permission denied for current apikey
-                    '10006': RateLimitExceeded,  # too many requests
+                    '10006': AccountRateLimitExceeded,  # too many requests
                     '10007': AuthenticationError,  # api_key not found in your request parameters
                     '10008': AuthenticationError,  # User had been banned
-                    '10009': AuthenticationError,  # IP had been banned
+                    '10009': BadRequest,  # IP had been banned
                     '10010': PermissionDenied,  # request ip mismatch
                     '10014': BadRequest,  # Request is duplicate
                     '10016': ExchangeError,  # {"retCode":10016,"retMsg":"System error. Please try again later."}
@@ -826,6 +827,8 @@ class bybit(Exchange):
                     '170203': InvalidOrder,  # Please enter the TP/SL price.
                     '170204': InvalidOrder,  # trigger price cannot be higher than 110% price.
                     '170206': InvalidOrder,  # trigger price cannot be lower than 90% of qty.
+                    '170241': PermissionDenied,
+                    # "To proceed with trading, users must read through and confirm that they fully understand the project's risk disclosure document. For App users, please update your Bybit App to version 4.16.0 to process.",
                     '175000': InvalidOrder,  # The serialNum is already in use.
                     '175001': InvalidOrder,  # Daily purchase limit has been exceeded. Please try again later.
                     '175002': InvalidOrder,  # There's a large number of purchase orders. Please try again later.
@@ -1087,9 +1090,6 @@ class bybit(Exchange):
                     'withdraw': {},
                     'deposit': {},
                 },
-            },
-            'commonCurrencies': {
-                'GAS': 'GASDAO',
             },
         })
 
@@ -2332,7 +2332,7 @@ class bybit(Exchange):
         #         "executionTime": "1666702226335"
         #     }
         #
-        timestamp = self.safe_integer_n(trade, ['time', 'creatTime'])
+        timestamp = self.safe_integer_n(trade, ['execTime', 'time', 'creatTime'])
         takerOrMaker = None
         isMaker = self.safe_integer(trade, 'isMaker')
         side = self.safe_string(trade, 'side')
@@ -2361,8 +2361,8 @@ class bybit(Exchange):
             'type': None,
             'side': side,
             'takerOrMaker': takerOrMaker,
-            'price': self.safe_string_2(trade, 'price', 'orderPrice'),
-            'amount': self.safe_string_2(trade, 'qty', 'orderQty'),
+            'price': self.safe_string_n(trade, ['execPrice', 'price', 'orderPrice']),
+            'amount': self.safe_string_n(trade, ['execQty', 'qty', 'orderQty']),
             'cost': None,
             'fee': fee,
         }, market)
@@ -3119,11 +3119,11 @@ class bybit(Exchange):
             if trade_cost:
                 cost += trade_cost
             trade_fee = trade['fee']
-            _fee_cost = self.safe_float(trade_fee, 'cost')
+            _fee_cost = self.safe_string(trade_fee, 'cost')
             if _fee_cost is not None:
                 _fee_currency = trade_fee['currency']
                 fees[_fee_currency]['currency'] = _fee_currency
-                fees[_fee_currency]['cost'] += _fee_cost
+                fees[_fee_currency]['cost'] = float(Precise.string_add(str(fees[_fee_currency]['cost']), _fee_cost))
 
         if fees:
             base_currency = self.get_currency(symbol)
