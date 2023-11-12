@@ -695,7 +695,9 @@ class binance(Exchange):
             results.append(result)
         return results
 
-    def fetch_collateral(self, asset, symbol=None, params={}):
+    def fetch_collateral(self, asset, symbol=None, params=None):
+        if params is None:
+            params = dict()
         self.load_markets()
         params["asset"] = asset
         _type = self.safe_string(self.options, 'defaultType')
