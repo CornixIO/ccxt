@@ -5053,6 +5053,8 @@ class bybit(Exchange):
         size = self.safe_number(position, 'size')
         size_abs = Precise.string_abs(self.safe_string(position, 'size'))
         side = self.safe_string(position, 'side')
+        enableUnifiedMargin, enableUnifiedAccount = self.is_unified_enabled()
+        isUnifiedAccount = (enableUnifiedMargin or enableUnifiedAccount)
         if side is not None:
             if side == 'Buy':
                 side = 'long'
@@ -5071,7 +5073,10 @@ class bybit(Exchange):
             timestamp = self.safe_integer_n(position, ['updatedTime', 'updatedAt'])
         # default to cross of USDC margined positions
         tradeMode = self.safe_integer(position, 'tradeMode', 0)
-        marginMode = 'isolated' if tradeMode else 'cross'
+        if isUnifiedAccount:
+            marginMode = None  # tradeMode is not provided, need to be taked from client settings.
+        else:
+            marginMode = 'isolated' if tradeMode else 'cross'
         collateralString = self.safe_string(position, 'positionBalance')
         entryPrice = self.omit_zero(self.safe_string_2(position, 'entryPrice', 'avgPrice'))
         liquidationPrice = self.omit_zero(self.safe_string(position, 'liqPrice'))
