@@ -2790,8 +2790,10 @@ class bybit(Exchange):
         isSpot = (type == 'spot')
         isSwap = self.is_linear() or self.is_inverse()
         if isUnifiedAccount:
-            if isSpot or isSwap:
+            if isSpot or self.is_linear():
                 type = 'unified'
+            else:
+                type = 'contract'
         else:
             if isSwap:
                 type = 'contract'
