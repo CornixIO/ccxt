@@ -5259,10 +5259,16 @@ class bybit(Exchange):
 
     @staticmethod
     def get_same_direction_position(positions, is_long):
+        no_side_position = None
         for position in positions:
             _is_long = position["is_long"]
-            if is_long == _is_long or _is_long is None or is_long is None:
+            if is_long == _is_long or is_long is None:
                 return position
+
+            # making sure that we go through all position before we chose one without side.
+            if _is_long is None:
+                no_side_position = position
+        return no_side_position
 
     def _change_margin_type(self, is_cross, symbol=None, leverage=None):
         try:
@@ -5282,7 +5288,7 @@ class bybit(Exchange):
     @staticmethod
     def get_change_margin_input(positions, leverage, same_direction_is_long, is_long):
         long_leverage = short_leverage = leverage
-        if same_direction_is_long is not None and is_long is not None:
+        if is_long is not None:
             for position in positions:
                 _is_long = position["is_long"]
                 _leverage = position["leverage"]
