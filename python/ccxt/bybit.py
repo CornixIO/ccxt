@@ -5392,15 +5392,15 @@ class bybit(Exchange):
             _position = position['info']
             positionIdx = self.safe_number(_position, 'positionIdx')
             position_mode = 'BothSide' if positionIdx > 0 else 'MergedSingle'
-            if self.safe_integer(position, 'contractSize', 0):
+            if self.safe_integer(position, 'quantity', 0):
                 open_positions_mode_count[position_mode] += 1
             all_symbols_mode_count[position_mode] += 1
         return open_positions_mode_count, all_symbols_mode_count
 
-    def get_position_mode(self):
+    def get_position_mode(self, symbol=None):
         if self.is_linear():
             self.load_markets()
-            positions = self.fetch_positions()
+            positions = self.get_positions(symbol=symbol)
             open_positions_mode_count, all_symbols_mode_count = self.count_position_modes_usages(positions)
             if open_positions_mode_count["BothSide"] == open_positions_mode_count["MergedSingle"]:
                 return all_symbols_mode_count["BothSide"] > MIN_HEDGE_MODE_COUNT_THRESHOLD
