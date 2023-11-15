@@ -5316,7 +5316,7 @@ class bybit(Exchange):
             return
         elif force_change_margin or is_cross != _is_cross:
             result = self._change_margin_type(is_cross, symbol=symbol, leverage=leverage)
-            if long_leverage != short_leverage:
+            if long_leverage != short_leverage or _leverage != leverage:
                 return self.set_leverage(symbol, long_leverage=long_leverage, short_leverage=short_leverage)
             else:
                 return result
