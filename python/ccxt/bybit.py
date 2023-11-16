@@ -4659,7 +4659,7 @@ class bybit(Exchange):
             "expiration": self.parse8601(self.safe_string(result, "expiredAt")),
             "permissions": permissions,
             "ip_restrict": not allow_all,
-            'unifed_account': unifed_account,
+            'unified_account': unifed_account,
             'unified_margin': unified_margin
         }
 
