@@ -5265,8 +5265,8 @@ class bybit(Exchange):
             if is_long == _is_long or is_long is None:
                 return position
 
-            # making sure that we go through all position before we chose one without side.
-            if _is_long is None:
+            # making sure that we go through all positions before we chose one without side.
+            if _is_long is None and not no_side_position:
                 no_side_position = position
         return no_side_position
 
@@ -5292,12 +5292,10 @@ class bybit(Exchange):
             for position in positions:
                 _is_long = position["is_long"]
                 _leverage = position["leverage"]
-                _is_cross = position["margin_type"] == "cross"
-                _maintenance_margin = position["maintenance_margin"]
                 if same_direction_is_long != _is_long:
-                    if _is_long:
+                    if _is_long is True:
                         long_leverage = _leverage
-                    else:
+                    elif _is_long is False:
                         short_leverage = _leverage
         return long_leverage, short_leverage
 
