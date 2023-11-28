@@ -5254,7 +5254,7 @@ class bybit(Exchange):
                 self.set_leverage(symbol, leverage=leverage)
                 return self._change_margin_type(is_cross)
             else:
-                return self.classify_change_margin(symbol, is_long, is_cross, leverage, force_change_margin=True)
+                return self.classify_change_margin(symbol, is_long, is_cross, leverage)
         else:
             return self.classify_change_margin(symbol, is_long, is_cross, leverage)
 
@@ -5300,7 +5300,7 @@ class bybit(Exchange):
                         short_leverage = _leverage
         return long_leverage, short_leverage
 
-    def classify_change_margin(self, symbol, is_long, is_cross, leverage, force_change_margin=False):
+    def classify_change_margin(self, symbol, is_long, is_cross, leverage):
         positions = self.get_positions(symbol)
         same_direction_position = self.get_same_direction_position(positions, is_long)
         if same_direction_position is None:
@@ -5308,12 +5308,13 @@ class bybit(Exchange):
 
         _is_long = same_direction_position["is_long"]
         _leverage = same_direction_position["leverage"]
-        _is_cross = same_direction_position["margin_type"] == "cross"
+        same_direction_margin_type = same_direction_position["margin_type"]
+        _is_cross = same_direction_margin_type == "cross" if same_direction_margin_type is not None else None
 
         long_leverage, short_leverage = self.get_change_margin_input(positions, leverage, _is_long, is_long)
-        if not force_change_margin and is_cross == _is_cross and leverage == _leverage:
+        if is_cross == _is_cross and leverage == _leverage:
             return
-        elif force_change_margin or is_cross != _is_cross:
+        elif is_cross != _is_cross:
             result = self._change_margin_type(is_cross, symbol=symbol, leverage=leverage)
             if long_leverage != short_leverage or _leverage != leverage:
                 return self.set_leverage(symbol, long_leverage=long_leverage, short_leverage=short_leverage)
