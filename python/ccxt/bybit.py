@@ -1117,7 +1117,8 @@ class bybit(Exchange):
         enableUnifiedMargin = self.safe_value(self.options, 'enableUnifiedMargin')
         enableUnifiedAccount = self.safe_value(self.options, 'enableUnifiedAccount')
         if enableUnifiedMargin is None or enableUnifiedAccount is None:
-            response = self.privateGetV5UserQueryApi(params)
+            raise NotSupported('enableUnifiedMargin and enableUnifiedAccount must be set for client')
+            # response = self.privateGetV5UserQueryApi(params)
             #
             #     {
             #         "retCode": 0,
@@ -1158,9 +1159,9 @@ class bybit(Exchange):
             #         "time": 1676891757649
             #     }
             #
-            result = self.safe_value(response, 'result', {})
-            self.options['enableUnifiedMargin'] = self.safe_integer(result, 'unified') == 1
-            self.options['enableUnifiedAccount'] = self.safe_integer(result, 'uta') == 1
+            # result = self.safe_value(response, 'result', {})
+            # self.options['enableUnifiedMargin'] = self.safe_integer(result, 'unified') == 1
+            # self.options['enableUnifiedAccount'] = self.safe_integer(result, 'uta') == 1
         return [self.options['enableUnifiedMargin'], self.options['enableUnifiedAccount']]
 
     def upgrade_unified_trade_account(self, params={}):
