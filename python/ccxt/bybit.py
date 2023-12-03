@@ -4661,7 +4661,8 @@ class bybit(Exchange):
             "permissions": permissions,
             "ip_restrict": not allow_all,
             'unified_account': unifed_account,
-            'unified_margin': unified_margin
+            'unified_margin': unified_margin,
+            'read_only': read_only
         }
 
     def withdraw(self, code: str, amount, address, tag=None, params={}):
