@@ -70,8 +70,8 @@ STATUS_MAPPING = {
     'Active': 'open',
 }
 
-PERMISSION_TO_VALUE = {'spot': ['Spot'], 'futures': ['ContractTrade'],
-                       'withdrawal': ['Wallet']}
+PERMISSION_TO_VALUE = {'spot': {'Spot': ['SpotTrade']}, 'futures': {'ContractTrade': ['Order', 'Position']},
+                       'withdrawal': {'Wallet': []}}
 MIN_HEDGE_MODE_COUNT_THRESHOLD = 3
 
 
