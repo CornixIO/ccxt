@@ -2271,6 +2271,15 @@ class Exchange(object):
         result = self.index_by(result, 'currency') if indexed else result
         return result
 
+    def parse_market(self, market):
+        raise NotSupported(self.id + ' parseMarket() is not supported yet')
+
+    def parse_markets(self, markets):
+        result = []
+        for i in range(0, len(markets)):
+            result.append(self.parse_market(markets[i]))
+        return result
+
     def parse_tickers(self, tickers, symbols=None, params={}):
         result = []
         values = self.to_array(tickers)
