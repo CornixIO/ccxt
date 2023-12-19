@@ -29,6 +29,7 @@ from ccxt.base.decimal_to_precision import TICK_SIZE
 from ccxt.base.precise import Precise
 
 TO_FLOAT_PARAMS = {'sz', 'slOrdPx', 'slTriggerPx', 'tpOrdPx', 'tpTriggerPx', 'orderPx', 'triggerPx', 'px'}
+PERMISSION_TO_VALUE = {"spot": ["read_only", "trade"], "futures": ["read_only", "trade"]}
 
 
 class okx(Exchange):
@@ -862,11 +863,11 @@ class okx(Exchange):
             role_type = self.safe_string(account, 'roleType')
             spot_role_type = self.safe_string(account, 'spotRoleType')
             ips = self.safe_string(account, 'ip')
-            permissions = self.safe_string(account, 'perm')
+            exchange_permissions = self.safe_string(account, 'perm').split(',')
+            permissions = self.extract_trading_permissions(PERMISSION_TO_VALUE, permissions_list=exchange_permissions)
             result.append({
                 'id': _accountId,
                 'type': _type,
-                'currency': None,
                 'position_mode': position_mode,
                 'role_type': role_type,
                 'spot_role_type': spot_role_type,
