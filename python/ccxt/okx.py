@@ -863,6 +863,7 @@ class okx(Exchange):
             spot_role_type = self.safe_integer(account, 'spotRoleType')
             ips = self.safe_string(account, 'ip')
             exchange_permissions = self.safe_string(account, 'perm').split(',')
+            read_only = 'trade' not in exchange_permissions
             permissions = self.extract_trading_permissions(PERMISSION_TO_VALUE, permissions_list=exchange_permissions)
             result.append({
                 'margin_free': margin_free,
@@ -871,6 +872,7 @@ class okx(Exchange):
                 'spot_role_type': spot_role_type,
                 'ips': ips,
                 'permissions': permissions,
+                'read_only': read_only,
                 'ip_restrict': not ips,
             })
         return result
