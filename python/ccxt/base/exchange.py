@@ -3248,3 +3248,10 @@ class Exchange(object):
         if marginMode is not None:
             params = self.omit(params, ['marginMode', 'defaultMarginMode'])
         return [marginMode, params]
+
+    def handle_until_option(self, key, request, params, multiplier=1):
+        until = self.safe_value_2(params, 'until', 'till')
+        if until is not None:
+            request[key] = self.parseToInt(until * multiplier)
+            params = self.omit(params, ['until', 'till'])
+        return [request, params]
