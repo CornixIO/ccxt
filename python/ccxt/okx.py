@@ -857,6 +857,8 @@ class okx(Exchange):
         result = []
         for i in range(0, len(data)):
             account = data[i]
+            accountId = self.safe_string(account, 'uid')
+            mainUid = self.safe_string(account, 'mainUid')
             margin_free = self.safe_integer(account, 'acctLv') == MARGIN_FREE_ACCOUNT_TYPE
             position_mode = self.safe_string(account, 'posMode')
             role_type = self.safe_integer(account, 'roleType')
@@ -866,6 +868,8 @@ class okx(Exchange):
             read_only = 'trade' not in exchange_permissions
             permissions = self.extract_trading_permissions(PERMISSION_TO_VALUE, permissions_list=exchange_permissions)
             result.append({
+                'uid': accountId,
+                'main_uid': mainUid,
                 'margin_free': margin_free,
                 'position_mode': position_mode,
                 'role_type': role_type,
