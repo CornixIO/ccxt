@@ -877,7 +877,7 @@ class okx(Exchange):
                 'ips': ips,
                 'permissions': permissions,
                 'read_only': read_only,
-                'ip_restrict': not ips,
+                'ip_restrict': bool(ips),
             })
         return result
 
