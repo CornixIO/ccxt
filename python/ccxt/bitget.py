@@ -3729,7 +3729,7 @@ class bitget(Exchange, ImplicitAPI):
                 'currency': market['settle'],
             }
         feeDetail = self.safe_value(order, 'feeDetail')
-        if feeDetail is not None:
+        if feeDetail:
             parsedFeeDetail = json.loads(feeDetail)
             feeValues = list(parsedFeeDetail.values())
             feeObject = None
