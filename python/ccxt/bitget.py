@@ -6038,6 +6038,12 @@ class bitget(Exchange, ImplicitAPI):
             'marginRatio': self.safe_number(position, 'marginRatio'),
             'stopLossPrice': None,
             'takeProfitPrice': None,
+            # cornix fields
+            'quantity': self.parse_number(rawCollateral),
+            'is_long': None if side == 'BOTH' else side == 'long',
+            'maintenance_margin': self.parse_number(maintenanceMargin),
+            'liquidation_price': liquidationPrice,
+            'margin_type': marginMode,
         })
 
     def fetch_funding_rate_history(self, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
