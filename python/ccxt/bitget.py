@@ -5795,8 +5795,9 @@ class bitget(Exchange, ImplicitAPI):
         isHistory = False
         if method == 'privateMixGetV2MixPositionAllPosition':
             if symbols is None:
-                raise ArgumentsRequired(self.id + ' fetchPositions() requires a symbols argument')
-            request['marginCoin'] = market['settleId']
+                request['marginCoin'] = ''
+            else:
+                request['marginCoin'] = market['settleId']
             response = self.privateMixGetV2MixPositionAllPosition(self.extend(request, params))
         else:
             isHistory = True
@@ -6039,10 +6040,10 @@ class bitget(Exchange, ImplicitAPI):
             'stopLossPrice': None,
             'takeProfitPrice': None,
             # cornix fields
-            'quantity': self.parse_number(rawCollateral),
+            'quantity': self.parse_number(rawCollateral) or 0.,
             'is_long': None if side == 'BOTH' else side == 'long',
             'maintenance_margin': self.parse_number(maintenanceMargin),
-            'liquidation_price': liquidationPrice,
+            'liquidation_price': liquidationPrice or 0.,
             'margin_type': marginMode,
         })
 
@@ -6414,6 +6415,10 @@ class bitget(Exchange, ImplicitAPI):
         #     }
         #
         return response
+
+    def get_position_mode(self, symbol: str) -> bool:
+        position = self.fetch_leverage(symbol)['data']
+        return self.safe_string(position, 'posMode') == 'hedge_mode'
 
     def set_leverage(self, leverage, symbol: Str = None, params={}):
         """
