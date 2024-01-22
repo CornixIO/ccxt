@@ -3165,7 +3165,7 @@ class bybit(Exchange):
         }
         params, isStop = self.has_stop_params(params, should_omit=False)
         original_params = copy(params)
-        result = self.fetch_orders(symbol, None, None, self.extend(request, params))
+        result = self.fetch_closed_orders(symbol, None, None, self.extend(request, params))
         length = len(result)
         if length == 0:
             result = self.fetch_open_orders(symbol, None, None, self.extend(request, original_params))
@@ -4000,7 +4000,7 @@ class bybit(Exchange):
         request = {
             'orderStatus': 'Filled',
         }
-        return self.fetch_orders(symbol, since, limit, self.extend(request, params))
+        return self.fetch_closed_orders(symbol, since, limit, self.extend(request, params))
 
     def fetch_canceled_orders(self, symbol: Optional[str] = None, since: Optional[int] = None, limit: Optional[int] = None, params={}):
         """
@@ -4019,7 +4019,7 @@ class bybit(Exchange):
         request = {
             'orderStatus': 'Cancelled',
         }
-        return self.fetch_orders(symbol, since, limit, self.extend(request, params))
+        return self.fetch_closed_orders(symbol, since, limit, self.extend(request, params))
 
     def fetch_usdc_open_orders(self, symbol: Optional[str] = None, since: Optional[int] = None, limit: Optional[int] = None, params={}):
         self.load_markets()
