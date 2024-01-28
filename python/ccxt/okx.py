@@ -4556,6 +4556,7 @@ class okx(Exchange):
             'mgnMode': margin_type,
             'instId': market['id']
         }
+        # Only applicable to cross MARGIN of Multi-currency margin and Portfolio margin - currently not in use
         # if margin_type == "cross":
         #     request['ccy'] = market['settleId']
         default_type = self.safe_value(self.options, "defaultType")
