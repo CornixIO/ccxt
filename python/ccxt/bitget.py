@@ -4631,8 +4631,8 @@ class bitget(Exchange, ImplicitAPI):
             'orderId': id,
         }
         response = None
+        order_type = self.safe_string(params, 'type', None)
         if market['spot']:
-            order_type = self.safe_string(params, 'type', None)
             if order_type == 'stop':
                 orderId = int(request.pop('orderId'))
                 request['isLessThan'] = str(orderId + 1)
@@ -4652,7 +4652,17 @@ class bitget(Exchange, ImplicitAPI):
             productType = None
             productType, params = self.handle_product_type_and_params(market, params)
             request['productType'] = productType
-            response = self.privateMixGetV2MixOrderDetail(self.extend(request, params))
+            if order_type == 'stop':
+                request['planType'] = 'normal_plan'
+                response = self.privateMixGetV2MixOrderOrdersPlanPending(self.extend(request, params))
+                if isinstance(response, str):
+                    response = json.loads(response)
+                data = self.safe_value(response, 'data')
+                data = self.safe_value(data, 'entrustedList')
+                first = self.safe_value(data, 0, data)
+                return self.parse_order(first, market)
+            else:
+                response = self.privateMixGetV2MixOrderDetail(self.extend(request, params))
         else:
             raise NotSupported(self.id + ' fetchOrder() does not support ' + market['type'] + ' orders')
         #
@@ -6431,6 +6441,7 @@ class bitget(Exchange, ImplicitAPI):
         return response
 
     def get_position_mode(self, symbol: str) -> bool:
+        symbol = self.find_market(symbol)['symbol']
         position = self.fetch_leverage(symbol)['data']
         return self.safe_string(position, 'posMode') == 'hedge_mode'
 
