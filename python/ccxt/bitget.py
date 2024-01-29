@@ -4632,7 +4632,21 @@ class bitget(Exchange, ImplicitAPI):
         }
         response = None
         if market['spot']:
-            response = self.privateSpotGetV2SpotTradeOrderInfo(self.extend(request, params))
+            order_type = self.safe_string(params, 'type', None)
+            if order_type == 'stop':
+                orderId = int(request.pop('orderId'))
+                request['isLessThan'] = str(orderId + 1)
+                request['limit'] = '1'
+                request['symbol'] = market['id']
+                response = self.privateSpotGetV2SpotTradeCurrentPlanOrder(request)
+                if isinstance(response, str):
+                    response = json.loads(response)
+                data = self.safe_value(response, 'data')
+                data = self.safe_value(data, 'orderList')
+                first = self.safe_value(data, 0, data)
+                return self.parse_order(first, market)
+            else:
+                response = self.privateSpotGetV2SpotTradeOrderInfo(self.extend(request, params))
         elif market['swap'] or market['future']:
             request['symbol'] = market['id']
             productType = None
