@@ -6437,9 +6437,9 @@ class bitget(Exchange, ImplicitAPI):
         market = None
         if sandboxMode:
             sandboxSymbol = self.convert_symbol_for_sandbox(symbol)
-            market = self.market(sandboxSymbol)
+            market = self.find_market(sandboxSymbol)
         else:
-            market = self.market(symbol)
+            market = self.find_market(symbol)
         productType = None
         productType, params = self.handle_product_type_and_params(market, params)
         request = {
