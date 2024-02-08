@@ -1481,7 +1481,7 @@ class bitget(Exchange, ImplicitAPI):
             if type == 'swap':
                 defaultSubType = self.safe_value(self.options, 'defaultSubType')
                 if defaultSubType == 'linear':
-                    subTypes = ['USDT-FUTURES', 'USDC-FUTURES']
+                    subTypes = ['USDT-FUTURES']
                 elif defaultSubType == 'inverse':
                     subTypes = ['COIN-FUTURES']
                 if sandboxMode:
