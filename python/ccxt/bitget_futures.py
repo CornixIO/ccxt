@@ -1,5 +1,7 @@
 from ccxt.bitget import bitget
 
+BITGET_FUTURES = 'Bitget Futures'
+
 
 class bitget_futures(bitget):
     def __init__(self, config={}):
