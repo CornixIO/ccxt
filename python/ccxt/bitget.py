@@ -1631,7 +1631,7 @@ class bitget(Exchange, ImplicitAPI):
         if status is not None:
             active = ((status == 'online') or (status == 'normal'))
         minCost = None
-        if quote == 'USDT':
+        if quote in {'USD', 'USDC', 'USDT'}:
             minCost = self.safe_number(market, 'minTradeUSDT')
         contractSize = 1 if contract else None
         return {
