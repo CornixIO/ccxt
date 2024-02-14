@@ -1497,6 +1497,8 @@ class bitget(Exchange, ImplicitAPI):
         for i in range(1, len(promises)):
             result = self.array_concat(result, promises[i])
         result = list(filter(lambda x: x['type'] in types, result))
+        # cornix filter since all cost limit are in USDT
+        result = list(filter(lambda x: x['quote'] in {'USD', 'USDC', 'USDT'}, result))
         for symbol in result:
             symbol['symbol'] = symbol['symbol'].split(':')[0]
         return result
