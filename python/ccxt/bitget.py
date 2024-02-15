@@ -3737,7 +3737,7 @@ class bitget(Exchange, ImplicitAPI):
             feeObject = None
             for i in range(0, len(feeValues)):
                 feeValue = feeValues[i]
-                if self.safe_value(feeValue, 'feeCoinCode') is not None:
+                if self.safe_value(feeValue, 'feeCoinCode') is not None and self.safe_value(feeValue, 'deduction') is False:
                     feeObject = feeValue
                     break
             fee = {
