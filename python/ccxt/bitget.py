@@ -3773,6 +3773,11 @@ class bitget(Exchange, ImplicitAPI):
         else:
             size = self.safe_string(order, 'size')
             filled = self.safe_string(order, 'baseVolume')
+        side = self.safe_string(order, 'side')
+        order_type = self.safe_string(order, 'orderType')
+        if side == 'buy' and order_type == 'market' and average:
+            size = Precise.string_div(size, average)
+            size = self.amount_to_precision(market['symbol'], size)
         return self.safe_order({
             'info': order,
             'id': self.safe_string_2(order, 'orderId', 'data'),
@@ -3782,8 +3787,8 @@ class bitget(Exchange, ImplicitAPI):
             'lastTradeTimestamp': updateTimestamp,
             'lastUpdateTimestamp': updateTimestamp,
             'symbol': market['symbol'],
-            'type': self.safe_string(order, 'orderType'),
-            'side': self.safe_string(order, 'side'),
+            'type': order_type,
+            'side': side,
             'price': price,
             'amount': size,
             'cost': self.safe_string_2(order, 'quoteVolume', 'quoteSize'),
