@@ -3772,7 +3772,7 @@ class bitget(Exchange, ImplicitAPI):
             filled = self.safe_string(order, 'baseVolume')
         side = self.safe_string(order, 'side')
         order_type = self.safe_string(order, 'orderType')
-        if side == 'buy' and order_type == 'market' and average:
+        if marketType == 'spot' and side == 'buy' and order_type == 'market' and average:
             size = Precise.string_div(size, average)
             size = self.amount_to_precision(market['symbol'], size)
         return self.safe_order({
