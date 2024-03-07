@@ -3128,11 +3128,11 @@ class bybit(Exchange):
         return params, isStop or order_type == 'stop'
 
     def parse_trades_cost_fee(self, symbol, trades):
-        cost, fees, fee = 0., defaultdict(lambda: {'cost': 0.}), None
+        cost_str, fees, fee = '0.', defaultdict(lambda: {'cost': 0.}), None
         for trade in trades:
-            trade_cost = self.safe_float(trade, 'cost')
-            if trade_cost:
-                cost += trade_cost
+            trade_cost_str = self.safe_string(trade, 'cost')
+            if trade_cost_str:
+                cost_str = Precise.string_add(cost_str, trade_cost_str)
             trade_fee = trade['fee']
             _fee_cost = self.safe_string(trade_fee, 'cost')
             if _fee_cost is not None:
@@ -3146,13 +3146,13 @@ class bybit(Exchange):
             fee = fees.get(base_currency) or fees.get(pair)
             if fee is None:
                 fee = list(fees.values())[0]
-        return cost, fee
+        return float(cost_str), fee
 
-    def fetch_order_fee(self, _id, symbol, validate_filled=True):
+    def fetch_order_fee(self, _id, symbol, expected_cost):
         order_trades = self.fetch_my_trades(symbol, params={"orderId": _id})
-        if validate_filled and not order_trades:
+        cost, fee = self.parse_trades_cost_fee(symbol, order_trades)
+        if not order_trades or cost != expected_cost:
             raise TradesNotFound("Couldn't get order's trades for external_order_id: %s" % _id)
-        _, fee = self.parse_trades_cost_fee(symbol, order_trades)
         return fee
 
     def fetch_order(self, id: str, symbol: Optional[str] = None, params={}):
@@ -3189,7 +3189,7 @@ class bybit(Exchange):
 
         if self.is_spot() and (result['fee']['cost'] is None or result['fee']['currency'] is None) \
                 and result['filled'] and result['filled'] > 0:
-            result['fee'] = self.fetch_order_fee(result["id"], symbol, validate_filled=True)
+            result['fee'] = self.fetch_order_fee(result["id"], symbol, result['cost'])
         return result
 
     def create_order(self, symbol: str, type: OrderType, side: OrderSide, amount, price=None, params={}):
