@@ -7730,8 +7730,6 @@ class bitget(Exchange, ImplicitAPI):
 
     def get_api_account_details(self):
         response = self.privateSpotGetV2SpotAccountInfo()
-        if response['msg'] != 'success':
-            raise Exception()
         data = self.safe_value(response, 'data')
         return {
             'creation': datetime.fromtimestamp(int(data['regisTime'])/1000),
