@@ -7732,6 +7732,7 @@ class bitget(Exchange, ImplicitAPI):
         response = self.privateSpotGetV2SpotAccountInfo()
         data = self.safe_value(response, 'data')
         return {
+            'info': data,
             'creation': datetime.fromtimestamp(int(data['regisTime'])/1000),
             'role_type': data['traderType'],
         }
