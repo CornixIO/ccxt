@@ -12,7 +12,7 @@ from ccxt.base.exchange import Exchange
 import hashlib
 from ccxt.base.types import OrderSide
 from ccxt.base.types import OrderType
-from typing import Optional
+from typing import Optional, Union, Tuple
 from typing import List
 from ccxt.base.errors import ExchangeError, NotChanged, OrderCancelled, PositionNotFound, TradesNotFound, \
     AccountRateLimitExceeded
@@ -3127,7 +3127,7 @@ class bybit(Exchange):
             params = self.omit(params, ['stop', 'type'])
         return params, isStop or order_type == 'stop'
 
-    def parse_trades_cost_fee(self, symbol, trades):
+    def parse_trades_cost_fee(self, symbol, trades) -> Tuple[float, Union[dict, None]]:
         cost_str, fees, fee = '0.', defaultdict(lambda: {'cost': 0.}), None
         for trade in trades:
             trade_cost_str = self.safe_string(trade, 'cost')
@@ -3151,7 +3151,7 @@ class bybit(Exchange):
     def fetch_order_fee(self, _id, symbol, expected_cost):
         order_trades = self.fetch_my_trades(symbol, params={"orderId": _id})
         cost, fee = self.parse_trades_cost_fee(symbol, order_trades)
-        if not order_trades or cost != expected_cost:
+        if not order_trades or cost != float(expected_cost):
             raise TradesNotFound("Couldn't get order's trades for external_order_id: %s" % _id)
         return fee
 
