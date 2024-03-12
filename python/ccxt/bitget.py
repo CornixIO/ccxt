@@ -7735,7 +7735,5 @@ class bitget(Exchange, ImplicitAPI):
         data = self.safe_value(response, 'data')
         return {
             'creation': datetime.fromtimestamp(int(data['regisTime'])/1000),
-            'permissions': data['authorities'],
-            'ip_restrict': data['ips'],
-            'account_type': data['traderType'],
+            'role_type': data['traderType'],
         }
