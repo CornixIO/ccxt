@@ -2213,7 +2213,7 @@ class Exchange(object):
             raise NotSupported('fetch_funding_fee() not supported yet')
         return self.fetch_funding_fees(params)
 
-    def handle_option_and_params(self, params, methodName, optionName, defaultValue=None):
+    def handle_option_and_params(self, params: object, methodName: str, optionName: str, defaultValue=None):
         # This method can be used to obtain method specific properties, i.e: self.handle_option_and_params(params, 'fetchPosition', 'marginMode', 'isolated')
         defaultOptionName = 'default' + self.capitalize(optionName)  # we also need to check the 'defaultXyzWhatever'
         # check if params contain the key
@@ -2221,6 +2221,8 @@ class Exchange(object):
         if value is not None:
             params = self.omit(params, [optionName, defaultOptionName])
         else:
+            # handle routed methods like "watchTrades > watchTradesForSymbols"(or "watchTicker > watchTickers")
+            methodName, params = self.handle_param_string(params, 'callerMethodName', methodName)
             # check if exchange has properties for self method
             exchangeWideMethodOptions = self.safe_value(self.options, methodName)
             if exchangeWideMethodOptions is not None:
@@ -3332,19 +3334,13 @@ class Exchange(object):
             return
         return string_number
 
-    def handle_margin_mode_and_params(self, methodName, params={}):
+    def handle_margin_mode_and_params(self, methodName: str, params={}, defaultValue=None):
         """
          * @ignore
-        :param dict params: extra parameters specific to the exchange api endpoint
-        :returns [str|None, dict]: the marginMode in lowercase as specified by params["marginMode"], params["defaultMarginMode"] self.options["marginMode"] or self.options["defaultMarginMode"]
+        :param dict [params]: extra parameters specific to the exchange API endpoint
+        :returns Array: the marginMode in lowercase by params["marginMode"], params["defaultMarginMode"] self.options["marginMode"] or self.options["defaultMarginMode"]
         """
-        defaultMarginMode = self.safe_string_2(self.options, 'marginMode', 'defaultMarginMode')
-        methodOptions = self.safe_value(self.options, methodName, {})
-        methodMarginMode = self.safe_string_2(methodOptions, 'marginMode', 'defaultMarginMode', defaultMarginMode)
-        marginMode = self.safe_string_lower_2(params, 'marginMode', 'defaultMarginMode', methodMarginMode)
-        if marginMode is not None:
-            params = self.omit(params, ['marginMode', 'defaultMarginMode'])
-        return [marginMode, params]
+        return self.handle_option_and_params(params, methodName, 'marginMode', defaultValue)
 
     def handle_until_option(self, key, request, params, multiplier=1):
         until = self.safe_value_2(params, 'until', 'till')
