@@ -42,6 +42,9 @@ from ccxt.base.types import IndexType
 
 # ecdsa signing
 from ccxt.static_dependencies import ecdsa
+
+from base.types import Int, Str
+
 # eddsa signing
 try:
     import axolotl_curve25519 as eddsa
@@ -2729,6 +2732,18 @@ class Exchange(object):
     def symbol(self, symbol):
         market = self.market(symbol)
         return self.safe_string(market, 'symbol', symbol)
+
+    def handle_param_string(self, params: object, paramName: str, defaultValue: Str = None):
+        value = self.safe_string(params, paramName, defaultValue)
+        if value is not None:
+            params = self.omit(params, paramName)
+        return [value, params]
+
+    def handle_param_integer(self, params: object, paramName: str, defaultValue: Int = None):
+        value = self.safe_integer(params, paramName, defaultValue)
+        if value is not None:
+            params = self.omit(params, paramName)
+        return [value, params]
 
     def calculate_fee(self, symbol, type, side, amount, price, takerOrMaker='taker', params={}):
         market = self.markets[symbol]
