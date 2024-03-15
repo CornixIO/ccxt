@@ -4,11 +4,11 @@
 
 # -----------------------------------------------------------------------------
 
-__version__ = '4.0.106.26'
+__version__ = '4.0.106.27'
 
 # -----------------------------------------------------------------------------
 import random
-from typing import Optional, List
+from typing import Optional, List, Any
 
 from ccxt.base.errors import ExchangeError, InvalidOrder, NullResponse
 from ccxt.base.errors import NetworkError
@@ -808,6 +808,8 @@ class Exchange(object):
 
     @staticmethod
     def safe_value_n(dictionary, key_list, default_value=None):
+        if dictionary is None:
+            return default_value
         value = Exchange.get_object_value_from_key_list(dictionary, key_list)
         return value if value is not None else default_value
 
@@ -869,6 +871,91 @@ class Exchange(object):
             return ast.literal_eval(value)
         except (ValueError, SyntaxError):
             return value
+
+    def safe_dict_n(self, dictionaryOrList, keys: List[IndexType], defaultValue: dict = None):
+        """
+         * @ignore
+        safely extract a dictionary from dictionary or list
+        :returns dict | None:
+        """
+        value = self.safe_value_n(dictionaryOrList, keys, defaultValue)
+        if value is None:
+            return defaultValue
+        if isinstance(value, dict):
+            return value
+        return defaultValue
+
+    def safe_dict(self, dictionary, key: IndexType, defaultValue: dict = None):
+        """
+         * @ignore
+        safely extract a dictionary from dictionary or list
+        :returns dict | None:
+        """
+        return self.safe_dict_n(dictionary, [key], defaultValue)
+
+    def safe_dict_2(self, dictionary, key1: IndexType, key2: str, defaultValue: dict = None):
+        """
+         * @ignore
+        safely extract a dictionary from dictionary or list
+        :returns dict | None:
+        """
+        return self.safe_dict_n(dictionary, [key1, key2], defaultValue)
+
+    def safe_list_n(self, dictionaryOrList, keys: List[IndexType], defaultValue: List[Any] = None):
+        """
+         * @ignore
+        safely extract an Array from dictionary or list
+        :returns Array | None:
+        """
+        value = self.safe_value_n(dictionaryOrList, keys, defaultValue)
+        if value is None:
+            return defaultValue
+        if isinstance(value, list):
+            return value
+        return defaultValue
+
+    def safe_list_2(self, dictionaryOrList, key1: IndexType, key2: str, defaultValue: List[Any] = None):
+        """
+         * @ignore
+        safely extract an Array from dictionary or list
+        :returns Array | None:
+        """
+        return self.safe_list_n(dictionaryOrList, [key1, key2], defaultValue)
+
+    def safe_list(self, dictionaryOrList, key: IndexType, defaultValue: List[Any] = None):
+        """
+         * @ignore
+        safely extract an Array from dictionary or list
+        :returns Array | None:
+        """
+        return self.safe_list_n(dictionaryOrList, [key], defaultValue)
+
+    def safe_bool_n(self, dictionaryOrList, keys: List[IndexType], defaultValue: bool = None):
+        """
+         * @ignore
+        safely extract boolean value from dictionary or list
+        :returns bool | None:
+        """
+        value = self.safe_value_n(dictionaryOrList, keys, defaultValue)
+        if isinstance(value, bool):
+            return value
+        return defaultValue
+
+    def safe_bool_2(self, dictionary, key1: IndexType, key2: IndexType, defaultValue: bool = None):
+        """
+         * @ignore
+        safely extract boolean value from dictionary or list
+        :returns bool | None:
+        """
+        return self.safe_bool_n(dictionary, [key1, key2], defaultValue)
+
+    def safe_bool(self, dictionary, key: IndexType, defaultValue: bool = None):
+        """
+         * @ignore
+        safely extract boolean value from dictionary or list
+        :returns bool | None:
+        """
+        return self.safe_bool_n(dictionary, [key], defaultValue)
 
     @staticmethod
     def safe_string(dictionary, key, default_value=None):
@@ -950,11 +1037,15 @@ class Exchange(object):
         return Exchange.safe_either(Exchange.safe_value, dictionary, key1, key2, default_value)
 
     @staticmethod
-    def get_object_value_from_key_list(dictionary, key_list):
-        filtered_list = list(filter(lambda el: el in dictionary, key_list))
-        if (len(filtered_list) == 0):
-            return None
-        return dictionary[filtered_list[0]]
+    def get_object_value_from_key_list(dictionary_or_list, key_list):
+        for key in key_list:
+            if isinstance(key, str):
+                if key in dictionary_or_list and dictionary_or_list[key] is not None and dictionary_or_list[key] != '':
+                    return dictionary_or_list[key]
+            else:
+                if (key < len(dictionary_or_list)) and (dictionary_or_list[key] is not None) and (dictionary_or_list[key] != ''):
+                    return dictionary_or_list[key]
+        return None
 
     @staticmethod
     def safe_either(method, dictionary, key1, key2, default_value=None):
@@ -2587,6 +2678,12 @@ class Exchange(object):
                 result.append(objects[i])
 
         return self.index_by(result, key) if indexed else result
+
+    def resolve_path(self, path, params):
+        return [
+            self.implode_params(path, params),
+            self.omit(params, self.extract_params(path)),
+        ]
 
     def currency(self, code):
         if not self.currencies:

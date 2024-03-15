@@ -22,7 +22,7 @@
 
 # ----------------------------------------------------------------------------
 
-__version__ = '4.0.106.26'
+__version__ = '4.0.106.27'
 
 # ----------------------------------------------------------------------------
 
@@ -167,6 +167,8 @@ from ccxt.liquid import liquid                              # noqa: F401
 from ccxt.livecoin import livecoin                          # noqa: F401
 from ccxt.luno import luno                                  # noqa: F401
 from ccxt.lykke import lykke                                # noqa: F401
+from ccxt.mexc import mexc                                  # noqa: F401
+from ccxt.mexc_spot import mexc_spot                        # noqa: F401
 from ccxt.mercado import mercado                            # noqa: F401
 from ccxt.mixcoins import mixcoins                          # noqa: F401
 from ccxt.oceanex import oceanex                            # noqa: F401
@@ -295,6 +297,8 @@ exchanges = [
     'luno',
     'lykke',
     'mercado',
+    'mexc',
+    'mexc_spot',
     'mixcoins',
     'oceanex',
     'okcoin',
