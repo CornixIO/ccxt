@@ -37,13 +37,11 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
-from ccxt.base.types import IndexType
+from ccxt.base.types import IndexType, Str, Int
 # -----------------------------------------------------------------------------
 
 # ecdsa signing
 from ccxt.static_dependencies import ecdsa
-
-from base.types import Int, Str
 
 # eddsa signing
 try:
