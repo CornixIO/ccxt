@@ -1208,8 +1208,10 @@ class mexc(Exchange, ImplicitAPI):
             quote = self.safe_currency_code(quoteId)
             status = self.safe_string(market, 'status')
             isSpotTradingAllowed = self.safe_value(market, 'isSpotTradingAllowed')
+            order_types = self.safe_value(market, 'orderTypes')
+            support_market_order = "MARKET" in order_types
             active = False
-            if (status == 'ENABLED') and (isSpotTradingAllowed):
+            if (status == 'ENABLED') and isSpotTradingAllowed and support_market_order:
                 active = True
             isMarginTradingAllowed = self.safe_value(market, 'isMarginTradingAllowed')
             makerCommission = self.safe_number(market, 'makerCommission')
