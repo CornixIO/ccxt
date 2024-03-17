@@ -1217,7 +1217,7 @@ class mexc(Exchange, ImplicitAPI):
             maxQuoteAmount = self.safe_number(market, 'maxQuoteAmount')
             result.append({
                 'id': id,
-                'symbol': base + '/' + quote,
+                'symbol': baseId + '/' + quoteId,
                 'base': base,
                 'quote': quote,
                 'settle': None,
