@@ -1209,13 +1209,10 @@ class mexc(Exchange, ImplicitAPI):
             status = self.safe_string(market, 'status')
             isSpotTradingAllowed = self.safe_value(market, 'isSpotTradingAllowed')
             order_types = self.safe_value(market, 'orderTypes')
-            support_market_order = "MARKET" in order_types
-            active = False
-            active_for_trading = False
-            if status == 'ENABLED':
-                active = True
-            if isSpotTradingAllowed and support_market_order:
-                active_for_trading = True
+            allow_market = "MARKET" in order_types
+            active = status == 'ENABLED'
+            active_for_trading = isSpotTradingAllowed
+
             isMarginTradingAllowed = self.safe_value(market, 'isMarginTradingAllowed')
             makerCommission = self.safe_number(market, 'makerCommission')
             takerCommission = self.safe_number(market, 'takerCommission')
@@ -1237,6 +1234,7 @@ class mexc(Exchange, ImplicitAPI):
                 'option': False,
                 'active': active,
                 'active_for_trading': active_for_trading,
+                'allow_market': allow_market,
                 'contract': False,
                 'linear': None,
                 'inverse': None,
