@@ -5318,7 +5318,7 @@ class bybit(Exchange):
 
     def _get_max_leverage(self, symbol):
         market = self.market(symbol)
-        return market['limits']['leverage']['max']
+        return self.safe_float(market['limits']['leverage'], 'max')
 
     @staticmethod
     def validate_leverage(leverage, max_leverage):
