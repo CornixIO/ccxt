@@ -5316,7 +5316,19 @@ class bybit(Exchange):
                         short_leverage = _leverage
         return long_leverage, short_leverage
 
+    def _get_max_leverage(self, symbol):
+        market = self.market(symbol)
+        return market['limits']['leverage']['max']
+
+    def validate_leverage(self, symbol, leverage):
+        max_leverage = self._get_max_leverage(symbol)
+        if max_leverage < leverage:
+            raise ExchangeError(f'leverage {leverage} is not valid')
+        return True
+
     def classify_change_margin(self, symbol, is_long, is_cross, leverage):
+        self.validate_leverage(symbol, leverage)
+
         positions = self.get_positions(symbol)
         same_direction_position = self.get_same_direction_position(positions, is_long)
         if same_direction_position is None:
@@ -5328,6 +5340,9 @@ class bybit(Exchange):
         _is_cross = same_direction_margin_type == "cross" if same_direction_margin_type is not None else None
 
         long_leverage, short_leverage = self.get_change_margin_input(positions, leverage, _is_long, is_long)
+        long_leverage = min(long_leverage, self._get_max_leverage(symbol))
+        short_leverage = min(short_leverage, self._get_max_leverage(symbol))
+
         if is_cross == _is_cross and leverage == _leverage:
             return
         elif is_cross != _is_cross:
