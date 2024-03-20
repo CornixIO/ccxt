@@ -5340,8 +5340,9 @@ class bybit(Exchange):
         _is_cross = same_direction_margin_type == "cross" if same_direction_margin_type is not None else None
 
         long_leverage, short_leverage = self.get_change_margin_input(positions, leverage, _is_long, is_long)
-        long_leverage = min(long_leverage, self._get_max_leverage(symbol))
-        short_leverage = min(short_leverage, self._get_max_leverage(symbol))
+        max_leverage = self._get_max_leverage(symbol)
+        long_leverage = min(long_leverage, max_leverage)
+        short_leverage = min(short_leverage, max_leverage)
 
         if is_cross == _is_cross and leverage == _leverage:
             return
