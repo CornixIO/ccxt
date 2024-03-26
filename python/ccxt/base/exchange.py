@@ -1607,15 +1607,23 @@ class Exchange(object):
                     return number_str.rstrip('.')
         return number
 
-    def optimal_float_to_str(self, number, num_digits=16):
+    @staticmethod
+    def float_with_e_to_str(number_str):
+        left, e_factor = number_str.split('e-')
+        left_to_point = left.split('.')[0]
+        left = left.replace('.', '')
+        left_to_point_len = len(left_to_point)
+        return '0.' + '0' * (int(e_factor) - left_to_point_len) + left
+
+    def optimal_float_to_str(self, number):
         number_str = str(number)
-        if 'e' in number_str:
-            return self.float_to_str(number, num_digits=num_digits).rstrip("0")
+        if 'e-' in number_str:
+            return self.float_with_e_to_str(number_str)
         else:
-            return str(number).rstrip("0")
+            return str(number).rstrip("0").rstrip('.')
 
     def str_float_params(self, all_params, to_float_params):
-        return {k: self.optimal_float_to_str(v, num_digits=16)
+        return {k: self.optimal_float_to_str(v)
                 if k in to_float_params else v for k, v in all_params.items()}
 
     def convert_amount_into_digit_precision(self, amount):
