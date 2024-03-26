@@ -1614,8 +1614,6 @@ class Exchange(object):
         number_str = str(number)
         if 'e' in number_str:
             return self.float_to_str(number, num_digits=num_digits, should_strip_zeros=True)
-        elif '.' in number_str:
-            return number_str.rstrip("0").rstrip('.')
         else:
             return number_str
 
