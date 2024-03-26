@@ -1608,11 +1608,16 @@ class Exchange(object):
         return number
 
     def optimal_float_to_str(self, number, num_digits=16):
+        if not isinstance(number, (int, float)):
+            return number
+
         number_str = str(number)
         if 'e' in number_str:
-            return self.float_to_str(number, num_digits=num_digits).rstrip("0")
+            return self.float_to_str(number, num_digits=num_digits, should_strip_zeros=True)
+        elif '.' in number_str:
+            return number_str.rstrip("0").rstrip('.')
         else:
-            return str(number).rstrip("0")
+            return number_str
 
     def str_float_params(self, all_params, to_float_params):
         return {k: self.optimal_float_to_str(v, num_digits=16)
