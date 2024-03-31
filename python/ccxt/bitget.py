@@ -4641,48 +4641,36 @@ class bitget(Exchange, ImplicitAPI):
         response = None
         order_type = params.pop('type', None)
         if market['spot']:
-            if order_type == 'stop':
-                fetch_func = None
-                try:
-                    data = self.get_trigger_sub_order(id, symbol)
-                    order_id = self.safe_value(data, 'orderId')
-                    if order_id and order_id != 'null':
-                        request['orderId'] = order_id
-                    else:
-                        fetch_func = self.fetch_canceled_and_closed_orders
-                except:
-                    fetch_func = self.fetch_open_orders
-                if fetch_func:
-                    orders = fetch_func(symbol, params={'stop':True,'idLessThan':int(id)+1, 'limit':1})
-                    if orders:
-                        order = orders[0]
-                        if order['id'] == id:
-                            return order
-                    raise OrderNotFound(f'order {id} not found')
-            response = self.privateSpotGetV2SpotTradeOrderInfo(self.extend(request, params))
+            reg_fetch_func = self.privateSpotGetV2SpotTradeOrderInfo
+            trigger_param = {'stop': True, 'idLessThan': int(id) + 1, 'limit': 1}
         elif market['swap'] or market['future']:
-            productType = None
             productType, params = self.handle_product_type_and_params(market, params)
             request['productType'] = productType
-            if order_type == 'stop':
-                fetch_func = None
-                try:
-                    data = self.get_trigger_sub_order(id, symbol)
-                    order_id = self.safe_value(data, 'orderId')
-                    if order_id and order_id != 'null':
-                        request['orderId'] = order_id
-                    else:
-                        fetch_func = self.fetch_canceled_and_closed_orders
-                except:
-                    fetch_func = self.fetch_open_orders
-                if fetch_func:
-                    orders = fetch_func(symbol, params={'stop': True, 'orderId': id})
-                    if orders:
-                        return orders[0]
-                    raise OrderNotFound(f'order {id} not found')
-            response = self.privateMixGetV2MixOrderDetail(self.extend(request, params))
+            reg_fetch_func = self.privateMixGetV2MixOrderDetail
+            trigger_param = {'stop': True, 'orderId': id}
         else:
             raise NotSupported(self.id + ' fetchOrder() does not support ' + market['type'] + ' orders')
+
+        if order_type == 'stop':
+            fetch_func = None
+            try:
+                data = self.get_trigger_sub_order(id, symbol)
+                order_id = self.safe_value(data, 'orderId')
+                if order_id and order_id != 'null':
+                    request['orderId'] = order_id
+                else:
+                    fetch_func = self.fetch_canceled_and_closed_orders
+            except:
+                fetch_func = self.fetch_open_orders
+            if fetch_func:
+                orders = fetch_func(symbol, params=trigger_param)
+                if orders:
+                    order = orders[0]
+                    if order['id'] == id:
+                        return order
+                raise OrderNotFound(f'order {id} not found')
+        response = reg_fetch_func(self.extend(request, params))
+
         #
         # spot
         #
