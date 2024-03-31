@@ -4642,12 +4642,12 @@ class bitget(Exchange, ImplicitAPI):
         order_type = params.pop('type', None)
         if market['spot']:
             reg_fetch_func = self.privateSpotGetV2SpotTradeOrderInfo
-            trigger_param = {'stop': True, 'idLessThan': int(id) + 1, 'limit': 1}
+            trigger_params = {'stop': True, 'idLessThan': int(id) + 1, 'limit': 1}
         elif market['swap'] or market['future']:
             productType, params = self.handle_product_type_and_params(market, params)
             request['productType'] = productType
             reg_fetch_func = self.privateMixGetV2MixOrderDetail
-            trigger_param = {'stop': True, 'orderId': id}
+            trigger_params = {'stop': True, 'orderId': id}
         else:
             raise NotSupported(self.id + ' fetchOrder() does not support ' + market['type'] + ' orders')
 
@@ -4660,10 +4660,12 @@ class bitget(Exchange, ImplicitAPI):
                     request['orderId'] = order_id
                 else:
                     fetch_func = self.fetch_canceled_and_closed_orders
-            except:
+            except ExchangeError as e:
+                if '40307' not in str(e):
+                    raise
                 fetch_func = self.fetch_open_orders
             if fetch_func:
-                orders = fetch_func(symbol, params=trigger_param)
+                orders = fetch_func(symbol, params=trigger_params)
                 if orders:
                     order = orders[0]
                     if order['id'] == id:
