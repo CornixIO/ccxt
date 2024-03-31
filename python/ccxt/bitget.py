@@ -4661,6 +4661,7 @@ class bitget(Exchange, ImplicitAPI):
                 else:
                     fetch_func = self.fetch_canceled_and_closed_orders
             except ExchangeError as e:
+                # {"code":"40307","msg":"The current plan order does not exist or has not been triggered","requestTime":1711868491378,"data":null}
                 if '40307' not in str(e):
                     raise
                 fetch_func = self.fetch_open_orders
