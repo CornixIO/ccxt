@@ -3151,8 +3151,11 @@ class bybit(Exchange):
     def fetch_order_fee(self, _id, symbol, expected_cost):
         order_trades = self.fetch_my_trades(symbol, params={"orderId": _id})
         cost, fee = self.parse_trades_cost_fee(symbol, order_trades)
-        if not order_trades or cost != float(expected_cost):
-            raise TradesNotFound("Couldn't get order's trades for external_order_id: %s" % _id)
+        if not order_trades:
+            raise TradesNotFound(f"Couldn't get order's trades for external_order_id: {_id}")
+        if cost != float(expected_cost):
+            raise TradesNotFound(f"Got order's trades with unexpected cost, got {cost} expecting {expected_cost} "
+                                 f"for external_order_id: {_id}")
         return fee
 
     def fetch_order(self, id: str, symbol: Optional[str] = None, params={}):
