@@ -15,7 +15,7 @@ from ccxt.base.types import OrderType
 from typing import Optional, Union, Tuple
 from typing import List
 from ccxt.base.errors import ExchangeError, NotChanged, OrderCancelled, PositionNotFound, TradesNotFound, \
-    AccountRateLimitExceeded
+    AccountRateLimitExceeded, MaxStopAllowed
 from ccxt.base.errors import PermissionDenied
 from ccxt.base.errors import ArgumentsRequired
 from ccxt.base.errors import BadRequest
@@ -529,7 +529,7 @@ class bybit(Exchange):
                     '10024': PermissionDenied,  # Compliance rules triggered
                     '10027': PermissionDenied,  # Trading Banned
                     '10028': PermissionDenied,  # The API can only be accessed by unified account users.
-                    '10029': PermissionDenied,  # The requested symbol is invalid, please check symbol whitelist
+                    '10029': ExchangeError,  # The requested symbol is invalid, please check symbol whitelist / The requested symbol is not whitelisted.
                     '12201': BadRequest,
                     # {"retCode":12201,"retMsg":"Invalid orderCategory parameter.","result":{},"retExtInfo":null,"time":1666699391220}
                     '12141': BadRequest,
@@ -543,7 +543,7 @@ class bybit(Exchange):
                     '110007': InsufficientFunds,
                     # {"retCode":110007,"retMsg":"ab not enough for new order","result":{},"retExtInfo":{},"time":1668838414793}
                     '110008': InvalidOrder,  # Order has been finished or canceled
-                    '110009': InvalidOrder,  # The number of stop orders exceeds maximum limit allowed
+                    '110009': MaxStopAllowed,  # The number of stop orders exceeds maximum limit allowed
                     '110010': InvalidOrder,  # Order already cancelled
                     '110011': InvalidOrder,  # Any adjustments made will trigger immediate liquidation
                     '110012': InsufficientFunds,  # Available balance not enough
@@ -1595,8 +1595,8 @@ class bybit(Exchange):
                         'max': None,
                     },
                     'cost': {
-                        'min': self.safe_number(lotSizeFilter, 'minOrderAmt'),
-                        'max': self.safe_number(lotSizeFilter, 'maxOrderAmt'),
+                        'min': self.safe_number_2(lotSizeFilter, 'minOrderAmt', 'minNotionalValue'),
+                        'max': self.safe_number_2(lotSizeFilter, 'maxOrderAmt', 'maxNotionalValue'),
                     },
                     'orders': {
                         'max': 500
@@ -5316,7 +5316,20 @@ class bybit(Exchange):
                         short_leverage = _leverage
         return long_leverage, short_leverage
 
+    def _get_max_leverage(self, symbol):
+        market = self.market(symbol)
+        return self.safe_float(market['limits']['leverage'], 'max')
+
+    @staticmethod
+    def validate_leverage(leverage, max_leverage):
+        if max_leverage < leverage:
+            raise ExchangeError(f'leverage {leverage} is not valid')
+        return True
+
     def classify_change_margin(self, symbol, is_long, is_cross, leverage):
+        max_leverage = self._get_max_leverage(symbol)
+        self.validate_leverage(leverage, max_leverage)
+
         positions = self.get_positions(symbol)
         same_direction_position = self.get_same_direction_position(positions, is_long)
         if same_direction_position is None:
@@ -5328,6 +5341,10 @@ class bybit(Exchange):
         _is_cross = same_direction_margin_type == "cross" if same_direction_margin_type is not None else None
 
         long_leverage, short_leverage = self.get_change_margin_input(positions, leverage, _is_long, is_long)
+
+        long_leverage = min(long_leverage, max_leverage)
+        short_leverage = min(short_leverage, max_leverage)
+
         if is_cross == _is_cross and leverage == _leverage:
             return
         elif is_cross != _is_cross:
