@@ -3778,6 +3778,10 @@ class bitget(Exchange, ImplicitAPI):
         if marketType == 'spot' and side == 'buy' and order_type == 'market' and average:
             size = Precise.string_div(size, average)
             size = self.amount_to_precision(market['symbol'], size)
+        is_triggered = None
+        orderSource = self.safe_string(order, 'orderSource')
+        if orderSource and 'plan' in orderSource:
+            is_triggered = True
         return self.safe_order({
             'info': order,
             'id': self.safe_string_2(order, 'orderId', 'data'),
@@ -3805,6 +3809,7 @@ class bitget(Exchange, ImplicitAPI):
             'status': self.parse_order_status(rawStatus),
             'fee': fee,
             'trades': None,
+            'is_triggered': is_triggered,
         }, market)
 
     def create_market_buy_order_with_cost(self, symbol: str, cost, params={}):
@@ -4374,7 +4379,11 @@ class bitget(Exchange, ImplicitAPI):
                 request['planType'] = planType
                 response = self.privateMixPostV2MixOrderCancelPlanOrder(self.extend(request, params))
             elif stop:
-                response = self.privateMixPostV2MixOrderCancelPlanOrder(self.extend(request, params))
+                order = self.fetch_order(id, symbol, params={'type': 'stop'})
+                if order['id'] == id:
+                    response = self.privateMixPostV2MixOrderCancelPlanOrder(self.extend(request, params))
+                else:
+                    self.cancel_order(order['id'], symbol)
             else:
                 response = self.privateMixPostV2MixOrderCancelOrder(self.extend(request, params))
         elif market['spot']:
@@ -4385,7 +4394,11 @@ class bitget(Exchange, ImplicitAPI):
                     response = self.privateMarginPostV2MarginCrossedCancelOrder(self.extend(request, params))
             else:
                 if stop:
-                    response = self.privateSpotPostV2SpotTradeCancelPlanOrder(self.extend(request, params))
+                    order = self.fetch_order(id, symbol, params={'type': 'stop'})
+                    if order['id'] == id:
+                        response = self.privateSpotPostV2SpotTradeCancelPlanOrder(self.extend(request, params))
+                    else:
+                        self.cancel_order(order['id'], symbol)
                 else:
                     response = self.privateSpotPostV2SpotTradeCancelOrder(self.extend(request, params))
         else:
@@ -4671,7 +4684,7 @@ class bitget(Exchange, ImplicitAPI):
                     order = orders[0]
                     if order['id'] == id:
                         return order
-                raise OrderNotFound(f'order {id} not found')
+                raise OrderNotFound(f'{self.id} order {id} not found')
         response = reg_fetch_func(self.extend(request, params))
 
         #
