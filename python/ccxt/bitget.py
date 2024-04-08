@@ -4379,7 +4379,7 @@ class bitget(Exchange, ImplicitAPI):
                 request['planType'] = planType
                 response = self.privateMixPostV2MixOrderCancelPlanOrder(self.extend(request, params))
             elif stop:
-                order_id = self.get_trigger_sub_order_id(id, symbol)
+                _, order_id = self.get_order_trigger_is_open_sub_order_id(id, symbol)
                 if order_id:
                     self.cancel_order(order_id, symbol)
                 else:
@@ -4394,7 +4394,7 @@ class bitget(Exchange, ImplicitAPI):
                     response = self.privateMarginPostV2MarginCrossedCancelOrder(self.extend(request, params))
             else:
                 if stop:
-                    order_id = self.get_trigger_sub_order_id(id, symbol)
+                    _, order_id = self.get_order_trigger_is_open_sub_order_id(id, symbol)
                     if order_id:
                         self.cancel_order(order_id, symbol)
                     else:
@@ -4666,17 +4666,13 @@ class bitget(Exchange, ImplicitAPI):
 
         if order_type == 'stop':
             fetch_func = None
-            try:
-                order_id = self.get_trigger_sub_order_id(id, symbol)
-                if order_id:
-                    request['orderId'] = order_id
-                else:
-                    fetch_func = self.fetch_canceled_and_closed_orders
-            except ExchangeError as e:
-                # {"code":"40307","msg":"The current plan order does not exist or has not been triggered","requestTime":1711868491378,"data":null}
-                if '40307' not in str(e):
-                    raise
+            is_open, order_id = self.get_order_trigger_is_open_sub_order_id(id, symbol)
+            if is_open:
                 fetch_func = self.fetch_open_orders
+            elif order_id:
+                request['orderId'] = order_id
+            else:
+                fetch_func = self.fetch_canceled_and_closed_orders
             if fetch_func:
                 orders = fetch_func(symbol, params=trigger_params)
                 if orders:
@@ -7770,12 +7766,15 @@ class bitget(Exchange, ImplicitAPI):
             response = json.loads(response)
         return self.safe_value(response, 'data')[0]
 
-    def get_trigger_sub_order_id(self, id: str, symbol: str):
+    def get_order_trigger_is_open_sub_order_id(self, id: str, symbol: str) -> tuple[bool, str | None]:
         try:
             data = self.get_trigger_sub_order(id, symbol)
             order_id = self.safe_value(data, 'orderId')
             if order_id and order_id != 'null':
-                return order_id
-            return None
-        except ExchangeError:
-            return None
+                return False, order_id
+            return False, None
+        except ExchangeError as e:
+            # {"code":"40307","msg":"The current plan order does not exist or has not been triggered","requestTime":1711868491378,"data":null}
+            if '40307' not in str(e):
+                raise
+            return True, None
