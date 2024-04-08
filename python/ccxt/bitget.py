@@ -4379,11 +4379,11 @@ class bitget(Exchange, ImplicitAPI):
                 request['planType'] = planType
                 response = self.privateMixPostV2MixOrderCancelPlanOrder(self.extend(request, params))
             elif stop:
-                order = self.fetch_order(id, symbol, params={'type': 'stop'})
-                if order['id'] == id:
-                    response = self.privateMixPostV2MixOrderCancelPlanOrder(self.extend(request, params))
+                order_id = self.get_trigger_sub_order_id(id, symbol)
+                if order_id:
+                    self.cancel_order(order_id, symbol)
                 else:
-                    self.cancel_order(order['id'], symbol)
+                    response = self.privateMixPostV2MixOrderCancelPlanOrder(self.extend(request, params))
             else:
                 response = self.privateMixPostV2MixOrderCancelOrder(self.extend(request, params))
         elif market['spot']:
@@ -4394,11 +4394,11 @@ class bitget(Exchange, ImplicitAPI):
                     response = self.privateMarginPostV2MarginCrossedCancelOrder(self.extend(request, params))
             else:
                 if stop:
-                    order = self.fetch_order(id, symbol, params={'type': 'stop'})
-                    if order['id'] == id:
-                        response = self.privateSpotPostV2SpotTradeCancelPlanOrder(self.extend(request, params))
+                    order_id = self.get_trigger_sub_order_id(id, symbol)
+                    if order_id:
+                        self.cancel_order(order_id, symbol)
                     else:
-                        self.cancel_order(order['id'], symbol)
+                        response = self.privateSpotPostV2SpotTradeCancelPlanOrder(self.extend(request, params))
                 else:
                     response = self.privateSpotPostV2SpotTradeCancelOrder(self.extend(request, params))
         else:
@@ -4667,9 +4667,8 @@ class bitget(Exchange, ImplicitAPI):
         if order_type == 'stop':
             fetch_func = None
             try:
-                data = self.get_trigger_sub_order(id, symbol)
-                order_id = self.safe_value(data, 'orderId')
-                if order_id and order_id != 'null':
+                order_id = self.get_trigger_sub_order_id(id, symbol)
+                if order_id:
                     request['orderId'] = order_id
                 else:
                     fetch_func = self.fetch_canceled_and_closed_orders
@@ -7770,3 +7769,13 @@ class bitget(Exchange, ImplicitAPI):
         if isinstance(response, str):
             response = json.loads(response)
         return self.safe_value(response, 'data')[0]
+
+    def get_trigger_sub_order_id(self, id: str, symbol: str):
+        try:
+            data = self.get_trigger_sub_order(id, symbol)
+            order_id = self.safe_value(data, 'orderId')
+            if order_id and order_id != 'null':
+                return order_id
+            return None
+        except ExchangeError:
+            return None
