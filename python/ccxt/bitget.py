@@ -5099,6 +5099,8 @@ class bitget(Exchange, ImplicitAPI):
         if symbol is not None:
             market = self.market(symbol)
             request['symbol'] = market['id']
+        order_type = params.pop('type', None)
+        stop = True if order_type == 'stop' else False
         marketType = None
         marketType, params = self.handle_market_type_and_params('fetchCanceledAndClosedOrders', market, params)
         marginMode = None
@@ -5115,7 +5117,6 @@ class bitget(Exchange, ImplicitAPI):
             return self.fetch_paginated_call_cursor('fetchCanceledAndClosedOrders', symbol, since, limit, params, cursorReceived, 'idLessThan')
         response = None
         trailing = self.safe_value(params, 'trailing')
-        stop = self.safe_value_2(params, 'stop', 'trigger')
         params = self.omit(params, ['stop', 'trigger', 'trailing'])
         request, params = self.handle_until_option('endTime', request, params)
         if since is not None:
