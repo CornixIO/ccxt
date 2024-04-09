@@ -4653,7 +4653,7 @@ class bitget(Exchange, ImplicitAPI):
             'symbol': market['id'],
         }
         response = None
-        order_type = params.pop('type', None)
+        params, stop = self.has_stop_params(params)
         if market['spot']:
             reg_fetch_func = self.privateSpotGetV2SpotTradeOrderInfo
             trigger_params = {'stop': True, 'idLessThan': int(id) + 1, 'limit': 1}
@@ -4665,7 +4665,7 @@ class bitget(Exchange, ImplicitAPI):
         else:
             raise NotSupported(self.id + ' fetchOrder() does not support ' + market['type'] + ' orders')
 
-        if order_type == 'stop':
+        if stop:
             fetch_func = None
             is_open, order_id = self.get_order_trigger_is_open_sub_order_id(id, symbol)
             if is_open:
@@ -5099,8 +5099,7 @@ class bitget(Exchange, ImplicitAPI):
         if symbol is not None:
             market = self.market(symbol)
             request['symbol'] = market['id']
-        order_type = params.pop('type', None)
-        stop = True if order_type == 'stop' else False
+        params, stop = self.has_stop_params(params)
         marketType = None
         marketType, params = self.handle_market_type_and_params('fetchCanceledAndClosedOrders', market, params)
         marginMode = None
