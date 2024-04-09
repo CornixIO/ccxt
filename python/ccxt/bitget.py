@@ -5116,6 +5116,7 @@ class bitget(Exchange, ImplicitAPI):
             return self.fetch_paginated_call_cursor('fetchCanceledAndClosedOrders', symbol, since, limit, params, cursorReceived, 'idLessThan')
         response = None
         trailing = self.safe_value(params, 'trailing')
+        params = self.omit(params, ['trigger', 'trailing'])
         request, params = self.handle_until_option('endTime', request, params)
         if since is not None:
             request['startTime'] = since
