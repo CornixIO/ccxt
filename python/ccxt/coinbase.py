@@ -3053,8 +3053,6 @@ class coinbase(Exchange, ImplicitAPI):
         until, params = self.handle_option_and_params(params, 'fetchTrades', 'until')
         if until is not None:
             request['end'] = self.number_to_string(self.parse_to_int(until / 1000))
-        elif since is not None:
-            raise ArgumentsRequired(self.id + ' fetchTrades() requires a `until` parameter when you use `since` argument')
         response = self.v3PrivateGetBrokerageProductsProductIdTicker(self.extend(request, params))
         #
         #     {
