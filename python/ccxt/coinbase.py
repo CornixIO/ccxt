@@ -337,7 +337,7 @@ class coinbase(Exchange, ImplicitAPI):
                 'CGLD': 'CELO',
             },
             'options': {
-                'brokerId': 'ccxt',
+                'brokerId': 'cornix',
                 'stablePairs': ['BUSD-USD', 'CBETH-ETH', 'DAI-USD', 'GUSD-USD', 'GYEN-USD', 'PAX-USD', 'PAX-USDT', 'USDC-EUR', 'USDC-GBP', 'USDT-EUR', 'USDT-GBP', 'USDT-USD', 'USDT-USDC', 'WBTC-BTC'],
                 'fetchCurrencies': {
                     'expires': 5000,
@@ -1186,6 +1186,7 @@ class coinbase(Exchange, ImplicitAPI):
             id = self.safe_string(market, 'product_id')
             baseId = self.safe_string(market, 'base_currency_id')
             quoteId = self.safe_string(market, 'quote_currency_id')
+            alias = self.safe_string(market, 'alias')
             base = self.safe_currency_code(baseId)
             quote = self.safe_currency_code(quoteId)
             marketType = self.safe_string_lower(market, 'product_type')
@@ -1196,6 +1197,7 @@ class coinbase(Exchange, ImplicitAPI):
                 'symbol': base + '/' + quote,
                 'base': base,
                 'quote': quote,
+                'alias': alias,
                 'settle': None,
                 'baseId': baseId,
                 'quoteId': quoteId,
@@ -2425,7 +2427,7 @@ class coinbase(Exchange, ImplicitAPI):
             if errorResponse is not None:
                 self.throw_exactly_matched_exception(self.exceptions['exact'], errorTitle, errorMessage)
                 self.throw_broadly_matched_exception(self.exceptions['broad'], errorTitle, errorMessage)
-                raise ExchangeError(errorMessage)
+                raise ExchangeError(errorResponse)
         data = self.safe_dict(response, 'success_response', {})
         return self.parse_order(data, market)
 
