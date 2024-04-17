@@ -4,13 +4,13 @@
 
 # -----------------------------------------------------------------------------
 
-__version__ = '4.0.106.29'
+__version__ = '4.0.106.32'
 
 # -----------------------------------------------------------------------------
 import random
-from typing import Optional, List
+from typing import Optional, List, Any
 
-from ccxt.base.errors import ExchangeError, InvalidOrder, NullResponse
+from ccxt.base.errors import ExchangeError, InvalidOrder, NullResponse, BadRequest
 from ccxt.base.errors import NetworkError
 from ccxt.base.errors import NotSupported
 from ccxt.base.errors import AuthenticationError
@@ -37,7 +37,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
-from ccxt.base.types import IndexType
+from ccxt.base.types import IndexType, Market, Currency, Int, Str
 # -----------------------------------------------------------------------------
 
 # ecdsa signing
@@ -500,16 +500,19 @@ class Exchange(object):
             delay = self.rateLimit - elapsed
             time.sleep(delay / 1000.0)
 
-    def fetch2(self, path, api='public', method='GET', params={}, headers=None, body=None):
+    def fetch2(self, path, api='public', method='GET', params=None, headers=None, body=None, config=None):
         """A better wrapper over request for deferred signing"""
+        params = params or dict()
+        config = config or dict()
         if self.enableRateLimit:
             self.throttle()
         self.lastRestRequestTimestamp = self.milliseconds()
         request = self.sign(path, api, method, params, headers, body)
         return self.fetch(request['url'], request['method'], request['headers'], request['body'])
 
-    def request(self, path, api='public', method='GET', params={}, headers=None, body=None):
+    def request(self, path, api='public', method='GET', params=None, headers=None, body=None):
         """Exchange.request is the entry point for all generated methods"""
+        params = params or dict()
         return self.fetch2(path, api, method, params, headers, body)
 
     @staticmethod
@@ -1334,6 +1337,10 @@ class Exchange(object):
         return Exchange.decode(base64.standard_b64encode(s))
 
     @staticmethod
+    def base64_to_binary(s):
+        return base64.standard_b64decode(s)
+
+    @staticmethod
     def jwt(request, secret, alg='HS256'):
         algos = {
             'HS256': hashlib.sha256,
@@ -1795,6 +1802,113 @@ class Exchange(object):
         """
         return self.filter_by_array(objects, key, values, indexed)
 
+    def filter_by_array_tickers(self, objects, key: IndexType, values=None, indexed=True):
+        """
+         * @ignore
+        Typed wrapper for filterByArray that returns a dictionary of tickers
+        """
+        return self.filter_by_array(objects, key, values, indexed)
+
+    def handle_max_entries_per_request_and_params(self, method: str, maxEntriesPerRequest: Int = None, params={}):
+        newMaxEntriesPerRequest = None
+        newMaxEntriesPerRequest, params = self.handle_option_and_params(params, method, 'maxEntriesPerRequest')
+        if (newMaxEntriesPerRequest is not None) and (newMaxEntriesPerRequest != maxEntriesPerRequest):
+            maxEntriesPerRequest = newMaxEntriesPerRequest
+        if maxEntriesPerRequest is None:
+            maxEntriesPerRequest = 1000  # default to 1000
+        return [maxEntriesPerRequest, params]
+
+    def safe_deterministic_call(self, method: str, symbol: Str = None, since: Int = None, limit: Int = None, timeframe: Str = None, params={}):
+        maxRetries = None
+        maxRetries, params = self.handle_option_and_params(params, method, 'maxRetries', 3)
+        errors = 0
+        try:
+            if timeframe and method != 'fetchFundingRateHistory':
+                return getattr(self, method)(symbol, timeframe, since, limit, params)
+            else:
+                return getattr(self, method)(symbol, since, limit, params)
+        except Exception as e:
+            if isinstance(e, RateLimitExceeded):
+                raise e  # if we are rate limited, we should not retry and fail fast
+            errors += 1
+            if errors > maxRetries:
+                raise e
+        return None
+
+    def fetch_paginated_call_deterministic(self, method: str, symbol: Str = None, since: Int = None, limit: Int = None, timeframe: Str = None, params={}, maxEntriesPerRequest=None):
+        maxCalls = None
+        maxCalls, params = self.handle_option_and_params(params, method, 'paginationCalls', 10)
+        maxEntriesPerRequest, params = self.handle_max_entries_per_request_and_params(method, maxEntriesPerRequest, params)
+        current = self.milliseconds()
+        tasks = []
+        time = self.parse_timeframe(timeframe) * 1000
+        step = time * maxEntriesPerRequest
+        currentSince = current - (maxCalls * step) - 1
+        if since is not None:
+            currentSince = max(currentSince, since)
+        until = self.safe_integer_2(params, 'until', 'till')  # do not omit it here
+        if until is not None:
+            requiredCalls = int(math.ceil((until - since)) / step)
+            if requiredCalls > maxCalls:
+                raise BadRequest(self.id + ' the number of required calls is greater than the max number of calls allowed, either increase the paginationCalls or decrease the since-until gap. Current paginationCalls limit is ' + str(maxCalls) + ' required calls is ' + str(requiredCalls))
+        for i in range(0, maxCalls):
+            if (until is not None) and (currentSince >= until):
+                break
+            tasks.append(self.safe_deterministic_call(method, symbol, currentSince, maxEntriesPerRequest, timeframe, params))
+            currentSince = self.sum(currentSince, step) - 1
+        results = tasks
+        result = []
+        for i in range(0, len(results)):
+            result = self.array_concat(result, results[i])
+        uniqueResults = self.remove_repeated_elements_from_array(result)
+        key = 0 if (method == 'fetchOHLCV') else 'timestamp'
+
+    def fetch_paginated_call_cursor(self, method: str, symbol: Str = None, since=None, limit=None, params={}, cursorReceived=None, cursorSent=None, cursorIncrement=None, maxEntriesPerRequest=None):
+        maxCalls = None
+        maxCalls, params = self.handle_option_and_params(params, method, 'paginationCalls', 10)
+        maxRetries = None
+        maxRetries, params = self.handle_option_and_params(params, method, 'maxRetries', 3)
+        maxEntriesPerRequest, params = self.handle_max_entries_per_request_and_params(method, maxEntriesPerRequest, params)
+        cursorValue = None
+        i = 0
+        errors = 0
+        result = []
+        while(i < maxCalls):
+            try:
+                if cursorValue is not None:
+                    if cursorIncrement is not None:
+                        cursorValue = self.parseToInt(cursorValue) + cursorIncrement
+                    params[cursorSent] = cursorValue
+                response = None
+                if method == 'fetchAccounts':
+                    response = getattr(self, method)(params)
+                else:
+                    response = getattr(self, method)(symbol, since, maxEntriesPerRequest, params)
+                errors = 0
+                responseLength = len(response)
+                if self.verbose:
+                    iteration = (i + str(1))
+                    cursorMessage = 'Cursor pagination call ' + iteration + ' method ' + method + ' response length ' + str(responseLength) + ' cursor ' + cursorValue
+                    self.log(cursorMessage)
+                if responseLength == 0:
+                    break
+                result = self.array_concat(result, response)
+                last = self.safe_value(response, responseLength - 1)
+                cursorValue = self.safe_value(last['info'], cursorReceived)
+                if cursorValue is None:
+                    break
+                lastTimestamp = self.safe_integer(last, 'timestamp')
+                if lastTimestamp is not None and lastTimestamp < since:
+                    break
+            except Exception as e:
+                errors += 1
+                if errors > maxRetries:
+                    raise e
+            i += 1
+        sorted = self.sortCursorPaginatedResult(result)
+        key = 0 if (method == 'fetchOHLCV') else 'timestamp'
+        return self.filter_by_since_limit(sorted, since, limit, key)
+
     def fetch_deposits(self, code=None, since=None, limit=None, params={}):
         raise NotSupported('fetch_deposits() is not supported yet')
 
@@ -1806,9 +1920,6 @@ class Exchange(object):
 
     def fetch_accounts(self, params={}):
         raise NotSupported(self.id + ' fetchAccounts() is not supported yet')
-
-    def parse_position(self, position, market=None):
-        raise NotSupported(self.id + ' parsePosition() is not supported yet')
 
     def parse_ohlcv(self, ohlcv, market=None):
         return ohlcv[0:6] if isinstance(ohlcv, list) else ohlcv
@@ -2292,12 +2403,74 @@ class Exchange(object):
             result.append(self.parse_market(markets[i]))
         return result
 
+    def parse_ticker(self, ticker: object, market: Market = None):
+        raise NotSupported(self.id + ' parseTicker() is not supported yet')
+
+    def parse_deposit_address(self, depositAddress, currency: Currency = None):
+        raise NotSupported(self.id + ' parseDepositAddress() is not supported yet')
+
+    def parse_trade(self, trade: object, market: Market = None):
+        raise NotSupported(self.id + ' parseTrade() is not supported yet')
+
+    def parse_transaction(self, transaction, currency: Currency = None):
+        raise NotSupported(self.id + ' parseTransaction() is not supported yet')
+
+    def parse_transfer(self, transfer, currency: Currency = None):
+        raise NotSupported(self.id + ' parseTransfer() is not supported yet')
+
+    def parse_account(self, account):
+        raise NotSupported(self.id + ' parseAccount() is not supported yet')
+
+    def parse_ledger_entry(self, item, currency: Currency = None):
+        raise NotSupported(self.id + ' parseLedgerEntry() is not supported yet')
+
+    def parse_order(self, order, market: Market = None):
+        raise NotSupported(self.id + ' parseOrder() is not supported yet')
+
+    def fetch_cross_borrow_rates(self, params={}):
+        raise NotSupported(self.id + ' fetchCrossBorrowRates() is not supported yet')
+
+    def fetch_isolated_borrow_rates(self, params={}):
+        raise NotSupported(self.id + ' fetchIsolatedBorrowRates() is not supported yet')
+
+    def parse_market_leverage_tiers(self, info, market: Market = None):
+        raise NotSupported(self.id + ' parseMarketLeverageTiers() is not supported yet')
+
+    def fetch_leverage_tiers(self, symbols: List[str] = None, params={}):
+        raise NotSupported(self.id + ' fetchLeverageTiers() is not supported yet')
+
+    def parse_position(self, position, market: Market = None):
+        raise NotSupported(self.id + ' parsePosition() is not supported yet')
+
+    def parse_funding_rate_history(self, info, market: Market = None):
+        raise NotSupported(self.id + ' parseFundingRateHistory() is not supported yet')
+
+    def parse_borrow_interest(self, info, market: Market = None):
+        raise NotSupported(self.id + ' parseBorrowInterest() is not supported yet')
+
+    def parse_ws_trade(self, trade, market: Market = None):
+        raise NotSupported(self.id + ' parseWsTrade() is not supported yet')
+
+    def parse_ws_order(self, order, market: Market = None):
+        raise NotSupported(self.id + ' parseWsOrder() is not supported yet')
+
+    def parse_ws_order_trade(self, trade, market: Market = None):
+        raise NotSupported(self.id + ' parseWsOrderTrade() is not supported yet')
+
     def parse_tickers(self, tickers, symbols=None, params={}):
         result = []
         values = self.to_array(tickers)
         for i in range(0, len(values)):
             result.append(self.extend(self.parse_ticker(values[i]), params))
         return self.filter_by_array(result, 'symbol', symbols)
+
+    def parse_accounts(self, accounts: List[Any], params={}):
+        accounts = self.to_array(accounts)
+        result = []
+        for i in range(0, len(accounts)):
+            account = self.extend(self.parse_account(accounts[i]), params)
+            result.append(account)
+        return result
 
     def parse_trades(self, trades, market=None, since=None, limit=None, params={}):
         array = self.to_array(trades)
@@ -3267,3 +3440,95 @@ class Exchange(object):
             request[key] = self.parseToInt(until * multiplier)
             params = self.omit(params, ['until', 'till'])
         return [request, params]
+
+    def safe_bool_n(self, dictionaryOrList, keys: List[IndexType], defaultValue: bool = None):
+        """
+         * @ignore
+        safely extract boolean value from dictionary or list
+        :returns bool | None:
+        """
+        value = self.safe_value_n(dictionaryOrList, keys, defaultValue)
+        if isinstance(value, bool):
+            return value
+        return defaultValue
+
+    def safe_bool_2(self, dictionary, key1: IndexType, key2: IndexType, defaultValue: bool = None):
+        """
+         * @ignore
+        safely extract boolean value from dictionary or list
+        :returns bool | None:
+        """
+        return self.safe_bool_n(dictionary, [key1, key2], defaultValue)
+
+    def safe_bool(self, dictionary, key: IndexType, defaultValue: bool = None):
+        """
+         * @ignore
+        safely extract boolean value from dictionary or list
+        :returns bool | None:
+        """
+        return self.safe_bool_n(dictionary, [key], defaultValue)
+
+    def safe_dict_n(self, dictionaryOrList, keys: List[IndexType], defaultValue: dict = None):
+        """
+         * @ignore
+        safely extract a dictionary from dictionary or list
+        :returns dict | None:
+        """
+        value = self.safe_value_n(dictionaryOrList, keys, defaultValue)
+        if value is None:
+            return defaultValue
+        if isinstance(value, dict):
+            return value
+        return defaultValue
+
+    def safe_dict(self, dictionary, key: IndexType, defaultValue: dict = None):
+        """
+         * @ignore
+        safely extract a dictionary from dictionary or list
+        :returns dict | None:
+        """
+        return self.safe_dict_n(dictionary, [key], defaultValue)
+
+    def safe_dict_2(self, dictionary, key1: IndexType, key2: str, defaultValue: dict = None):
+        """
+         * @ignore
+        safely extract a dictionary from dictionary or list
+        :returns dict | None:
+        """
+        return self.safe_dict_n(dictionary, [key1, key2], defaultValue)
+
+    def safe_list_n(self, dictionaryOrList, keys: List[IndexType], defaultValue: List[Any] = None):
+        """
+         * @ignore
+        safely extract an Array from dictionary or list
+        :returns Array | None:
+        """
+        value = self.safe_value_n(dictionaryOrList, keys, defaultValue)
+        if value is None:
+            return defaultValue
+        if isinstance(value, list):
+            return value
+        return defaultValue
+
+    def safe_list_2(self, dictionaryOrList, key1: IndexType, key2: str, defaultValue: List[Any] = None):
+        """
+         * @ignore
+        safely extract an Array from dictionary or list
+        :returns Array | None:
+        """
+        return self.safe_list_n(dictionaryOrList, [key1, key2], defaultValue)
+
+    def safe_list(self, dictionaryOrList, key: IndexType, defaultValue: List[Any] = None):
+        """
+         * @ignore
+        safely extract an Array from dictionary or list
+        :returns Array | None:
+        """
+        return self.safe_list_n(dictionaryOrList, [key], defaultValue)
+
+    def has_stop_params(self, params, should_omit=True):
+        isStop = self.safe_value(params, 'stop', False)
+        order_type = self.safe_value(params, 'type')
+        if should_omit:
+            params = self.omit(params, ['stop', 'type'])
+        return params, isStop or order_type == 'stop'
