@@ -1115,6 +1115,12 @@ class coinbase(Exchange, ImplicitAPI):
                     })
         return result
 
+    def _populate_aliases(self, markets):
+        _id_to_symbol = {market['id']: market['symbol'] for market in markets}
+        for market in markets:
+            alias = self.safe_string(market['info'], 'alias')
+            market['alias'] = _id_to_symbol[alias] if alias else None
+
     def fetch_markets_v3(self, params={}):
         promisesUnresolved = [
             self.v3PrivateGetBrokerageProducts(params),
@@ -1186,7 +1192,6 @@ class coinbase(Exchange, ImplicitAPI):
             id = self.safe_string(market, 'product_id')
             baseId = self.safe_string(market, 'base_currency_id')
             quoteId = self.safe_string(market, 'quote_currency_id')
-            alias = self.safe_string(market, 'alias')
             base = self.safe_currency_code(baseId)
             quote = self.safe_currency_code(quoteId)
             marketType = self.safe_string_lower(market, 'product_type')
@@ -1197,7 +1202,6 @@ class coinbase(Exchange, ImplicitAPI):
                 'symbol': base + '/' + quote,
                 'base': base,
                 'quote': quote,
-                'alias': alias,
                 'settle': None,
                 'baseId': baseId,
                 'quoteId': quoteId,
@@ -1244,6 +1248,7 @@ class coinbase(Exchange, ImplicitAPI):
                 'created': None,
                 'info': market,
             })
+        self._populate_aliases(result)
         return result
 
     def fetch_currencies_from_cache(self, params={}):
