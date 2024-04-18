@@ -1119,7 +1119,7 @@ class coinbase(Exchange, ImplicitAPI):
         _id_to_symbol = {market['id']: market['symbol'] for market in markets}
         for market in markets:
             alias = self.safe_string(market['info'], 'alias')
-            market['alias'] = _id_to_symbol[alias] if alias else None
+            market['alias'] = _id_to_symbol.get(alias) if alias else None
 
     def fetch_markets_v3(self, params={}):
         promisesUnresolved = [
