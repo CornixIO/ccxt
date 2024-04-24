@@ -1194,6 +1194,8 @@ class coinbase(Exchange, ImplicitAPI):
             quoteId = self.safe_string(market, 'quote_currency_id')
             base = self.safe_currency_code(baseId)
             quote = self.safe_currency_code(quoteId)
+            if quote == 'USDT':  # since it's low volumed we will convert USDT to USD/USDC
+                continue
             marketType = self.safe_string_lower(market, 'product_type')
             tradingDisabled = self.safe_bool(market, 'trading_disabled')
             stablePairs = self.safe_list(self.options, 'stablePairs', [])
