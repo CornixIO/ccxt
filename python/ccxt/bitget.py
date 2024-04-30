@@ -1105,6 +1105,7 @@ class bitget(Exchange, ImplicitAPI):
                     '36228': InvalidOrder,  # Exceeding max available qty for instrument.
                     '36229': InvalidOrder,  # Exceeding max available qty for underlying.
                     '36230': InvalidOrder,  # Exceeding max position limit for underlying.
+                    '40762': InsufficientFunds # The order amount exceeds the balance.
                     # --------------------------------------------------------
                     # swap
                     '400': BadRequest,  # Bad Request
