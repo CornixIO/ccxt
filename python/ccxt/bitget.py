@@ -1105,7 +1105,6 @@ class bitget(Exchange, ImplicitAPI):
                     '36228': InvalidOrder,  # Exceeding max available qty for instrument.
                     '36229': InvalidOrder,  # Exceeding max available qty for underlying.
                     '36230': InvalidOrder,  # Exceeding max position limit for underlying.
-                    '40762': InsufficientFunds # The order amount exceeds the balance.
                     # --------------------------------------------------------
                     # swap
                     '400': BadRequest,  # Bad Request
@@ -1213,6 +1212,7 @@ class bitget(Exchange, ImplicitAPI):
                     '40712': InsufficientFunds,  # Insufficient margin
                     '40713': ExchangeError,  # Cannot exceed the maximum transferable margin amount
                     '40714': ExchangeError,  # No direct margin call is allowed
+                    '40762': InsufficientFunds, # The order amount exceeds the balance.
                     '40768': OrderNotFound,  # Order does not exist"
                     '41114': OnMaintenance,  # {"code":"41114","msg":"The current trading pair is under maintenance, please refer to the official announcement for the opening time","requestTime":1679196062544,"data":null}
                     '43011': InvalidOrder,  # The parameter does not meet the specification executePrice <= 0
