@@ -1487,6 +1487,8 @@ class kucoinfutures(kucoin):
             filled = Precise.string_mul(contract_size, filled)
             amount = Precise.string_mul(contract_size, amount)
             average = average or Precise.string_div(rawCost, filled)
+            if average and not cost:  # WS only
+                cost = float(Precise.string_mul(filled, average))
         else:
             average = average or Precise.string_div(Precise.string_mul(contract_size, filled), rawCost)
         # precision reported by their api is 8 d.p.
