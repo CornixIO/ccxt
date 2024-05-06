@@ -6090,7 +6090,7 @@ class bybit(Exchange):
         response = self.publicGetV5MarketRiskLimit(self.extend(request))
         result = self.safe_value(response, 'result')
         tiers = self.safe_value(result, 'list')
-        paginationCursor = self.safe_string(response, 'nextPageCursor')
+        paginationCursor = self.safe_string(result, 'nextPageCursor')
         if paginationCursor:
             while paginationCursor:
                 params = {'cursor': paginationCursor}
