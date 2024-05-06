@@ -6097,9 +6097,6 @@ class bybit(Exchange):
                 responseInner = self.publicGetV5MarketRiskLimit(self.extend(request, params))
                 new_result = self.safe_value(responseInner, 'result', {})
                 new_tiers = self.safe_value(new_result, 'list', [])
-                # new_tiers_symbols = {tier['symbol'] for tier in new_tiers}
-                # if len(new_tiers_symbols) < symbol_limit:
-                #     break
                 tiers = self.array_concat(new_tiers, tiers)
                 paginationCursor = self.safe_string(new_result, 'nextPageCursor')
         #
