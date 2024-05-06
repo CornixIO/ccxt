@@ -6088,17 +6088,6 @@ class bybit(Exchange):
         else:
             raise NotSupported()
         response = self.publicGetV5MarketRiskLimit(self.extend(request))
-        result = self.safe_value(response, 'result')
-        tiers = self.safe_value(result, 'list')
-        paginationCursor = self.safe_string(result, 'nextPageCursor')
-        if paginationCursor:
-            while paginationCursor:
-                params = {'cursor': paginationCursor}
-                responseInner = self.publicGetV5MarketRiskLimit(self.extend(request, params))
-                new_result = self.safe_value(responseInner, 'result', {})
-                new_tiers = self.safe_value(new_result, 'list', [])
-                tiers = self.array_concat(new_tiers, tiers)
-                paginationCursor = self.safe_string(new_result, 'nextPageCursor')
         #
         #     {
         #         "retCode": 0,
@@ -6122,6 +6111,16 @@ class bybit(Exchange):
         #         "time": 1672054488010
         #     }
         #
+        result = self.safe_value(response, 'result')
+        tiers = self.safe_value(result, 'list')
+        paginationCursor = self.safe_string(result, 'nextPageCursor')
+        while paginationCursor:
+            params = {'cursor': paginationCursor}
+            responseInner = self.publicGetV5MarketRiskLimit(self.extend(request, params))
+            new_result = self.safe_value(responseInner, 'result', {})
+            new_tiers = self.safe_value(new_result, 'list', [])
+            tiers = self.array_concat(new_tiers, tiers)
+            paginationCursor = self.safe_string(new_result, 'nextPageCursor')
         return tiers
 
     def parse_trading_fee(self, fee, market=None):
