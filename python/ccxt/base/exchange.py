@@ -2005,6 +2005,35 @@ class Exchange(object):
             result.append(ohlcv)
         return self.sort_by(result, 0)
 
+    def parse_leverage_tiers(self, response: Any, symbols: List[str] = None, marketIdKey=None):
+        # marketIdKey should only be None when response is a dictionary
+        symbols = self.market_symbols(symbols)
+        tiers = {}
+        symbolsLength = 0
+        if symbols is not None:
+            symbolsLength = len(symbols)
+        noSymbols = (symbols is None) or (symbolsLength == 0)
+        if isinstance(response, list):
+            for i in range(0, len(response)):
+                item = response[i]
+                id = self.safe_string(item, marketIdKey)
+                market = self.safe_market(id, None, None, 'swap')
+                symbol = market['symbol']
+                contract = self.safe_bool(market, 'contract', True)
+                if contract and (noSymbols or self.in_array(symbol, symbols)):
+                    tiers[symbol] = self.parse_market_leverage_tiers(item, market)
+        else:
+            keys = list(response.keys())
+            for i in range(0, len(keys)):
+                marketId = keys[i]
+                item = response[marketId]
+                market = self.safe_market(marketId, None, None, 'swap')
+                symbol = market['symbol']
+                contract = self.safe_bool(market, 'contract', True)
+                if contract and (noSymbols or self.in_array(symbol, symbols)):
+                    tiers[symbol] = self.parse_market_leverage_tiers(item, market)
+        return tiers
+
     def network_code_to_id(self, networkCode, currencyCode=None):
         """
          * @ignore
@@ -2321,6 +2350,26 @@ class Exchange(object):
         else:
             # check if exchange has properties for self method
             exchangeWideMethodOptions = self.safe_value(self.options, methodName)
+            if exchangeWideMethodOptions is not None:
+                # check if the option is defined inside self method's props
+                value = self.safe_value_2(exchangeWideMethodOptions, optionName, defaultOptionName)
+            if value is None:
+                # if it's still None, check if global exchange-wide option exists
+                value = self.safe_value_2(self.options, optionName, defaultOptionName)
+            # if it's still None, use the default value
+            value = value if (value is not None) else defaultValue
+        return [value, params]
+
+    def handle_option_and_params_2(self, params: object, methodName: str, methodName2: str, optionName: str, defaultValue=None):
+        # This method can be used to obtain method specific properties, i.e: self.handle_option_and_params(params, 'fetchPosition', 'marginMode', 'isolated')
+        defaultOptionName = 'default' + self.capitalize(optionName)  # we also need to check the 'defaultXyzWhatever'
+        # check if params contain the key
+        value = self.safe_value_2(params, optionName, defaultOptionName)
+        if value is not None:
+            params = self.omit(params, [optionName, defaultOptionName])
+        else:
+            # check if exchange has properties for self method
+            exchangeWideMethodOptions = self.safe_value_2(self.options, methodName, methodName2)
             if exchangeWideMethodOptions is not None:
                 # check if the option is defined inside self method's props
                 value = self.safe_value_2(exchangeWideMethodOptions, optionName, defaultOptionName)

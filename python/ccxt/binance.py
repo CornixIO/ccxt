@@ -28,6 +28,7 @@ from ccxt.base.errors import InvalidNonce
 from ccxt.base.errors import NotChanged
 from ccxt.base.decimal_to_precision import ROUND
 from ccxt.base.decimal_to_precision import TRUNCATE
+from ccxt.base.types import Market, Str, Strings
 
 
 STATUSES_MAPPING = {
@@ -581,6 +582,18 @@ class binance(Exchange):
             },
         })
 
+    def is_inverse(self, type: str, subType: Str = None) -> bool:
+        if subType is None:
+            return(type == 'delivery')
+        else:
+            return subType == 'inverse'
+
+    def is_linear(self, type: str, subType: Str = None) -> bool:
+        if subType is None:
+            return(type == 'future') or (type == 'swap')
+        else:
+            return subType == 'linear'
+
     def nonce(self):
         return self.milliseconds() - self.options['timeDifference']
 
@@ -838,14 +851,17 @@ class binance(Exchange):
 
         return positions_to_return
 
-    def handle_leverage_limits(self, entry, leverage_limits, market, id):
-        if leverage_limits:
-            symbol_position_limits = self.safe_value(leverage_limits, id)
-            if symbol_position_limits:
-                if any(symbol_position_limit.get("position_amount") or symbol_position_limit.get("position_cost")
+    def handle_leverage_limits(self, entry, leverage_tiers, market, symbol):
+        if leverage_tiers:
+            symbol_position_tiers = self.safe_value(leverage_tiers, symbol)
+            if symbol_position_tiers:
+                market['position_tiers'] = symbol_position_tiers
+                symbol_position_limits = self.parse_symbol_leverage_limits([
+                    symbol_position_tier['info'] for symbol_position_tier in symbol_position_tiers])
+                if any(symbol_position_limit.get('position_amount') or symbol_position_limit.get('position_cost')
                        for symbol_position_limit in symbol_position_limits):
-                    market["position_limits"] = symbol_position_limits
-                max_leverage = max([leverage_limit["leverage"]["max"] for leverage_limit in symbol_position_limits])
+                    market['position_limits'] = symbol_position_limits
+                max_leverage = max([symbol_position_tier['maxLeverage'] for symbol_position_tier in symbol_position_tiers])
                 entry['limits']['leverage'] = {'max': max_leverage}
                 return True
             else:
@@ -865,9 +881,9 @@ class binance(Exchange):
             method = 'dapiPublicGetExchangeInfo'
         response = getattr(self, method)(query)
 
-        leverage_limits = None
+        leverage_tiers = None
         if load_leverage and type in {'future', 'delivery', 'margin_isolated', 'margin_cross'}:
-            leverage_limits = self._get_leverage_limits()
+            leverage_tiers = self.fetch_leverage_tiers()
         #
         # spot / margin
         #
@@ -1137,7 +1153,7 @@ class binance(Exchange):
                     max_num_orders = self.safe_float(filter, 'limit')
                 entry['limits']['conditional_orders']['max'] = max_num_orders
 
-            exists = self.handle_leverage_limits(entry, leverage_limits, market, id)
+            exists = self.handle_leverage_limits(entry, leverage_tiers, market, symbol)
             if exists is False:
                 continue
             result.append(entry)
@@ -2873,3 +2889,115 @@ class binance(Exchange):
         if (api == 'private') or (api == 'wapi'):
             self.options['hasAlreadyAuthenticatedSuccessfully'] = True
         return response
+
+    def fetch_leverage_tiers(self, symbols: Strings = None, params={}):
+        """
+        retrieve information on the maximum leverage, and maintenance margin for trades of varying trade sizes
+        :see: https://binance-docs.github.io/apidocs/futures/en/#notional-and-leverage-brackets-user_data
+        :see: https://binance-docs.github.io/apidocs/delivery/en/#notional-bracket-for-symbol-user_data
+        :see: https://binance-docs.github.io/apidocs/pm/en/#um-notional-and-leverage-brackets-user_data
+        :see: https://binance-docs.github.io/apidocs/pm/en/#cm-notional-and-leverage-brackets-user_data
+        :param str[]|None symbols: list of unified market symbols
+        :param dict [params]: extra parameters specific to the exchange API endpoint
+        :param boolean [params.portfolioMargin]: set to True if you would like to fetch the leverage tiers for a portfolio margin account
+        :param str [params.subType]: "linear" or "inverse"
+        :returns dict: a dictionary of `leverage tiers structures <https://docs.ccxt.com/#/?id=leverage-tiers-structure>`, indexed by market symbols
+        """
+        self.load_markets()
+        type = None
+        type, params = self.handle_market_type_and_params('fetchLeverageTiers', None, params)
+        subType = None
+        subType, params = self.handle_sub_type_and_params('fetchLeverageTiers', None, params)
+        isPortfolioMargin = None
+        isPortfolioMargin, params = self.handle_option_and_params_2(params, 'fetchLeverageTiers', 'papi', 'portfolioMargin', False)
+        response = None
+        if self.is_linear(type, subType):
+            if isPortfolioMargin:
+                response = self.papiGetUmLeverageBracket(params)
+            else:
+                response = self.fapiPrivateGetLeverageBracket(params)
+        elif self.is_inverse(type, subType):
+            if isPortfolioMargin:
+                response = self.papiGetCmLeverageBracket(params)
+            else:
+                response = self.dapiPrivateV2GetLeverageBracket(params)
+        else:
+            raise NotSupported(self.id + ' fetchLeverageTiers() supports linear and inverse contracts only')
+        #
+        # usdm
+        #
+        #    [
+        #        {
+        #            "symbol": "SUSHIUSDT",
+        #            "brackets": [
+        #                {
+        #                    "bracket": 1,
+        #                    "initialLeverage": 50,
+        #                    "notionalCap": 50000,
+        #                    "notionalFloor": 0,
+        #                    "maintMarginRatio": 0.01,
+        #                    "cum": 0.0
+        #                },
+        #                ...
+        #            ]
+        #        }
+        #    ]
+        #
+        # coinm
+        #
+        #     [
+        #         {
+        #             "symbol":"XRPUSD_210326",
+        #             "brackets":[
+        #                 {
+        #                     "bracket":1,
+        #                     "initialLeverage":20,
+        #                     "qtyCap":500000,
+        #                     "qtyFloor":0,
+        #                     "maintMarginRatio":0.0185,
+        #                     "cum":0.0
+        #                 }
+        #             ]
+        #         }
+        #     ]
+        #
+        return self.parse_leverage_tiers(response, symbols, 'symbol')
+
+    def parse_market_leverage_tiers(self, info, market: Market = None):
+        """
+         * @ignore
+        :param dict info: Exchange response for 1 market
+        :param dict market: CCXT market
+        """
+        #
+        #    {
+        #        "symbol": "SUSHIUSDT",
+        #        "brackets": [
+        #            {
+        #                "bracket": 1,
+        #                "initialLeverage": 50,
+        #                "notionalCap": 50000,
+        #                "notionalFloor": 0,
+        #                "maintMarginRatio": 0.01,
+        #                "cum": 0.0
+        #            },
+        #            ...
+        #        ]
+        #    }
+        #
+        marketId = self.safe_string(info, 'symbol')
+        market = self.safe_market(marketId, market, None, 'contract')
+        brackets = self.safe_list(info, 'brackets', [])
+        tiers = []
+        for j in range(0, len(brackets)):
+            bracket = brackets[j]
+            tiers.append({
+                'tier': self.safe_number(bracket, 'bracket'),
+                'currency': market['quote'],
+                'minNotional': self.safe_number_2(bracket, 'notionalFloor', 'qtyFloor'),
+                'maxNotional': self.safe_number_2(bracket, 'notionalCap', 'qtyCap'),
+                'maintenanceMarginRate': self.safe_number(bracket, 'maintMarginRatio'),
+                'maxLeverage': self.safe_number(bracket, 'initialLeverage'),
+                'info': bracket,
+            })
+        return tiers
