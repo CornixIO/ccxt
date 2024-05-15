@@ -60,26 +60,45 @@ class bitget(Exchange, ImplicitAPI):
                 'cancelOrders': True,
                 'closeAllPositions': True,
                 'closePosition': True,
+                'createConvertTrade': True,
+                'createDepositAddress': False,
                 'createMarketBuyOrderWithCost': True,
                 'createMarketOrderWithCost': False,
                 'createMarketSellOrderWithCost': False,
                 'createOrder': True,
                 'createOrders': True,
+                'createOrderWithTakeProfitAndStopLoss': True,
+                'createPostOnlyOrder': True,
                 'createReduceOnlyOrder': False,
+                'createStopLimitOrder': True,
+                'createStopLossOrder': True,
+                'createStopMarketOrder': True,
+                'createStopOrder': True,
+                'createTakeProfitOrder': True,
+                'createTrailingAmountOrder': False,
+                'createTrailingPercentOrder': True,
+                'createTriggerOrder': True,
                 'editOrder': True,
                 'fetchAccounts': False,
                 'fetchBalance': True,
                 'fetchBorrowInterest': True,
                 'fetchBorrowRateHistories': False,
                 'fetchBorrowRateHistory': False,
+                'fetchCanceledAndClosedOrders': True,
                 'fetchCanceledOrders': True,
                 'fetchClosedOrders': True,
+                'fetchConvertCurrencies': True,
+                'fetchConvertQuote': True,
+                'fetchConvertTrade': False,
+                'fetchConvertTradeHistory': True,
                 'fetchCrossBorrowRate': True,
                 'fetchCrossBorrowRates': False,
                 'fetchCurrencies': True,
+                'fetchDeposit': False,
                 'fetchDepositAddress': True,
                 'fetchDepositAddresses': False,
                 'fetchDeposits': True,
+                'fetchDepositsWithdrawals': False,
                 'fetchDepositWithdrawFee': 'emulated',
                 'fetchDepositWithdrawFees': True,
                 'fetchFundingHistory': True,
@@ -93,7 +112,8 @@ class bitget(Exchange, ImplicitAPI):
                 'fetchLeverage': True,
                 'fetchLeverageTiers': False,
                 'fetchLiquidations': False,
-                'fetchMarginMode': None,
+                'fetchMarginAdjustmentHistory': False,
+                'fetchMarginMode': True,
                 'fetchMarketLeverageTiers': True,
                 'fetchMarkets': True,
                 'fetchMarkOHLCV': True,
@@ -105,29 +125,37 @@ class bitget(Exchange, ImplicitAPI):
                 'fetchOpenOrders': True,
                 'fetchOrder': True,
                 'fetchOrderBook': True,
+                'fetchOrderBooks': False,
                 'fetchOrders': False,
                 'fetchOrderTrades': False,
                 'fetchPosition': True,
+                'fetchPositionHistory': 'emulated',
                 'fetchPositionMode': False,
                 'fetchPositions': True,
+                'fetchPositionsHistory': True,
                 'fetchPositionsRisk': False,
                 'fetchPremiumIndexOHLCV': False,
+                'fetchStatus': False,
                 'fetchTicker': True,
                 'fetchTickers': True,
                 'fetchTime': True,
                 'fetchTrades': True,
                 'fetchTradingFee': True,
                 'fetchTradingFees': True,
+                'fetchTransactions': False,
                 'fetchTransfer': False,
                 'fetchTransfers': True,
+                'fetchWithdrawAddresses': False,
                 'fetchWithdrawal': False,
                 'fetchWithdrawals': True,
                 'reduceMargin': True,
                 'repayCrossMargin': True,
                 'repayIsolatedMargin': True,
                 'setLeverage': True,
+                'setMargin': False,
                 'setMarginMode': True,
                 'setPositionMode': True,
+                'signIn': False,
                 'transfer': True,
                 'withdraw': True,
             },
@@ -183,579 +211,591 @@ class bitget(Exchange, ImplicitAPI):
             'api': {
                 'public': {
                     'common': {
-                        'get': [
-                            'v2/public/annoucements',
-                            'v2/public/time',
-                            'v2/common/trade-rate',
-                        ],
+                        'get': {
+                            'v2/public/annoucements': 1,
+                            'v2/public/time': 1,
+                        },
                     },
                     'spot': {
-                        'get': [
-                            'spot/v1/notice/queryAllNotices',  # 20 times/1s(IP) => 20/20 = 1
-                            'spot/v1/public/time',
-                            'spot/v1/public/currencies',  # 3 times/1s(IP) => 20/3 = 6.6667
-                            'spot/v1/public/products',
-                            'spot/v1/public/product',
-                            'spot/v1/market/ticker',
-                            'spot/v1/market/tickers',
-                            'spot/v1/market/fills',  # 10 times/1s(IP) => 20/10 = 2
-                            'spot/v1/market/fills-history',
-                            'spot/v1/market/candles',
-                            'spot/v1/market/depth',
-                            'spot/v1/market/spot-vip-level',
-                            'spot/v1/market/merge-depth',
-                            'spot/v1/market/history-candles',
-                            'spot/v1/public/loan/coinInfos',  # 10 times/1s(IP) => 20/10 = 2
-                            'spot/v1/public/loan/hour-interest',  # 10 times/1s(IP) => 20/10 = 2
-                            'v2/spot/public/coins',
-                            'v2/spot/public/symbols',
-                            'v2/spot/market/vip-fee-rate',
-                            'v2/spot/market/tickers',
-                            'v2/spot/market/merge-depth',
-                            'v2/spot/market/orderbook',
-                            'v2/spot/market/candles',
-                            'v2/spot/market/history-candles',
-                            'v2/spot/market/fills',
-                            'v2/spot/market/fills-history',
-                        ],
+                        'get': {
+                            'spot/v1/notice/queryAllNotices': 1,  # 20 times/1s(IP) => 20/20 = 1
+                            'spot/v1/public/time': 1,
+                            'spot/v1/public/currencies': 6.6667,  # 3 times/1s(IP) => 20/3 = 6.6667
+                            'spot/v1/public/products': 1,
+                            'spot/v1/public/product': 1,
+                            'spot/v1/market/ticker': 1,
+                            'spot/v1/market/tickers': 1,
+                            'spot/v1/market/fills': 2,  # 10 times/1s(IP) => 20/10 = 2
+                            'spot/v1/market/fills-history': 2,
+                            'spot/v1/market/candles': 1,
+                            'spot/v1/market/depth': 1,
+                            'spot/v1/market/spot-vip-level': 2,
+                            'spot/v1/market/merge-depth': 1,
+                            'spot/v1/market/history-candles': 1,
+                            'spot/v1/public/loan/coinInfos': 2,  # 10 times/1s(IP) => 20/10 = 2
+                            'spot/v1/public/loan/hour-interest': 2,  # 10 times/1s(IP) => 20/10 = 2
+                            'v2/spot/public/coins': 6.6667,
+                            'v2/spot/public/symbols': 1,
+                            'v2/spot/market/vip-fee-rate': 2,
+                            'v2/spot/market/tickers': 1,
+                            'v2/spot/market/merge-depth': 1,
+                            'v2/spot/market/orderbook': 1,
+                            'v2/spot/market/candles': 1,
+                            'v2/spot/market/history-candles': 1,
+                            'v2/spot/market/fills': 2,
+                            'v2/spot/market/fills-history': 2,
+                        },
                     },
                     'mix': {
-                        'get': [
-                            'mix/v1/market/contracts',
-                            'mix/v1/market/depth',
-                            'mix/v1/market/ticker',
-                            'mix/v1/market/tickers',
-                            'mix/v1/market/contract-vip-level',
-                            'mix/v1/market/fills',
-                            'mix/v1/market/fills-history',
-                            'mix/v1/market/candles',
-                            'mix/v1/market/index',
-                            'mix/v1/market/funding-time',
-                            'mix/v1/market/history-fundRate',
-                            'mix/v1/market/current-fundRate',
-                            'mix/v1/market/open-interest',
-                            'mix/v1/market/mark-price',
-                            'mix/v1/market/symbol-leverage',
-                            'mix/v1/market/queryPositionLever',
-                            'mix/v1/market/open-limit',
-                            'mix/v1/market/history-candles',
-                            'mix/v1/market/history-index-candles',
-                            'mix/v1/market/history-mark-candles',
-                            'mix/v1/market/merge-depth',
-                            'v2/mix/market/vip-fee-rate',
-                            'v2/mix/market/merge-depth',
-                            'v2/mix/market/ticker',
-                            'v2/mix/market/tickers',
-                            'v2/mix/market/fills',
-                            'v2/mix/market/fills-history',
-                            'v2/mix/market/candles',
-                            'v2/mix/market/history-candles',
-                            'v2/mix/market/history-index-candles',
-                            'v2/mix/market/history-mark-candles',
-                            'v2/mix/market/open-interest',
-                            'v2/mix/market/funding-time',
-                            'v2/mix/market/symbol-price',
-                            'v2/mix/market/history-fund-rate',
-                            'v2/mix/market/current-fund-rate',
-                            'v2/mix/market/contracts',
-                            'v2/mix/market/query-position-lever',
-                        ],
+                        'get': {
+                            'mix/v1/market/contracts': 1,
+                            'mix/v1/market/depth': 1,
+                            'mix/v1/market/ticker': 1,
+                            'mix/v1/market/tickers': 1,
+                            'mix/v1/market/contract-vip-level': 2,
+                            'mix/v1/market/fills': 1,
+                            'mix/v1/market/fills-history': 2,
+                            'mix/v1/market/candles': 1,
+                            'mix/v1/market/index': 1,
+                            'mix/v1/market/funding-time': 1,
+                            'mix/v1/market/history-fundRate': 1,
+                            'mix/v1/market/current-fundRate': 1,
+                            'mix/v1/market/open-interest': 1,
+                            'mix/v1/market/mark-price': 1,
+                            'mix/v1/market/symbol-leverage': 1,
+                            'mix/v1/market/queryPositionLever': 1,
+                            'mix/v1/market/open-limit': 1,
+                            'mix/v1/market/history-candles': 1,
+                            'mix/v1/market/history-index-candles': 1,
+                            'mix/v1/market/history-mark-candles': 1,
+                            'mix/v1/market/merge-depth': 1,
+                            'v2/mix/market/vip-fee-rate': 2,
+                            'v2/mix/market/merge-depth': 1,
+                            'v2/mix/market/ticker': 1,
+                            'v2/mix/market/tickers': 1,
+                            'v2/mix/market/fills': 1,
+                            'v2/mix/market/fills-history': 2,
+                            'v2/mix/market/candles': 1,
+                            'v2/mix/market/history-candles': 1,
+                            'v2/mix/market/history-index-candles': 1,
+                            'v2/mix/market/history-mark-candles': 1,
+                            'v2/mix/market/open-interest': 1,
+                            'v2/mix/market/funding-time': 1,
+                            'v2/mix/market/symbol-price': 1,
+                            'v2/mix/market/history-fund-rate': 1,
+                            'v2/mix/market/current-fund-rate': 1,
+                            'v2/mix/market/contracts': 1,
+                            'v2/mix/market/query-position-lever': 2,
+                        },
                     },
                     'margin': {
-                        'get': [
-                            'margin/v1/cross/public/interestRateAndLimit',  # 10 times/1s(IP) => 20/10 = 2
-                            'margin/v1/isolated/public/interestRateAndLimit',  # 10 times/1s(IP) => 20/10 = 2
-                            'margin/v1/cross/public/tierData',  # 10 times/1s(IP) => 20/10 = 2
-                            'margin/v1/isolated/public/tierData',  # 10 times/1s(IP) => 20/10 = 2
-                            'margin/v1/public/currencies',  # 20 times/1s(IP) => 20/20 = 1
-                            'v2/margin/currencies',
-                        ],
+                        'get': {
+                            'margin/v1/cross/public/interestRateAndLimit': 2,  # 10 times/1s(IP) => 20/10 = 2
+                            'margin/v1/isolated/public/interestRateAndLimit': 2,  # 10 times/1s(IP) => 20/10 = 2
+                            'margin/v1/cross/public/tierData': 2,  # 10 times/1s(IP) => 20/10 = 2
+                            'margin/v1/isolated/public/tierData': 2,  # 10 times/1s(IP) => 20/10 = 2
+                            'margin/v1/public/currencies': 1,  # 20 times/1s(IP) => 20/20 = 1
+                            'v2/margin/currencies': 2,
+                        },
                     },
                     'earn': {
-                        'get': [
-                            'v2/earn/loan/public/coinInfos',
-                            'v2/earn/loan/public/hour-interest',
-                        ],
+                        'get': {
+                            'v2/earn/loan/public/coinInfos': 2,
+                            'v2/earn/loan/public/hour-interest': 2,
+                        },
                     },
                 },
                 'private': {
                     'spot': {
-                        'get': [
-                            'spot/v1/wallet/deposit-address',
-                            'spot/v1/wallet/withdrawal-list',
-                            'spot/v1/wallet/deposit-list',
-                            'spot/v1/account/getInfo',
-                            'spot/v1/account/assets',
-                            'spot/v1/account/assets-lite',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/account/transferRecords',  # 20 times/1s(UID) => 20/20 = 1
-                            'spot/v1/convert/currencies',
-                            'spot/v1/convert/convert-record',
-                            'spot/v1/loan/ongoing-orders',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/loan/repay-history',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/loan/revise-history',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/loan/borrow-history',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/loan/debts',  # 10 times/1s(UID) => 20/10 = 2
-                            'v2/spot/trade/orderInfo',
-                            'v2/spot/trade/unfilled-orders',
-                            'v2/spot/trade/history-orders',
-                            'v2/spot/trade/fills',
-                            'v2/spot/trade/current-plan-order',
-                            'v2/spot/trade/history-plan-order',
-                            'v2/spot/trade/plan-sub-order',
-                            'v2/spot/account/info',
-                            'v2/spot/account/assets',
-                            'v2/spot/account/subaccount-assets',
-                            'v2/spot/account/bills',
-                            'v2/spot/account/transferRecords',
-                            'v2/spot/wallet/deposit-address',
-                            'v2/spot/wallet/deposit-records',
-                            'v2/spot/wallet/withdrawal-records',
-                        ],
-                        'post': [
-                            'spot/v1/wallet/transfer',
-                            'spot/v1/wallet/transfer-v2',
-                            'spot/v1/wallet/subTransfer',
-                            'spot/v1/wallet/withdrawal',
-                            'spot/v1/wallet/withdrawal-v2',
-                            'spot/v1/wallet/withdrawal-inner',
-                            'spot/v1/wallet/withdrawal-inner-v2',
-                            'spot/v1/account/sub-account-spot-assets',
-                            'spot/v1/account/bills',
-                            'spot/v1/trade/orders',
-                            'spot/v1/trade/batch-orders',
-                            'spot/v1/trade/cancel-order',
-                            'spot/v1/trade/cancel-order-v2',
-                            'spot/v1/trade/cancel-symbol-order',
-                            'spot/v1/trade/cancel-batch-orders',
-                            'spot/v1/trade/cancel-batch-orders-v2',
-                            'spot/v1/trade/orderInfo',
-                            'spot/v1/trade/open-orders',
-                            'spot/v1/trade/history',
-                            'spot/v1/trade/fills',
-                            'spot/v1/plan/placePlan',
-                            'spot/v1/plan/modifyPlan',
-                            'spot/v1/plan/cancelPlan',
-                            'spot/v1/plan/currentPlan',
-                            'spot/v1/plan/historyPlan',
-                            'spot/v1/plan/batchCancelPlan',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/convert/quoted-price',
-                            'spot/v1/convert/trade',
-                            'spot/v1/loan/borrow',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/loan/repay',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/loan/revise-pledge',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/order/orderCurrentList',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/order/orderHistoryList',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/order/closeTrackingOrder',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/order/updateTpsl',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/order/followerEndOrder',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/order/spotInfoList',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/config/getTraderSettings',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/config/getFollowerSettings',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/user/myTraders',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/config/setFollowerConfig',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/user/myFollowers',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/config/setProductCode',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/user/removeTrader',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/getRemovableFollower',
-                            'spot/v1/trace/user/removeFollower',
-                            'spot/v1/trace/profit/totalProfitInfo',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/profit/totalProfitList',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/profit/profitHisList',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/profit/profitHisDetailList',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/profit/waitProfitDetailList',  # 10 times/1s(UID) => 20/10 = 2
-                            'spot/v1/trace/user/getTraderInfo',  # 10 times/1s(UID) => 20/10 = 2
-                            'v2/spot/trade/place-order',
-                            'v2/spot/trade/cancel-order',
-                            'v2/spot/trade/batch-orders',
-                            'v2/spot/trade/batch-cancel-order',
-                            'v2/spot/trade/cancel-symbol-order',
-                            'v2/spot/trade/place-plan-order',
-                            'v2/spot/trade/modify-plan-order',
-                            'v2/spot/trade/cancel-plan-order',
-                            'v2/spot/trade/batch-cancel-plan-order',
-                            'v2/spot/wallet/transfer',
-                            'v2/spot/wallet/subaccount-transfer',
-                            'v2/spot/wallet/withdrawal',
-                        ],
+                        'get': {
+                            'spot/v1/wallet/deposit-address': 4,
+                            'spot/v1/wallet/withdrawal-list': 1,
+                            'spot/v1/wallet/deposit-list': 1,
+                            'spot/v1/account/getInfo': 20,
+                            'spot/v1/account/assets': 2,
+                            'spot/v1/account/assets-lite': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/account/transferRecords': 1,  # 20 times/1s(UID) => 20/20 = 1
+                            'spot/v1/convert/currencies': 2,
+                            'spot/v1/convert/convert-record': 2,
+                            'spot/v1/loan/ongoing-orders': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/loan/repay-history': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/loan/revise-history': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/loan/borrow-history': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/loan/debts': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'v2/spot/trade/orderInfo': 1,
+                            'v2/spot/trade/unfilled-orders': 1,
+                            'v2/spot/trade/history-orders': 1,
+                            'v2/spot/trade/fills': 2,
+                            'v2/spot/trade/current-plan-order': 1,
+                            'v2/spot/trade/history-plan-order': 1,
+                            'v2/spot/trade/plan-sub-order': 1,
+                            'v2/spot/account/info': 20,
+                            'v2/spot/account/assets': 2,
+                            'v2/spot/account/subaccount-assets': 2,
+                            'v2/spot/account/bills': 2,
+                            'v2/spot/account/transferRecords': 1,
+                            'v2/account/funding-assets': 2,
+                            'v2/account/bot-assets': 2,
+                            'v2/account/all-account-balance': 20,
+                            'v2/spot/wallet/deposit-address': 2,
+                            'v2/spot/wallet/deposit-records': 2,
+                            'v2/spot/wallet/withdrawal-records': 2,
+                        },
+                        'post': {
+                            'spot/v1/wallet/transfer': 4,
+                            'spot/v1/wallet/transfer-v2': 4,
+                            'spot/v1/wallet/subTransfer': 10,
+                            'spot/v1/wallet/withdrawal': 4,
+                            'spot/v1/wallet/withdrawal-v2': 4,
+                            'spot/v1/wallet/withdrawal-inner': 4,
+                            'spot/v1/wallet/withdrawal-inner-v2': 4,
+                            'spot/v1/account/sub-account-spot-assets': 200,
+                            'spot/v1/account/bills': 2,
+                            'spot/v1/trade/orders': 2,
+                            'spot/v1/trade/batch-orders': 4,
+                            'spot/v1/trade/cancel-order': 2,
+                            'spot/v1/trade/cancel-order-v2': 2,
+                            'spot/v1/trade/cancel-symbol-order': 2,
+                            'spot/v1/trade/cancel-batch-orders': 4,
+                            'spot/v1/trade/cancel-batch-orders-v2': 4,
+                            'spot/v1/trade/orderInfo': 1,
+                            'spot/v1/trade/open-orders': 1,
+                            'spot/v1/trade/history': 1,
+                            'spot/v1/trade/fills': 1,
+                            'spot/v1/plan/placePlan': 1,
+                            'spot/v1/plan/modifyPlan': 1,
+                            'spot/v1/plan/cancelPlan': 1,
+                            'spot/v1/plan/currentPlan': 1,
+                            'spot/v1/plan/historyPlan': 1,
+                            'spot/v1/plan/batchCancelPlan': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/convert/quoted-price': 4,
+                            'spot/v1/convert/trade': 4,
+                            'spot/v1/loan/borrow': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/loan/repay': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/loan/revise-pledge': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/order/orderCurrentList': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/order/orderHistoryList': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/order/closeTrackingOrder': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/order/updateTpsl': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/order/followerEndOrder': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/order/spotInfoList': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/config/getTraderSettings': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/config/getFollowerSettings': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/user/myTraders': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/config/setFollowerConfig': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/user/myFollowers': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/config/setProductCode': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/user/removeTrader': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/getRemovableFollower': 2,
+                            'spot/v1/trace/user/removeFollower': 2,
+                            'spot/v1/trace/profit/totalProfitInfo': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/profit/totalProfitList': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/profit/profitHisList': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/profit/profitHisDetailList': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/profit/waitProfitDetailList': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'spot/v1/trace/user/getTraderInfo': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'v2/spot/trade/place-order': 2,
+                            'v2/spot/trade/cancel-order': 2,
+                            'v2/spot/trade/batch-orders': 20,
+                            'v2/spot/trade/batch-cancel-order': 2,
+                            'v2/spot/trade/cancel-symbol-order': 4,
+                            'v2/spot/trade/place-plan-order': 1,
+                            'v2/spot/trade/modify-plan-order': 1,
+                            'v2/spot/trade/cancel-plan-order': 1,
+                            'v2/spot/trade/batch-cancel-plan-order': 2,
+                            'v2/spot/wallet/transfer': 2,
+                            'v2/spot/wallet/subaccount-transfer': 2,
+                            'v2/spot/wallet/withdrawal': 2,
+                            'v2/spot/wallet/cancel-withdrawal': 2,
+                            'v2/spot/wallet/modify-deposit-account': 2,
+                        },
                     },
                     'mix': {
-                        'get': [
-                            'mix/v1/account/account',
-                            'mix/v1/account/accounts',
-                            'mix/v1/position/singlePosition',
-                            'mix/v1/position/singlePosition-v2',
-                            'mix/v1/position/allPosition',  # 5 times/1s(UID) => 20/5 = 4
-                            'mix/v1/position/allPosition-v2',  # 5 times/1s(UID) => 20/5 = 4
-                            'mix/v1/position/history-position',
-                            'mix/v1/account/accountBill',
-                            'mix/v1/account/accountBusinessBill',
-                            'mix/v1/order/current',  # 20 times/1s(UID) => 20/20 = 1
-                            'mix/v1/order/marginCoinCurrent',  # 20 times/1s(UID) => 20/20 = 1
-                            'mix/v1/order/history',
-                            'mix/v1/order/historyProductType',  # 5 times/1s(UID) => 20/5 = 4
-                            'mix/v1/order/detail',
-                            'mix/v1/order/fills',
-                            'mix/v1/order/allFills',
-                            'mix/v1/plan/currentPlan',  # 20 times/1s(UID) => 20/20 = 1
-                            'mix/v1/plan/historyPlan',
-                            'mix/v1/trace/currentTrack',
-                            'mix/v1/trace/followerOrder',
-                            'mix/v1/trace/followerHistoryOrders',
-                            'mix/v1/trace/historyTrack',
-                            'mix/v1/trace/summary',  # 20 times/1s(UID) => 20/20 = 1
-                            'mix/v1/trace/profitSettleTokenIdGroup',  # 20 times/1s(UID) => 20/20 = 1
-                            'mix/v1/trace/profitDateGroupList',  # 20 times/1s(UID) => 20/20 = 1
-                            'mix/v1/trade/profitDateList',
-                            'mix/v1/trace/waitProfitDateList',  # 20 times/1s(UID) => 20/20 = 1
-                            'mix/v1/trace/traderSymbols',  # 20 times/1s(UID) => 20/20 = 1
-                            'mix/v1/trace/traderList',
-                            'mix/v1/trace/traderDetail',  # 10 times/1s(UID) => 20/10 = 2
-                            'mix/v1/trace/queryTraceConfig',
-                            'v2/mix/account/account',
-                            'v2/mix/account/accounts',
-                            'v2/mix/account/sub-account-assets',
-                            'v2/mix/account/open-count',
-                            'v2/mix/account/bill',
-                            'v2/mix/market/query-position-lever',
-                            'v2/mix/position/single-position',
-                            'v2/mix/position/all-position',
-                            'v2/mix/position/history-position',
-                            'v2/mix/order/detail',
-                            'v2/mix/order/fills',
-                            'v2/mix/order/fill-history',
-                            'v2/mix/order/orders-pending',
-                            'v2/mix/order/orders-history',
-                            'v2/mix/order/orders-plan-pending',
-                            'v2/mix/order/orders-plan-history',
-                            'v2/mix/order/plan-sub-order',
-                        ],
-                        'post': [
-                            'mix/v1/account/sub-account-contract-assets',  # 0.1 times/1s(UID) => 20/0.1 = 200
-                            'mix/v1/account/open-count',
-                            'mix/v1/account/setLeverage',  # 5 times/1s(UID) => 20/5 = 4
-                            'mix/v1/account/setMargin',  # 5 times/1s(UID) => 20/5 = 4
-                            'mix/v1/account/setMarginMode',  # 5 times/1s(UID) => 20/5 = 4
-                            'mix/v1/account/setPositionMode',  # 5 times/1s(UID) => 20/5 = 4
-                            'mix/v1/order/placeOrder',
-                            'mix/v1/order/batch-orders',
-                            'mix/v1/order/cancel-order',
-                            'mix/v1/order/cancel-batch-orders',
-                            'mix/v1/order/modifyOrder',  # 10 times/1s(UID) => 20/10 = 2
-                            'mix/v1/order/cancel-symbol-orders',
-                            'mix/v1/order/cancel-all-orders',
-                            'mix/v1/order/close-all-positions',
-                            'mix/v1/plan/placePlan',
-                            'mix/v1/plan/modifyPlan',
-                            'mix/v1/plan/modifyPlanPreset',
-                            'mix/v1/plan/placeTPSL',
-                            'mix/v1/plan/placeTrailStop',
-                            'mix/v1/plan/placePositionsTPSL',
-                            'mix/v1/plan/modifyTPSLPlan',
-                            'mix/v1/plan/cancelPlan',
-                            'mix/v1/plan/cancelSymbolPlan',
-                            'mix/v1/plan/cancelAllPlan',
-                            'mix/v1/trace/closeTrackOrder',
-                            'mix/v1/trace/modifyTPSL',  # 10 times/1s(UID) => 20/10 = 2
-                            'mix/v1/trace/closeTrackOrderBySymbol',
-                            'mix/v1/trace/setUpCopySymbols',
-                            'mix/v1/trace/followerSetBatchTraceConfig',
-                            'mix/v1/trace/followerCloseByTrackingNo',
-                            'mix/v1/trace/followerCloseByAll',
-                            'mix/v1/trace/followerSetTpsl',
-                            'mix/v1/trace/cancelCopyTrader',  # 5 times/1s(UID) => 20/5 = 4
-                            'mix/v1/trace/traderUpdateConfig',  # 10 times/1s(UID) => 20/10 = 2
-                            'mix/v1/trace/myTraderList',  # 10 times/1s(UID) => 20/10 = 2
-                            'mix/v1/trace/myFollowerList',  # 10 times/1s(UID) => 20/10 = 2
-                            'mix/v1/trace/removeFollower',  # 10 times/1s(UID) => 20/10 = 2
-                            'mix/v1/trace/public/getFollowerConfig',  # 10 times/1s(UID) => 20/10 = 2
-                            'mix/v1/trace/report/order/historyList',  # 10 times/1s(IP) => 20/10 = 2
-                            'mix/v1/trace/report/order/currentList',  # 10 times/1s(IP) => 20/10 = 2
-                            'mix/v1/trace/queryTraderTpslRatioConfig',  # 10 times/1s(UID) => 20/10 = 2
-                            'mix/v1/trace/traderUpdateTpslRatioConfig',  # 10 times/1s(UID) => 20/10 = 2
-                            'v2/mix/account/set-leverage',
-                            'v2/mix/account/set-margin',
-                            'v2/mix/account/set-margin-mode',
-                            'v2/mix/account/set-position-mode',
-                            'v2/mix/order/place-order',
-                            'v2/mix/order/click-backhand',
-                            'v2/mix/order/batch-place-order',
-                            'v2/mix/order/modify-order',
-                            'v2/mix/order/cancel-order',
-                            'v2/mix/order/batch-cancel-orders',
-                            'v2/mix/order/close-positions',
-                            'v2/mix/order/place-tpsl-order',
-                            'v2/mix/order/place-plan-order',
-                            'v2/mix/order/modify-tpsl-order',
-                            'v2/mix/order/modify-plan-order',
-                            'v2/mix/order/cancel-plan-order',
-                        ],
+                        'get': {
+                            'mix/v1/account/account': 2,
+                            'mix/v1/account/accounts': 2,
+                            'mix/v1/position/singlePosition': 2,
+                            'mix/v1/position/singlePosition-v2': 2,
+                            'mix/v1/position/allPosition': 4,  # 5 times/1s(UID) => 20/5 = 4
+                            'mix/v1/position/allPosition-v2': 4,  # 5 times/1s(UID) => 20/5 = 4
+                            'mix/v1/position/history-position': 1,
+                            'mix/v1/account/accountBill': 2,
+                            'mix/v1/account/accountBusinessBill': 4,
+                            'mix/v1/order/current': 1,  # 20 times/1s(UID) => 20/20 = 1
+                            'mix/v1/order/marginCoinCurrent': 1,  # 20 times/1s(UID) => 20/20 = 1
+                            'mix/v1/order/history': 2,
+                            'mix/v1/order/historyProductType': 4,  # 5 times/1s(UID) => 20/5 = 4
+                            'mix/v1/order/detail': 2,
+                            'mix/v1/order/fills': 2,
+                            'mix/v1/order/allFills': 2,
+                            'mix/v1/plan/currentPlan': 1,  # 20 times/1s(UID) => 20/20 = 1
+                            'mix/v1/plan/historyPlan': 2,
+                            'mix/v1/trace/currentTrack': 2,
+                            'mix/v1/trace/followerOrder': 2,
+                            'mix/v1/trace/followerHistoryOrders': 2,
+                            'mix/v1/trace/historyTrack': 2,
+                            'mix/v1/trace/summary': 1,  # 20 times/1s(UID) => 20/20 = 1
+                            'mix/v1/trace/profitSettleTokenIdGroup': 1,  # 20 times/1s(UID) => 20/20 = 1
+                            'mix/v1/trace/profitDateGroupList': 1,  # 20 times/1s(UID) => 20/20 = 1
+                            'mix/v1/trade/profitDateList': 2,
+                            'mix/v1/trace/waitProfitDateList': 1,  # 20 times/1s(UID) => 20/20 = 1
+                            'mix/v1/trace/traderSymbols': 1,  # 20 times/1s(UID) => 20/20 = 1
+                            'mix/v1/trace/traderList': 2,
+                            'mix/v1/trace/traderDetail': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'mix/v1/trace/queryTraceConfig': 2,
+                            'v2/mix/account/account': 2,
+                            'v2/mix/account/accounts': 2,
+                            'v2/mix/account/sub-account-assets': 200,
+                            'v2/mix/account/open-count': 2,
+                            'v2/mix/account/bill': 2,
+                            'v2/mix/market/query-position-lever': 2,
+                            'v2/mix/position/single-position': 2,
+                            'v2/mix/position/all-position': 4,
+                            'v2/mix/position/history-position': 1,
+                            'v2/mix/order/detail': 2,
+                            'v2/mix/order/fills': 2,
+                            'v2/mix/order/fill-history': 2,
+                            'v2/mix/order/orders-pending': 2,
+                            'v2/mix/order/orders-history': 2,
+                            'v2/mix/order/orders-plan-pending': 2,
+                            'v2/mix/order/orders-plan-history': 2,
+                            'v2/mix/order/plan-sub-order': 1,
+                        },
+                        'post': {
+                            'mix/v1/account/sub-account-contract-assets': 200,  # 0.1 times/1s(UID) => 20/0.1 = 200
+                            'mix/v1/account/open-count': 1,
+                            'mix/v1/account/setLeverage': 4,  # 5 times/1s(UID) => 20/5 = 4
+                            'mix/v1/account/setMargin': 4,  # 5 times/1s(UID) => 20/5 = 4
+                            'mix/v1/account/setMarginMode': 4,  # 5 times/1s(UID) => 20/5 = 4
+                            'mix/v1/account/setPositionMode': 4,  # 5 times/1s(UID) => 20/5 = 4
+                            'mix/v1/order/placeOrder': 2,
+                            'mix/v1/order/batch-orders': 2,
+                            'mix/v1/order/cancel-order': 2,
+                            'mix/v1/order/cancel-batch-orders': 2,
+                            'mix/v1/order/modifyOrder': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'mix/v1/order/cancel-symbol-orders': 2,
+                            'mix/v1/order/cancel-all-orders': 2,
+                            'mix/v1/order/close-all-positions': 20,
+                            'mix/v1/plan/placePlan': 2,
+                            'mix/v1/plan/modifyPlan': 2,
+                            'mix/v1/plan/modifyPlanPreset': 2,
+                            'mix/v1/plan/placeTPSL': 2,
+                            'mix/v1/plan/placeTrailStop': 2,
+                            'mix/v1/plan/placePositionsTPSL': 2,
+                            'mix/v1/plan/modifyTPSLPlan': 2,
+                            'mix/v1/plan/cancelPlan': 2,
+                            'mix/v1/plan/cancelSymbolPlan': 2,
+                            'mix/v1/plan/cancelAllPlan': 2,
+                            'mix/v1/trace/closeTrackOrder': 2,
+                            'mix/v1/trace/modifyTPSL': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'mix/v1/trace/closeTrackOrderBySymbol': 2,
+                            'mix/v1/trace/setUpCopySymbols': 2,
+                            'mix/v1/trace/followerSetBatchTraceConfig': 2,
+                            'mix/v1/trace/followerCloseByTrackingNo': 2,
+                            'mix/v1/trace/followerCloseByAll': 2,
+                            'mix/v1/trace/followerSetTpsl': 2,
+                            'mix/v1/trace/cancelCopyTrader': 4,  # 5 times/1s(UID) => 20/5 = 4
+                            'mix/v1/trace/traderUpdateConfig': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'mix/v1/trace/myTraderList': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'mix/v1/trace/myFollowerList': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'mix/v1/trace/removeFollower': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'mix/v1/trace/public/getFollowerConfig': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'mix/v1/trace/report/order/historyList': 2,  # 10 times/1s(IP) => 20/10 = 2
+                            'mix/v1/trace/report/order/currentList': 2,  # 10 times/1s(IP) => 20/10 = 2
+                            'mix/v1/trace/queryTraderTpslRatioConfig': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'mix/v1/trace/traderUpdateTpslRatioConfig': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'v2/mix/account/set-leverage': 4,
+                            'v2/mix/account/set-margin': 4,
+                            'v2/mix/account/set-margin-mode': 4,
+                            'v2/mix/account/set-position-mode': 4,
+                            'v2/mix/order/place-order': 20,
+                            'v2/mix/order/click-backhand': 20,
+                            'v2/mix/order/batch-place-order': 20,
+                            'v2/mix/order/modify-order': 2,
+                            'v2/mix/order/cancel-order': 2,
+                            'v2/mix/order/batch-cancel-orders': 2,
+                            'v2/mix/order/close-positions': 20,
+                            'v2/mix/order/place-tpsl-order': 2,
+                            'v2/mix/order/place-plan-order': 2,
+                            'v2/mix/order/modify-tpsl-order': 2,
+                            'v2/mix/order/modify-plan-order': 2,
+                            'v2/mix/order/cancel-plan-order': 2,
+                        },
                     },
                     'user': {
-                        'get': [
-                            'user/v1/fee/query',
-                            'user/v1/sub/virtual-list',
-                            'user/v1/sub/virtual-api-list',
-                            'user/v1/tax/spot-record',
-                            'user/v1/tax/future-record',
-                            'user/v1/tax/margin-record',
-                            'user/v1/tax/p2p-record',
-                            'v2/user/virtual-subaccount-list',
-                            'v2/user/virtual-subaccount-apikey-list',
-                        ],
-                        'post': [
-                            'user/v1/sub/virtual-create',
-                            'user/v1/sub/virtual-modify',
-                            'user/v1/sub/virtual-api-batch-create',  # 1 times/1s(UID) => 20/1 = 20
-                            'user/v1/sub/virtual-api-create',
-                            'user/v1/sub/virtual-api-modify',
-                            'v2/user/create-virtual-subaccount',
-                            'v2/user/modify-virtual-subaccount',
-                            'v2/user/batch-create-subaccount-and-apikey',
-                            'v2/user/create-virtual-subaccount-apikey',
-                            'v2/user/modify-virtual-subaccount-apikey',
-                        ],
+                        'get': {
+                            'user/v1/fee/query': 2,
+                            'user/v1/sub/virtual-list': 2,
+                            'user/v1/sub/virtual-api-list': 2,
+                            'user/v1/tax/spot-record': 1,
+                            'user/v1/tax/future-record': 1,
+                            'user/v1/tax/margin-record': 1,
+                            'user/v1/tax/p2p-record': 1,
+                            'v2/user/virtual-subaccount-list': 2,
+                            'v2/user/virtual-subaccount-apikey-list': 2,
+                        },
+                        'post': {
+                            'user/v1/sub/virtual-create': 4,
+                            'user/v1/sub/virtual-modify': 4,
+                            'user/v1/sub/virtual-api-batch-create': 20,  # 1 times/1s(UID) => 20/1 = 20
+                            'user/v1/sub/virtual-api-create': 4,
+                            'user/v1/sub/virtual-api-modify': 4,
+                            'v2/user/create-virtual-subaccount': 4,
+                            'v2/user/modify-virtual-subaccount': 4,
+                            'v2/user/batch-create-subaccount-and-apikey': 20,
+                            'v2/user/create-virtual-subaccount-apikey': 4,
+                            'v2/user/modify-virtual-subaccount-apikey': 4,
+                        },
                     },
                     'p2p': {
-                        'get': [
-                            'p2p/v1/merchant/merchantList',  # 10 times/1s(UID) => 20/10 = 2
-                            'p2p/v1/merchant/merchantInfo',  # 10 times/1s(UID) => 20/10 = 2
-                            'p2p/v1/merchant/advList',  # 10 times/1s(UID) => 20/10 = 2
-                            'p2p/v1/merchant/orderList',  # 10 times/1s(UID) => 20/10 = 2
-                            'v2/p2p/merchantList',
-                            'v2/p2p/merchantInfo',
-                            'v2/p2p/orderList',
-                            'v2/p2p/advList',
-                        ],
+                        'get': {
+                            'p2p/v1/merchant/merchantList': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'p2p/v1/merchant/merchantInfo': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'p2p/v1/merchant/advList': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'p2p/v1/merchant/orderList': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'v2/p2p/merchantList': 2,
+                            'v2/p2p/merchantInfo': 2,
+                            'v2/p2p/orderList': 2,
+                            'v2/p2p/advList': 2,
+                        },
                     },
                     'broker': {
-                        'get': [
-                            'broker/v1/account/info',  # 10 times/1s(UID) => 20/10 = 2
-                            'broker/v1/account/sub-list',  # 1 times/1s(UID) => 20/1 = 20
-                            'broker/v1/account/sub-email',  # 1 times/1s(UID) => 20/1 = 20
-                            'broker/v1/account/sub-spot-assets',  # 10 times/1s(UID) => 20/10 = 2
-                            'broker/v1/account/sub-future-assets',  # 10 times/1s(UID) => 20/10 = 2
-                            'broker/v1/account/subaccount-transfer',  # unknown
-                            'broker/v1/account/subaccount-deposit',  # unknown
-                            'broker/v1/account/subaccount-withdrawal',  # unknown
-                            'broker/v1/account/sub-api-list',  # 10 times/1s(UID) => 20/10 = 2
-                            'v2/broker/account/info',
-                            'v2/broker/account/subaccount-list',
-                            'v2/broker/account/subaccount-email',
-                            'v2/broker/account/subaccount-spot-assets',
-                            'v2/broker/account/subaccount-future-assets',
-                            'v2/broker/manage/subaccount-apikey-list',
-                        ],
-                        'post': [
-                            'broker/v1/account/sub-create',  # 1 times/1s(UID) => 20/1 = 20
-                            'broker/v1/account/sub-modify',  # 1 times/1s(UID) => 20/1 = 20
-                            'broker/v1/account/sub-modify-email',  # 1 times/1s(UID) => 20/1 = 20
-                            'broker/v1/account/sub-address',  # 10 times/1s(UID) => 20/10 = 2
-                            'broker/v1/account/sub-withdrawal',  # 10 times/1s(UID) => 20/10 = 2
-                            'broker/v1/account/sub-auto-transfer',  # 5 times/1s(UID) => 20/5 = 4
-                            'broker/v1/account/sub-api-create',  # 10 times/1s(UID) => 20/10 = 2
-                            'broker/v1/account/sub-api-modify',  # 10 times/1s(UID) => 20/10 = 2
-                            'v2/broker/account/modify-subaccount-email',
-                            'v2/broker/account/create-subaccount',
-                            'v2/broker/account/modify-subaccount',
-                            'v2/broker/account/subaccount-address',
-                            'v2/broker/account/subaccount-withdrawal',
-                            'v2/broker/account/set-subaccount-autotransfer',
-                            'v2/broker/manage/create-subaccount-apikey',
-                            'v2/broker/manage/modify-subaccount-apikey',
-                        ],
+                        'get': {
+                            'broker/v1/account/info': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'broker/v1/account/sub-list': 20,  # 1 times/1s(UID) => 20/1 = 20
+                            'broker/v1/account/sub-email': 20,  # 1 times/1s(UID) => 20/1 = 20
+                            'broker/v1/account/sub-spot-assets': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'broker/v1/account/sub-future-assets': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'broker/v1/account/subaccount-transfer': 1,  # unknown
+                            'broker/v1/account/subaccount-deposit': 1,  # unknown
+                            'broker/v1/account/subaccount-withdrawal': 1,  # unknown
+                            'broker/v1/account/sub-api-list': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'v2/broker/account/info': 2,
+                            'v2/broker/account/subaccount-list': 20,
+                            'v2/broker/account/subaccount-email': 2,
+                            'v2/broker/account/subaccount-spot-assets': 2,
+                            'v2/broker/account/subaccount-future-assets': 2,
+                            'v2/broker/manage/subaccount-apikey-list': 2,
+                        },
+                        'post': {
+                            'broker/v1/account/sub-create': 20,  # 1 times/1s(UID) => 20/1 = 20
+                            'broker/v1/account/sub-modify': 20,  # 1 times/1s(UID) => 20/1 = 20
+                            'broker/v1/account/sub-modify-email': 20,  # 1 times/1s(UID) => 20/1 = 20
+                            'broker/v1/account/sub-address': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'broker/v1/account/sub-withdrawal': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'broker/v1/account/sub-auto-transfer': 4,  # 5 times/1s(UID) => 20/5 = 4
+                            'broker/v1/account/sub-api-create': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'broker/v1/account/sub-api-modify': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'v2/broker/account/modify-subaccount-email': 2,
+                            'v2/broker/account/create-subaccount': 20,
+                            'v2/broker/account/modify-subaccount': 20,
+                            'v2/broker/account/subaccount-address': 2,
+                            'v2/broker/account/subaccount-withdrawal': 2,
+                            'v2/broker/account/set-subaccount-autotransfer': 2,
+                            'v2/broker/manage/create-subaccount-apikey': 2,
+                            'v2/broker/manage/modify-subaccount-apikey': 2,
+                        },
                     },
                     'margin': {
-                        'get': [
-                            'margin/v1/cross/account/riskRate',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/account/maxTransferOutAmount',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/account/maxTransferOutAmount',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/order/openOrders',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/order/history',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/order/fills',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/loan/list',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/repay/list',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/interest/list',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/liquidation/list',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/fin/list',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/order/openOrders',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/order/history',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/order/fills',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/loan/list',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/repay/list',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/interest/list',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/liquidation/list',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/fin/list',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/account/assets',  # 10 times/1s(IP) => 20/10 = 2
-                            'margin/v1/isolated/account/assets',  # 10 times/1s(IP) => 20/10 = 2
-                            'v2/margin/crossed/borrow-history',
-                            'v2/margin/crossed/repay-history',
-                            'v2/margin/crossed/interest-history',
-                            'v2/margin/crossed/liquidation-history',
-                            'v2/margin/crossed/financial-records',
-                            'v2/margin/crossed/account-assets',
-                            'v2/margin/crossed/account/risk-rate',
-                            'v2/margin/crossed/account/max-borrowable-amount',
-                            'v2/margin/crossed/account/max-transfer-out-amount',
-                            'v2/margin/crossed/interest-rate-and-limit',
-                            'v2/margin/crossed/tier-data',
-                            'v2/margin/crossed/open-orders',
-                            'v2/margin/crossed/history-orders',
-                            'v2/margin/crossed/fills',
-                            'v2/margin/isolated/borrow-history',
-                            'v2/margin/isolated/repay-history',
-                            'v2/margin/isolated/interest-history',
-                            'v2/margin/isolated/liquidation-history',
-                            'v2/margin/isolated/financial-records',
-                            'v2/margin/isolated/account-assets',
-                            'v2/margin/isolated/account/risk-rate',
-                            'v2/margin/isolated/account/max-borrowable-amount',
-                            'v2/margin/isolated/account/max-transfer-out-amount',
-                            'v2/margin/isolated/interest-rate-and-limit',
-                            'v2/margin/isolated/tier-data',
-                            'v2/margin/isolated/open-orders',
-                            'v2/margin/isolated/history-orders',
-                            'v2/margin/isolated/fills',
-                        ],
-                        'post': [
-                            'margin/v1/cross/account/borrow',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/account/borrow',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/account/repay',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/account/repay',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/account/riskRate',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/account/maxBorrowableAmount',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/account/maxBorrowableAmount',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/account/flashRepay',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/account/queryFlashRepayStatus',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/account/flashRepay',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/account/queryFlashRepayStatus',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/order/placeOrder',  # 5 times/1s(UID) => 20/5 = 4
-                            'margin/v1/isolated/order/batchPlaceOrder',  # 5 times/1s(UID) => 20/5 = 4
-                            'margin/v1/isolated/order/cancelOrder',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/isolated/order/batchCancelOrder',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/order/placeOrder',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/order/batchPlaceOrder',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/order/cancelOrder',  # 10 times/1s(UID) => 20/10 = 2
-                            'margin/v1/cross/order/batchCancelOrder',  # 10 times/1s(UID) => 20/10 = 2
-                            'v2/margin/crossed/account/borrow',
-                            'v2/margin/crossed/account/repay',
-                            'v2/margin/crossed/account/flash-repay',
-                            'v2/margin/crossed/account/query-flash-repay-status',
-                            'v2/margin/crossed/place-order',
-                            'v2/margin/crossed/batch-place-order',
-                            'v2/margin/crossed/cancel-order',
-                            'v2/margin/crossed/batch-cancel-order',
-                            'v2/margin/isolated/account/borrow',
-                            'v2/margin/isolated/account/repay',
-                            'v2/margin/isolated/account/flash-repay',
-                            'v2/margin/isolated/account/query-flash-repay-status',
-                            'v2/margin/isolated/place-order',
-                            'v2/margin/isolated/batch-place-order',
-                            'v2/margin/isolated/cancel-order',
-                            'v2/margin/isolated/batch-cancel-order',
-                        ],
+                        'get': {
+                            'margin/v1/cross/account/riskRate': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/account/maxTransferOutAmount': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/account/maxTransferOutAmount': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/order/openOrders': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/order/history': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/order/fills': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/loan/list': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/repay/list': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/interest/list': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/liquidation/list': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/fin/list': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/order/openOrders': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/order/history': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/order/fills': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/loan/list': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/repay/list': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/interest/list': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/liquidation/list': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/fin/list': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/account/assets': 2,  # 10 times/1s(IP) => 20/10 = 2
+                            'margin/v1/isolated/account/assets': 2,  # 10 times/1s(IP) => 20/10 = 2
+                            'v2/margin/crossed/borrow-history': 2,
+                            'v2/margin/crossed/repay-history': 2,
+                            'v2/margin/crossed/interest-history': 2,
+                            'v2/margin/crossed/liquidation-history': 2,
+                            'v2/margin/crossed/financial-records': 2,
+                            'v2/margin/crossed/account/assets': 2,
+                            'v2/margin/crossed/account/risk-rate': 2,
+                            'v2/margin/crossed/account/max-borrowable-amount': 2,
+                            'v2/margin/crossed/account/max-transfer-out-amount': 2,
+                            'v2/margin/crossed/interest-rate-and-limit': 2,
+                            'v2/margin/crossed/tier-data': 2,
+                            'v2/margin/crossed/open-orders': 2,
+                            'v2/margin/crossed/history-orders': 2,
+                            'v2/margin/crossed/fills': 2,
+                            'v2/margin/isolated/borrow-history': 2,
+                            'v2/margin/isolated/repay-history': 2,
+                            'v2/margin/isolated/interest-history': 2,
+                            'v2/margin/isolated/liquidation-history': 2,
+                            'v2/margin/isolated/financial-records': 2,
+                            'v2/margin/isolated/account/assets': 2,
+                            'v2/margin/isolated/account/risk-rate': 2,
+                            'v2/margin/isolated/account/max-borrowable-amount': 2,
+                            'v2/margin/isolated/account/max-transfer-out-amount': 2,
+                            'v2/margin/isolated/interest-rate-and-limit': 2,
+                            'v2/margin/isolated/tier-data': 2,
+                            'v2/margin/isolated/open-orders': 2,
+                            'v2/margin/isolated/history-orders': 2,
+                            'v2/margin/isolated/fills': 2,
+                        },
+                        'post': {
+                            'margin/v1/cross/account/borrow': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/account/borrow': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/account/repay': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/account/repay': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/account/riskRate': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/account/maxBorrowableAmount': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/account/maxBorrowableAmount': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/account/flashRepay': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/account/queryFlashRepayStatus': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/account/flashRepay': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/account/queryFlashRepayStatus': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/order/placeOrder': 4,  # 5 times/1s(UID) => 20/5 = 4
+                            'margin/v1/isolated/order/batchPlaceOrder': 4,  # 5 times/1s(UID) => 20/5 = 4
+                            'margin/v1/isolated/order/cancelOrder': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/isolated/order/batchCancelOrder': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/order/placeOrder': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/order/batchPlaceOrder': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/order/cancelOrder': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'margin/v1/cross/order/batchCancelOrder': 2,  # 10 times/1s(UID) => 20/10 = 2
+                            'v2/margin/crossed/account/borrow': 2,
+                            'v2/margin/crossed/account/repay': 2,
+                            'v2/margin/crossed/account/flash-repay': 2,
+                            'v2/margin/crossed/account/query-flash-repay-status': 2,
+                            'v2/margin/crossed/place-order': 2,
+                            'v2/margin/crossed/batch-place-order': 2,
+                            'v2/margin/crossed/cancel-order': 2,
+                            'v2/margin/crossed/batch-cancel-order': 2,
+                            'v2/margin/isolated/account/borrow': 2,
+                            'v2/margin/isolated/account/repay': 2,
+                            'v2/margin/isolated/account/flash-repay': 2,
+                            'v2/margin/isolated/account/query-flash-repay-status': 2,
+                            'v2/margin/isolated/place-order': 2,
+                            'v2/margin/isolated/batch-place-order': 2,
+                            'v2/margin/isolated/cancel-order': 2,
+                            'v2/margin/isolated/batch-cancel-order': 2,
+                        },
                     },
                     'copy': {
-                        'get': [
-                            'v2/copy/mix-trader/order-current-track',
-                            'v2/copy/mix-trader/order-history-track',
-                            'v2/copy/mix-trader/order-total-detail',
-                            'v2/copy/mix-trader/profit-history-summarys',
-                            'v2/copy/mix-trader/profit-history-details',
-                            'v2/copy/mix-trader/profit-details',
-                            'v2/copy/mix-trader/profits-group-coin-date',
-                            'v2/copy/mix-trader/config-query-symbols',
-                            'v2/copy/mix-trader/config-query-followers',
-                            'v2/copy/mix-follower/query-current-orders',
-                            'v2/copy/mix-follower/query-history-orders',
-                            'v2/copy/mix-follower/query-settings',
-                            'v2/copy/mix-follower/query-traders',
-                            'v2/copy/mix-follower/query-quantity-limit',
-                            'v2/copy/mix-broker/query-traders',
-                            'v2/copy/mix-broker/query-history-traces',
-                            'v2/copy/mix-broker/query-current-traces',
-                            'v2/copy/spot-trader/profit-summarys',
-                            'v2/copy/spot-trader/profit-history-details',
-                            'v2/copy/spot-trader/profit-details',
-                            'v2/copy/spot-trader/order-total-detail',
-                            'v2/copy/spot-trader/order-history-track',
-                            'v2/copy/spot-trader/order-current-track',
-                            'v2/copy/spot-trader/config-query-settings',
-                            'v2/copy/spot-trader/config-query-followers',
-                            'v2/copy/spot-follower/query-traders',
-                            'v2/copy/spot-follower/query-trader-symbols',
-                            'v2/copy/spot-follower/query-settings',
-                            'v2/copy/spot-follower/query-history-orders',
-                            'v2/copy/spot-follower/query-current-orders',
-                        ],
-                        'post': [
-                            'v2/copy/mix-trader/order-modify-tpsl',
-                            'v2/copy/mix-trader/order-close-positions',
-                            'v2/copy/mix-trader/config-setting-symbols',
-                            'v2/copy/mix-trader/config-setting-base',
-                            'v2/copy/mix-trader/config-remove-follower',
-                            'v2/copy/mix-follower/setting-tpsl',
-                            'v2/copy/mix-follower/settings',
-                            'v2/copy/mix-follower/close-positions',
-                            'v2/copy/mix-follower/cancel-trader',
-                            'v2/copy/spot-trader/order-modify-tpsl',
-                            'v2/copy/spot-trader/order-close-tracking',
-                            'v2/copy/spot-trader/config-setting-symbols',
-                            'v2/copy/spot-trader/config-remove-follower',
-                            'v2/copy/spot-follower/stop-order',
-                            'v2/copy/spot-follower/settings',
-                            'v2/copy/spot-follower/setting-tpsl',
-                            'v2/copy/spot-follower/order-close-tracking',
-                            'v2/copy/spot-follower/cancel-trader',
-                        ],
+                        'get': {
+                            'v2/copy/mix-trader/order-current-track': 2,
+                            'v2/copy/mix-trader/order-history-track': 2,
+                            'v2/copy/mix-trader/order-total-detail': 2,
+                            'v2/copy/mix-trader/profit-history-summarys': 1,
+                            'v2/copy/mix-trader/profit-history-details': 1,
+                            'v2/copy/mix-trader/profit-details': 1,
+                            'v2/copy/mix-trader/profits-group-coin-date': 1,
+                            'v2/copy/mix-trader/config-query-symbols': 1,
+                            'v2/copy/mix-trader/config-query-followers': 2,
+                            'v2/copy/mix-follower/query-current-orders': 2,
+                            'v2/copy/mix-follower/query-history-orders': 1,
+                            'v2/copy/mix-follower/query-settings': 2,
+                            'v2/copy/mix-follower/query-traders': 2,
+                            'v2/copy/mix-follower/query-quantity-limit': 2,
+                            'v2/copy/mix-broker/query-traders': 2,
+                            'v2/copy/mix-broker/query-history-traces': 2,
+                            'v2/copy/mix-broker/query-current-traces': 2,
+                            'v2/copy/spot-trader/profit-summarys': 2,
+                            'v2/copy/spot-trader/profit-history-details': 2,
+                            'v2/copy/spot-trader/profit-details': 2,
+                            'v2/copy/spot-trader/order-total-detail': 2,
+                            'v2/copy/spot-trader/order-history-track': 2,
+                            'v2/copy/spot-trader/order-current-track': 2,
+                            'v2/copy/spot-trader/config-query-settings': 2,
+                            'v2/copy/spot-trader/config-query-followers': 2,
+                            'v2/copy/spot-follower/query-traders': 2,
+                            'v2/copy/spot-follower/query-trader-symbols': 2,
+                            'v2/copy/spot-follower/query-settings': 2,
+                            'v2/copy/spot-follower/query-history-orders': 2,
+                            'v2/copy/spot-follower/query-current-orders': 2,
+                        },
+                        'post': {
+                            'v2/copy/mix-trader/order-modify-tpsl': 2,
+                            'v2/copy/mix-trader/order-close-positions': 2,
+                            'v2/copy/mix-trader/config-setting-symbols': 2,
+                            'v2/copy/mix-trader/config-setting-base': 2,
+                            'v2/copy/mix-trader/config-remove-follower': 2,
+                            'v2/copy/mix-follower/setting-tpsl': 1,
+                            'v2/copy/mix-follower/settings': 2,
+                            'v2/copy/mix-follower/close-positions': 2,
+                            'v2/copy/mix-follower/cancel-trader': 4,
+                            'v2/copy/spot-trader/order-modify-tpsl': 2,
+                            'v2/copy/spot-trader/order-close-tracking': 2,
+                            'v2/copy/spot-trader/config-setting-symbols': 2,
+                            'v2/copy/spot-trader/config-remove-follower': 2,
+                            'v2/copy/spot-follower/stop-order': 2,
+                            'v2/copy/spot-follower/settings': 2,
+                            'v2/copy/spot-follower/setting-tpsl': 2,
+                            'v2/copy/spot-follower/order-close-tracking': 2,
+                            'v2/copy/spot-follower/cancel-trader': 2,
+                        },
                     },
                     'tax': {
-                        'get': [
-                            'v2/tax/spot-record',
-                            'v2/tax/future-record',
-                            'v2/tax/margin-record',
-                            'v2/tax/p2p-record',
-                        ],
+                        'get': {
+                            'v2/tax/spot-record': 20,
+                            'v2/tax/future-record': 20,
+                            'v2/tax/margin-record': 20,
+                            'v2/tax/p2p-record': 20,
+                        },
                     },
                     'convert': {
-                        'get': [
-                            'v2/convert/currencies',
-                            'v2/convert/quoted-price',
-                            'v2/convert/convert-record',
-                        ],
-                        'post': [
-                            'v2/convert/trade',
-                        ],
+                        'get': {
+                            'v2/convert/currencies': 2,
+                            'v2/convert/quoted-price': 2,
+                            'v2/convert/convert-record': 2,
+                            'v2/convert/bgb-convert-coin-list': 2,
+                            'v2/convert/bgb-convert-records': 2,
+                        },
+                        'post': {
+                            'v2/convert/trade': 2,
+                            'v2/convert/bgb-convert': 2,
+                        },
                     },
                     'earn': {
-                        'get': [
-                            'v2/earn/savings/product',
-                            'v2/earn/savings/account',
-                            'v2/earn/savings/assets',
-                            'v2/earn/savings/records',
-                            'v2/earn/savings/subscribe-info',
-                            'v2/earn/savings/subscribe-result',
-                            'v2/earn/savings/redeem-result',
-                            'v2/earn/sharkfin/product',
-                            'v2/earn/sharkfin/account',
-                            'v2/earn/sharkfin/assets',
-                            'v2/earn/sharkfin/records',
-                            'v2/earn/sharkfin/subscribe-info',
-                            'v2/earn/sharkfin/subscribe-result',
-                            'v2/earn/loan/ongoing-orders',
-                            'v2/earn/loan/repay-history',
-                            'v2/earn/loan/revise-history',
-                            'v2/earn/loan/borrow-history',
-                            'v2/earn/loan/debts',
-                            'v2/earn/loan/reduces',
-                        ],
-                        'post': [
-                            'v2/earn/savings/subscribe',
-                            'v2/earn/savings/redeem',
-                            'v2/earn/sharkfin/subscribe',
-                            'v2/earn/loan/borrow',
-                            'v2/earn/loan/repay',
-                            'v2/earn/loan/revise-pledge',
-                        ],
+                        'get': {
+                            'v2/earn/savings/product': 2,
+                            'v2/earn/savings/account': 2,
+                            'v2/earn/savings/assets': 2,
+                            'v2/earn/savings/records': 2,
+                            'v2/earn/savings/subscribe-info': 2,
+                            'v2/earn/savings/subscribe-result': 2,
+                            'v2/earn/savings/redeem-result': 2,
+                            'v2/earn/sharkfin/product': 2,
+                            'v2/earn/sharkfin/account': 2,
+                            'v2/earn/sharkfin/assets': 2,
+                            'v2/earn/sharkfin/records': 2,
+                            'v2/earn/sharkfin/subscribe-info': 2,
+                            'v2/earn/sharkfin/subscribe-result': 4,
+                            'v2/earn/loan/ongoing-orders': 2,
+                            'v2/earn/loan/repay-history': 2,
+                            'v2/earn/loan/revise-history': 2,
+                            'v2/earn/loan/borrow-history': 2,
+                            'v2/earn/loan/debts': 2,
+                            'v2/earn/loan/reduces': 2,
+                        },
+                        'post': {
+                            'v2/earn/savings/subscribe': 2,
+                            'v2/earn/savings/redeem': 2,
+                            'v2/earn/sharkfin/subscribe': 2,
+                            'v2/earn/loan/borrow': 2,
+                            'v2/earn/loan/repay': 2,
+                            'v2/earn/loan/revise-pledge': 2,
+                        },
+                    },
+                    'common': {
+                        'get': {
+                            'v2/common/trade-rate': 2,
+                        },
                     },
                 },
             },
@@ -1215,6 +1255,7 @@ class bitget(Exchange, ImplicitAPI):
                     '40768': OrderNotFound,  # Order does not exist"
                     '41114': OnMaintenance,  # {"code":"41114","msg":"The current trading pair is under maintenance, please refer to the official announcement for the opening time","requestTime":1679196062544,"data":null}
                     '43011': InvalidOrder,  # The parameter does not meet the specification executePrice <= 0
+                    '43012': InsufficientFunds,  # {"code":"43012","msg":"Insufficient balance","requestTime":1711648951774,"data":null}
                     '43025': InvalidOrder,  # Plan order does not exist
                     '43115': OnMaintenance,  # {"code":"43115","msg":"The current trading pair is opening soon, please refer to the official announcement for the opening time","requestTime":1688907202434,"data":null}
                     '45110': InvalidOrder,  # {"code":"45110","msg":"less than the minimum amount 5 USDT","requestTime":1669911118932,"data":null}
@@ -1290,6 +1331,8 @@ class bitget(Exchange, ImplicitAPI):
             'precisionMode': TICK_SIZE,
             'commonCurrencies': {
                 'JADE': 'Jade Protocol',
+                'DEGEN': 'DegenReborn',
+                'TONCOIN': 'TON',
             },
             'options': {
                 'timeframes': {
@@ -1337,10 +1380,27 @@ class bitget(Exchange, ImplicitAPI):
                 },
                 'fetchOHLCV': {
                     'spot': {
-                        'method': 'publicSpotGetV2SpotMarketCandles',  # or publicSpotGetV2SpotMarketHistoryCandles
+                        'method': 'publicSpotGetV2SpotMarketCandles',  # publicSpotGetV2SpotMarketCandles or publicSpotGetV2SpotMarketHistoryCandles
                     },
                     'swap': {
-                        'method': 'publicMixGetV2MixMarketCandles',  # or publicMixGetV2MixMarketHistoryCandles or publicMixGetV2MixMarketHistoryIndexCandles or publicMixGetV2MixMarketHistoryMarkCandles
+                        'method': 'publicMixGetV2MixMarketCandles',  # publicMixGetV2MixMarketCandles or publicMixGetV2MixMarketHistoryCandles or publicMixGetV2MixMarketHistoryIndexCandles or publicMixGetV2MixMarketHistoryMarkCandles
+                    },
+                    'maxDaysPerTimeframe': {
+                        '1m': 30,
+                        '3m': 30,
+                        '5m': 30,
+                        '10m': 52,
+                        '15m': 52,
+                        '30m': 52,
+                        '1h': 83,
+                        '2h': 120,
+                        '4h': 240,
+                        '6h': 360,
+                        '12h': 360,
+                        '1d': 360,
+                        '3d': 1000,
+                        '1w': 1000,
+                        '1M': 1000,
                     },
                 },
                 'fetchTrades': {
