@@ -1798,8 +1798,8 @@ class bybit(Exchange):
                         'max': self.safe_number(priceFilter, 'maxPrice'),
                     },
                     'cost': {
-                        'min': None, # self.safe_number_2(lotSizeFilter, 'minOrderAmt', 'minNotionalValue'),
-                        'max': None, # self.safe_number_2(lotSizeFilter, 'maxOrderAmt', 'maxNotionalValue'),
+                        'min': None,  # self.safe_number_2(lotSizeFilter, 'minOrderAmt', 'minNotionalValue'),
+                        'max': None,  # self.safe_number_2(lotSizeFilter, 'maxOrderAmt', 'maxNotionalValue'),
                     },
                     'orders': {
                         'max': 500
@@ -3121,13 +3121,6 @@ class bybit(Exchange):
                 return func(None, symbol=symbol, params={"orderLinkId": order_link_id})
             else:
                 raise Exception("Missing executedOrderId / orderLinkId")
-
-    def has_stop_params(self, params, should_omit=True):
-        isStop = self.safe_value(params, 'stop', False)
-        order_type = self.safe_value(params, 'type')
-        if should_omit:
-            params = self.omit(params, ['stop', 'type'])
-        return params, isStop or order_type == 'stop'
 
     def parse_trades_cost_fee(self, symbol, trades) -> Tuple[float, Union[dict, None]]:
         cost_str, fees, fee = '0.', defaultdict(lambda: {'cost': 0.}), None
