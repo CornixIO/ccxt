@@ -1259,6 +1259,7 @@ class bitget(Exchange, ImplicitAPI):
                     'your balance is low': InsufficientFunds,  # {"status":"error","ts":1595594160149,"err_code":"invalid-parameter","err_msg":"invalid size, valid range: [1,2000]"}
                     'address invalid cointype': ExchangeError,
                     'system exception': ExchangeError,  # {"status":"error","ts":1595711862763,"err_code":"system exception","err_msg":"system exception"}
+                    'The order amount exceeds the balance': InsufficientFunds,
                     '50003': ExchangeError,  # No record
                     '50004': BadSymbol,  # The transaction pair is currently not supported or has been suspended
                     '50006': PermissionDenied,  # The account is forbidden to withdraw. If you have any questions, please contact customer service.
@@ -1914,7 +1915,7 @@ class bitget(Exchange, ImplicitAPI):
         request = {}
         response = None
         marginMode = None
-        marginMode, params = self.handle_margin_mode_and_params('fetchMarketLeverageTiers', params, 'isolated')
+        marginMode, params = self.handle_margin_mode_and_params('fetchMarketLeverageTiers', params)
         if (market['swap']) or (market['future']):
             productType = None
             productType, params = self.handle_product_type_and_params(market, params)
@@ -3921,6 +3922,8 @@ class bitget(Exchange, ImplicitAPI):
             market = self.market(sandboxSymbol)
         else:
             market = self.market(symbol)
+        hedged = self.safe_value(params, 'hedged', True)
+        params = self.omit(params, 'hedged')
         marketType = None
         marginMode = None
         marketType, params = self.handle_market_type_and_params('createOrder', market, params)
@@ -4028,11 +4031,13 @@ class bitget(Exchange, ImplicitAPI):
                 requestSide = side
                 if reduceOnly:
                     request['reduceOnly'] = 'YES'
-                    request['tradeSide'] = 'Close'
-                    # on bitget if the position is long the side is always buy, and if the position is short the side is always sell
-                    requestSide = 'sell' if (side == 'buy') else 'buy'
+                    if hedged:
+                        request['tradeSide'] = 'Close'
+                        # on bitget if the position is long the side is always buy, and if the position is short the side is always sell
+                        requestSide = 'sell' if (side == 'buy') else 'buy'
                 else:
-                    request['tradeSide'] = 'Open'
+                    if hedged:
+                        request['tradeSide'] = 'Open'
                 request['side'] = requestSide
         elif marketType == 'spot':
             if isStopLossOrTakeProfitTrigger or isStopLossOrTakeProfit:
@@ -4382,7 +4387,7 @@ class bitget(Exchange, ImplicitAPI):
             elif stop:
                 _, order_id = self.get_order_trigger_is_open_sub_order_id(id, symbol)
                 if order_id:
-                    self.cancel_order(order_id, symbol)
+                    return self.cancel_order(order_id, symbol)
                 else:
                     response = self.privateMixPostV2MixOrderCancelPlanOrder(self.extend(request, params))
             else:
@@ -4397,7 +4402,7 @@ class bitget(Exchange, ImplicitAPI):
                 if stop:
                     _, order_id = self.get_order_trigger_is_open_sub_order_id(id, symbol)
                     if order_id:
-                        self.cancel_order(order_id, symbol)
+                        return self.cancel_order(order_id, symbol)
                     else:
                         response = self.privateSpotPostV2SpotTradeCancelPlanOrder(self.extend(request, params))
                 else:
@@ -4449,7 +4454,11 @@ class bitget(Exchange, ImplicitAPI):
         order = None
         if (market['swap'] or market['future']) and stop:
             orderInfo = self.safe_value(data, 'successList', [])
-            order = orderInfo[0]
+            if orderInfo:
+                order = orderInfo[0]
+            else:
+                orderInfo = self.safe_value(data, 'failureList', [])
+                raise ExchangeError(f'{self.id} {orderInfo[0]}')
         else:
             order = data
         return self.parse_order(order, market)
@@ -5780,9 +5789,21 @@ class bitget(Exchange, ImplicitAPI):
         #         ]
         #     }
         #
-        data = self.safe_value(response, 'data', [])
-        first = self.safe_value(data, 0, {})
-        return self.parse_position(first, market)
+        positions = self.safe_value(response, 'data', [])
+        if len(positions) == 0:
+            positions.append({})
+        elif len(positions) == 1:
+            pos = positions[0]
+            if pos['posMode'] == 'hedge_mode':
+                positions.append({
+                    'holdSide': 'short' if pos['holdSide'] == 'long' else 'long',
+                    'marginMode': pos['marginMode'],
+                    'posMode': pos['posMode'],
+                })
+        result = []
+        for position in positions:
+            result.append(self.parse_position(position, market))
+        return result
 
     def fetch_positions(self, symbols: Strings = None, params={}) -> List[Position]:
         """
@@ -7685,13 +7706,13 @@ class bitget(Exchange, ImplicitAPI):
         #     {"code":"40108","msg":"","requestTime":1595885064600,"data":null}
         #     {"order_id":"513468410013679613","client_oid":null,"symbol":"ethusd","result":false,"err_code":"order_no_exist_error","err_msg":"订单不存在！"}
         #
-        message = self.safe_string(response, 'err_msg')
-        errorCode = self.safe_string_2(response, 'code', 'err_code')
+        message = self.safe_string_2(response, 'err_msg', 'msg')
         feedback = self.id + ' ' + body
-        nonEmptyMessage = ((message is not None) and (message != ''))
+        nonEmptyMessage = ((message is not None) and (message != '') and (message != 'success'))
         if nonEmptyMessage:
             self.throw_exactly_matched_exception(self.exceptions['exact'], message, feedback)
             self.throw_broadly_matched_exception(self.exceptions['broad'], message, feedback)
+        errorCode = self.safe_string_2(response, 'code', 'err_code')
         nonZeroErrorCode = (errorCode is not None) and (errorCode != '00000')
         if nonZeroErrorCode:
             self.throw_exactly_matched_exception(self.exceptions['exact'], errorCode, feedback)

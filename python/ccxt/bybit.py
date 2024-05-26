@@ -621,6 +621,8 @@ class bybit(Exchange):
                     # Sorry, we're revamping the Unified Margin Account! Currently, new upgrades are not supported. If you have any questions, please contact our 24/7 customer support.
                     '110072': InvalidOrder,  # OrderLinkedID is duplicate
                     '110073': ExchangeError,  # Set margin mode failed
+                    '110092': InvalidOrder,  # expect Rising, but trigger_price
+                    '110093': InvalidOrder,  # expect Falling, but trigger_price
                     '130006': InvalidOrder,
                     # {"ret_code":130006,"ret_msg":"The number of contracts exceeds maximum limit allowed: too large","ext_code":"","ext_info":"","result":null,"time_now":"1658397095.099030","rate_limit_status":99,"rate_limit_reset_ms":1658397095097,"rate_limit":100}
                     '130021': InsufficientFunds,
@@ -1796,8 +1798,8 @@ class bybit(Exchange):
                         'max': self.safe_number(priceFilter, 'maxPrice'),
                     },
                     'cost': {
-                        'min': None,
-                        'max': None,
+                        'min': None, # self.safe_number_2(lotSizeFilter, 'minOrderAmt', 'minNotionalValue'),
+                        'max': None, # self.safe_number_2(lotSizeFilter, 'maxOrderAmt', 'maxNotionalValue'),
                     },
                     'orders': {
                         'max': 500
@@ -6123,6 +6125,14 @@ class bybit(Exchange):
         #
         result = self.safe_value(response, 'result')
         tiers = self.safe_value(result, 'list')
+        paginationCursor = self.safe_string(result, 'nextPageCursor')
+        while paginationCursor:
+            params = {'cursor': paginationCursor}
+            responseInner = self.publicGetV5MarketRiskLimit(self.extend(request, params))
+            new_result = self.safe_value(responseInner, 'result', {})
+            new_tiers = self.safe_value(new_result, 'list', [])
+            tiers = self.array_concat(new_tiers, tiers)
+            paginationCursor = self.safe_string(new_result, 'nextPageCursor')
         return tiers
 
     def parse_trading_fee(self, fee, market=None):
