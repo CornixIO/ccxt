@@ -2639,16 +2639,13 @@ class Exchange(object):
         trades = []
         if parseFilled or parseCost or shouldParseFees:
             rawTrades = self.safe_value(order, 'trades', trades)
-            oldNumber = self.number
             # we parse trades as strings here!
-            self.number = str
             trades = self.parse_trades(rawTrades, market, None, None, {
                 'symbol': order['symbol'],
                 'side': order['side'],
                 'type': order['type'],
                 'order': order['id'],
             })
-            self.number = oldNumber
             tradesLength = 0
             isArray = isinstance(trades, list)
             if isArray:
@@ -3001,7 +2998,7 @@ class Exchange(object):
             feeCurrencyCode = self.safe_string(fee, 'currency')
             if feeCurrencyCode is not None:
                 rate = self.safe_string(fee, 'rate')
-                cost = self.safe_value(fee, 'cost')
+                cost = self.safe_string(fee, 'cost')
                 if Precise.string_eq(cost, '0'):
                     # omit zero cost fees
                     continue
