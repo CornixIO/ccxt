@@ -2647,7 +2647,7 @@ class Exchange(object):
                 'type': order['type'],
                 'order': order['id'],
             })
-            # we transform all to string as in ccxt
+            # we transform all numbers to strings as in ccxt
             for trade in trades:
                 for k, v in trade.items():
                     if type(v) in self.number_types:
