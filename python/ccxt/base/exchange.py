@@ -2640,6 +2640,8 @@ class Exchange(object):
         trades = []
         if parseFilled or parseCost or shouldParseFees:
             rawTrades = self.safe_value(order, 'trades', trades)
+            if rawTrades:
+                self.logger.info(f'{self.id} Parsing trades in safe_order')
             # we parse trades as strings here!
             trades = self.parse_trades(rawTrades, market, None, None, {
                 'symbol': order['symbol'],
@@ -2651,7 +2653,7 @@ class Exchange(object):
             for trade in trades:
                 for k, v in trade.items():
                     if type(v) in self.number_types:
-                        trade[k] = self.safe_string(trade, k)
+                        trade[k] = str(v)
             tradesLength = 0
             isArray = isinstance(trades, list)
             if isArray:
