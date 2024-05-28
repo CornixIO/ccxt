@@ -315,6 +315,7 @@ class Exchange(object):
     }
     precisionMode = DECIMAL_PLACES
     number = float  # or str (a pointer to a class)
+    number_types = {int, float}
     minFundingAddressLength = 1  # used in check_address
     substituteCommonCurrencyCodes = True
     reduceFees = True
@@ -2646,6 +2647,11 @@ class Exchange(object):
                 'type': order['type'],
                 'order': order['id'],
             })
+            # we transform all to string as in ccxt
+            for trade in trades:
+                for k, v in trade.items():
+                    if type(v) in self.number_types:
+                        trade[k] = self.safe_string(trade, k)
             tradesLength = 0
             isArray = isinstance(trades, list)
             if isArray:
@@ -2998,7 +3004,7 @@ class Exchange(object):
             feeCurrencyCode = self.safe_string(fee, 'currency')
             if feeCurrencyCode is not None:
                 rate = self.safe_string(fee, 'rate')
-                cost = self.safe_string(fee, 'cost')
+                cost = self.safe_value(fee, 'cost')
                 if Precise.string_eq(cost, '0'):
                     # omit zero cost fees
                     continue
