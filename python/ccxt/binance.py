@@ -1374,7 +1374,8 @@ class binance(Exchange):
             if not isinstance(response, list):
                 balances = self.safe_value(response, 'assets', [])
             if part:
-                balances = [balance for balance in balances if balance.get("asset") == part]
+                filter_parts = ['BNFCR', 'USDT'] if part == 'USDT' else [part]
+                balances = [balance for balance in balances if balance.get("asset") in filter_parts]
             for i in range(0, len(balances)):
                 balance = balances[i]
                 currencyId = self.safe_string(balance, 'asset')
