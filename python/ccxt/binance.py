@@ -1165,6 +1165,15 @@ class binance(Exchange):
     def fetch_partial_balance(self, part, quote_asset=True, params={}):
         currency = self.reversed_commonCurrencies.get(part, part)
         balance = self.fetch_balance(currency, quote_asset=quote_asset, params=params)
+        defaultType = self.safe_string_2(self.options, 'fetchBalance', 'defaultType', 'spot')
+        type = self.safe_string(params, 'type', defaultType)
+        info = balance['info']
+        if part == 'USDT' and type == 'future' and info.get('multiAssetsMargin'):
+            bnfcr = info.get('BNFCR')
+            usdt = info.get('USDT')
+            if bnfcr and usdt and not usdt['free']:
+                return {'total': bnfcr['total'] + usdt['total'], 'free': usdt['free'] or bnfcr['free'],
+                        'used': usdt['used'] or bnfcr['used']}
         return balance[part]
 
     def fetch_balance(self, part=None, quote_asset=True, params={}):
