@@ -1167,11 +1167,9 @@ class binance(Exchange):
         balance = self.fetch_balance(currency, quote_asset=quote_asset, params=params)
         defaultType = self.safe_string_2(self.options, 'fetchBalance', 'defaultType', 'spot')
         type = self.safe_string(params, 'type', defaultType)
-        info = balance['info']
-        if part == 'USDT' and type == 'future' and info.get('multiAssetsMargin'):
-            assets = info.get('assets', [])
-            bnfcr = next(asset for asset in assets if asset['asset'] == 'BNFCR')
-            usdt = next(asset for asset in assets if asset['asset'] == 'USDT')
+        if part == 'USDT' and type == 'future' and balance['info'].get('multiAssetsMargin'):
+            bnfcr = balance['BNFCR']
+            usdt = balance['USDT']
             if bnfcr and usdt and not usdt['free']:
                 return {'total': bnfcr['total'] + usdt['total'], 'free': usdt['free'] or bnfcr['free'],
                         'used': usdt['used'] or bnfcr['used']}
