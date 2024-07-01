@@ -1164,10 +1164,19 @@ class binance(Exchange):
 
     def fetch_partial_balance(self, part, quote_asset=True, params={}):
         currency = self.reversed_commonCurrencies.get(part, part)
-        balance = self.fetch_balance(currency, quote_asset=quote_asset, params=params)
+        defaultType = self.safe_string_2(self.options, 'fetchBalance', 'defaultType', 'spot')
+        type = self.safe_string(params, 'type', defaultType)
+        parts = {currency, 'BNFCR'} if part == 'USDT' and type == 'future' else {currency}
+        balance = self.fetch_balance(parts=parts, quote_asset=quote_asset, params=params)
+        if part == 'USDT' and type == 'future' and balance['info'].get('multiAssetsMargin'):
+            bnfcr = balance['BNFCR']
+            usdt = balance['USDT']
+            if bnfcr and usdt and not usdt['free']:
+                return {'total': bnfcr['total'] + usdt['total'], 'free': usdt['free'] or bnfcr['free'],
+                        'used': usdt['used'] or bnfcr['used']}
         return balance[part]
 
-    def fetch_balance(self, part=None, quote_asset=True, params={}):
+    def fetch_balance(self, parts=None, quote_asset=True, params={}):
         self.load_markets()
         defaultType = self.safe_string_2(self.options, 'fetchBalance', 'defaultType', 'spot')
         type = self.safe_string(params, 'type', defaultType)
@@ -1333,8 +1342,8 @@ class binance(Exchange):
         result = {'info': response}
         if type == 'margin_isolated':
             balances = self.safe_value(response, 'assets', [])
-            if part:
-                balances = [balance for balance in balances if self.find_symbol(balance.get("symbol")) == part]
+            if parts:
+                balances = [balance for balance in balances if self.find_symbol(balance.get("symbol")) in parts]
             for balance in balances:
                 symbolId = self.safe_string(balance, 'symbol')
                 symbol = self.find_symbol(symbolId)
@@ -1348,8 +1357,8 @@ class binance(Exchange):
                 result[symbol] = account
         elif (type == 'spot') or (type == 'margin_cross'):
             balances = self.safe_value_2(response, 'balances', 'userAssets', [])
-            if part:
-                balances = [balance for balance in balances if balance.get("asset") == part]
+            if parts:
+                balances = [balance for balance in balances if balance.get("asset") in parts]
             for i in range(0, len(balances)):
                 balance = balances[i]
                 currencyId = self.safe_string(balance, 'asset')
@@ -1365,8 +1374,8 @@ class binance(Exchange):
             balances = response
             if not isinstance(response, list):
                 balances = self.safe_value(response, 'assets', [])
-            if part:
-                balances = [balance for balance in balances if balance.get("asset") == part]
+            if parts:
+                balances = [balance for balance in balances if balance.get("asset") in parts]
             for i in range(0, len(balances)):
                 balance = balances[i]
                 currencyId = self.safe_string(balance, 'asset')
