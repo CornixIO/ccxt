@@ -1710,7 +1710,6 @@ class bybit(Exchange):
         #
         symbol_id_to_risk_limits = self.get_symbol_id_to_risk_limits()
         result = []
-        category = self.safe_string(data, 'category')
         for i in range(0, len(markets)):
             market = markets[i]
             if category is None:
