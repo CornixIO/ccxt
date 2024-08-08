@@ -1632,8 +1632,8 @@ class bybit(Exchange):
         risk_limits = self.safe_value(symbol_id_to_risk_limits, _id, list())
         return self.parse_symbol_risk_limits(risk_limits)
 
-    def fetch_future_markets(self, params):
-        params = self.extend(params)
+    def handle_fetch_future_markets_pagination(self, params):
+        params = copy(params)
         limit = 1000
         params['limit'] = limit  # minimize number of requests
         response = self.publicGetV5MarketInstrumentsInfo(params)
@@ -1650,6 +1650,20 @@ class bybit(Exchange):
                     break
                 markets = self.array_concat(rawMarkets, markets)
                 paginationCursor = self.safe_string(dataNew, 'nextPageCursor')
+        return markets
+
+    def fetch_future_markets(self, params):
+        params = self.extend(params)
+
+        pre_launch_markets = list()
+        category = params['category']
+        if category == 'linear':
+            _params = copy(params)
+            _params['status'] = 'PreLaunch'
+            pre_launch_markets = self.handle_fetch_future_markets_pagination(_params)
+
+        markets = self.handle_fetch_future_markets_pagination(params)
+        markets += pre_launch_markets
         #
         #     {
         #         "retCode": 0,
