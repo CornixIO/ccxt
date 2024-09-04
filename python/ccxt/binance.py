@@ -847,9 +847,11 @@ class binance(Exchange):
             symbol_position_list = [position for position in position_list
                                     if self.safe_string(position, 'symbol') == market_id]
             if len(symbol_position_list) == 0:
-                position_list.append({'symbol': market_id, 'notional': 0})
+                position_list.append({'symbol': market_id, 'notional': 0, 'positionSide': 'BOTH'})
             elif len(symbol_position_list) == 1:
                 pos = symbol_position_list[0]
+                if pos['positionSide'] == 'BOTH':
+                    return
                 position_list.append({
                     'positionSide': 'SHORT' if pos['positionSide'] == 'LONG' else 'LONG',
                     'symbol': market_id,
