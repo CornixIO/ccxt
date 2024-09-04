@@ -111,6 +111,7 @@ class binance(Exchange):
                     'fapiPublic': 'https://testnet.binancefuture.com/fapi/v1',
                     'fapiPrivate': 'https://testnet.binancefuture.com/fapi/v1',
                     'fapiPrivateV2': 'https://testnet.binancefuture.com/fapi/v2',
+                    'fapiPrivateV3': 'https://testnet.binancefuture.com/fapi/v3',
                     'public': 'https://testnet.binance.vision/api/v3',
                     'private': 'https://testnet.binance.vision/api/v3',
                     'v3': 'https://testnet.binance.vision/api/v3',
@@ -127,6 +128,7 @@ class binance(Exchange):
                     'fapiPrivate': 'https://fapi.binance.com/fapi/v1',
                     'fapiData': 'https://fapi.binance.com/futures/data',
                     'fapiPrivateV2': 'https://fapi.binance.com/fapi/v2',
+                    'fapiPrivateV3': 'https://fapi.binance.com/fapi/v3',
                     'public': 'https://api.binance.com/api/v3',
                     'private': 'https://api.binance.com/api/v3',
                     'v3': 'https://api.binance.com/api/v3',
@@ -415,6 +417,7 @@ class binance(Exchange):
                         'positionSide/dual',
                         'userTrades',
                         'income',
+                        'symbolConfig',
                     ],
                     'post': [
                         'batchOrders',
@@ -437,6 +440,13 @@ class binance(Exchange):
                     ],
                 },
                 'fapiPrivateV2': {
+                    'get': [
+                        'account',
+                        'balance',
+                        'positionRisk',
+                    ],
+                },
+                'fapiPrivateV3': {
                     'get': [
                         'account',
                         'balance',
@@ -753,29 +763,43 @@ class binance(Exchange):
                     result = {"info": position, "symbol": market["symbol"],
                               "quantity": self.safe_float(position, "positionAmt", 0.),
                               "leverage": self.safe_float(position, "leverage", None),
-                              "maintenance_margin": maintenance_margin, "margin_type": position["marginType"],
+                              "maintenance_margin": maintenance_margin,
+                              "margin_type": self.safe_string(position, "marginType"),
                               "liquidation_price": max(liq_price, 0), "side": side,
                               "is_long": None if position_side == "BOTH" else position_side == "LONG"}
                     return result
 
-    def parse_positions_with_maintenance_margin(self, account_positions, risk_positions):
+    def append_symbol_configurations(self, parsed_position, symbol_configurations, symbol):
+        if not symbol_configurations or not parsed_position:
+            return
+        symbol_configuration = symbol_configurations.get(symbol)
+        parsed_position['margin_type'] = symbol_configuration['margin_type']
+        parsed_position['leverage'] = symbol_configuration['leverage']
+
+    def parse_positions_with_maintenance_margin(self, account_positions, raw_risk_positions,
+                                                symbol_configurations_dict):
         positions_to_return = list()
+        symbol_to_raw_risk_positions = defaultdict(list)
+        for raw_risk_position in raw_risk_positions:
+            symbol_to_raw_risk_positions[raw_risk_position["symbol"]].append(raw_risk_position)
 
         for account_position in account_positions:
             symbol = account_position["symbol"]
-            positions = risk_positions.get(symbol)
-            if positions is None:
+            raw_positions = symbol_to_raw_risk_positions.get(symbol)
+            if raw_positions is None:
                 continue
-            for position in positions:
-                parsed_position = self.parse_position(position, account_position=account_position)
+            for raw_position in raw_positions:
+                parsed_position = self.parse_position(raw_position, account_position=account_position)
+                self.append_symbol_configurations(parsed_position, symbol_configurations_dict, symbol)
                 if parsed_position:
                     positions_to_return.append(parsed_position)
         return positions_to_return
 
-    def parse_positions_without_maintenance_margin(self, positions):
+    def parse_positions_without_maintenance_margin(self, raw_risk_positions, symbol_configurations_dict):
         positions_to_return = list()
-        for position in positions:
-            parsed_position = self.parse_position(position)
+        for raw_position in raw_risk_positions:
+            parsed_position = self.parse_position(raw_position)
+            self.append_symbol_configurations(parsed_position, symbol_configurations_dict, raw_position["symbol"])
             if parsed_position:
                 positions_to_return.append(parsed_position)
         return positions_to_return
@@ -803,23 +827,58 @@ class binance(Exchange):
 
         return positions_to_return
 
+    def fetch_symbol_config_dict(self, params):
+        symbol_configurations = self.fapiPrivateGetSymbolConfig(params)
+        symbol_configurations_dict = dict()
+        for symbol_configuration in symbol_configurations:
+            leverage = self.safe_float(symbol_configuration, 'leverage')
+            symbol = self.safe_string(symbol_configuration, 'symbol')
+            raw_margin_type = self.safe_string(symbol_configuration, 'marginType')
+
+            symbol_configurations_dict[symbol] = \
+                {'leverage': leverage,
+                 'symbol': symbol,
+                 'margin_type': 'cross' if raw_margin_type == 'CROSSED' else 'isolated',
+                 }
+        return symbol_configurations_dict
+
+    def append_symbol_empty_position(self, position_list, market_id):
+        if market_id:
+            symbol_position_list = [position for position in position_list
+                                    if self.safe_string(position, 'symbol') == market_id]
+            if len(symbol_position_list) == 0:
+                position_list.append({'symbol': market_id, 'notional': 0})
+            elif len(symbol_position_list) == 1:
+                pos = symbol_position_list[0]
+                position_list.append({
+                    'positionSide': 'SHORT' if pos['positionSide'] == 'LONG' else 'LONG',
+                    'symbol': market_id,
+                    'notional': 0
+                })
+
     def get_futures_positions(self, symbol=None, fetch_maintenance_margin=True):
         _type = self.safe_string(self.options, 'defaultType')
         if _type == "future":
-            account_func = self.fapiPrivateV2GetAccount
-            position_risk_func = self.fapiPrivateV2GetPositionRisk
+            account_func = self.fapiPrivateV3GetAccount
+            position_risk_func = self.fapiPrivateV3GetPositionRisk
+            symbol_conf_func = self.fetch_symbol_config_dict
         else:
             account_func = self.dapiPrivateGetAccount
             position_risk_func = self.dapiPrivateGetPositionRisk
-        raw_risk_positions = position_risk_func({"symbol": self.market_id(symbol)} if symbol else {})
+            symbol_conf_func = None
+        market_id = self.market_id(symbol) if symbol else None
+        params = {"symbol": market_id} if symbol else {}
+        raw_risk_positions = position_risk_func(params)
+        self.append_symbol_empty_position(raw_risk_positions, market_id)
+        symbol_configurations_dict = symbol_conf_func(params) if symbol_conf_func else dict()
         if fetch_maintenance_margin:
-            risk_positions = defaultdict(list)
-            for raw_risk_position in raw_risk_positions:
-                risk_positions[raw_risk_position["symbol"]].append(raw_risk_position)
             account_positions = account_func().get("positions", list())
-            positions_to_return = self.parse_positions_with_maintenance_margin(account_positions, risk_positions)
+            self.append_symbol_empty_position(account_positions, market_id)
+            positions_to_return = self.parse_positions_with_maintenance_margin(account_positions, raw_risk_positions,
+                                                                               symbol_configurations_dict)
         else:
-            positions_to_return = self.parse_positions_without_maintenance_margin(raw_risk_positions)
+            positions_to_return = self.parse_positions_without_maintenance_margin(raw_risk_positions,
+                                                                                  symbol_configurations_dict)
         return positions_to_return
 
     def get_positions(self, symbol=None, fetch_maintenance_margin=True, params=None):
@@ -1175,7 +1234,7 @@ class binance(Exchange):
         if type == 'future':
             options = self.safe_value(self.options, 'future', {})
             fetchBalanceOptions = self.safe_value(options, 'fetchBalance', {})
-            method = self.safe_string(fetchBalanceOptions, 'method', 'fapiPrivateV2GetAccount')
+            method = self.safe_string(fetchBalanceOptions, 'method', 'fapiPrivateV3GetAccount')
         elif type == 'delivery':
             options = self.safe_value(self.options, 'delivery', {})
             fetchBalanceOptions = self.safe_value(options, 'fetchBalance', {})
@@ -2766,7 +2825,7 @@ class binance(Exchange):
                 }
             else:
                 raise AuthenticationError(self.id + ' userDataStream endpoint requires `apiKey` credential')
-        if (api == 'private') or (api == 'sapi') or (api == 'wapi' and path != 'systemStatus') or (api == 'dapiPrivate') or (api == 'fapiPrivate') or (api == 'fapiPrivateV2') or (api == 'dapiPrivateV2'):
+        if (api == 'private') or (api == 'sapi') or (api == 'wapi' and path != 'systemStatus') or (api == 'dapiPrivate') or (api == 'fapiPrivate') or (api == 'fapiPrivateV2') or (api == 'dapiPrivateV2') or (api == 'fapiPrivateV3'):
             self.check_required_credentials()
             query = None
             recvWindow = self.safe_integer(self.options, 'recvWindow', 5000)
