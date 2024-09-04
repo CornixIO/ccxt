@@ -835,11 +835,11 @@ class binance(Exchange):
             symbol = self.safe_string(symbol_configuration, 'symbol')
             raw_margin_type = self.safe_string(symbol_configuration, 'marginType')
 
-            symbol_configurations_dict[symbol] = \
-                {'leverage': leverage,
-                 'symbol': symbol,
-                 'margin_type': 'cross' if raw_margin_type == 'CROSSED' else 'isolated',
-                 }
+            symbol_configurations_dict[symbol] = {
+                'leverage': leverage,
+                'symbol': symbol,
+                'margin_type': 'cross' if raw_margin_type == 'CROSSED' else 'isolated',
+            }
         return symbol_configurations_dict
 
     def append_symbol_empty_position(self, position_list, market_id):
