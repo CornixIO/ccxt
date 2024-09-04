@@ -831,8 +831,8 @@ class binance(Exchange):
         symbol_configurations = self.fapiPrivateGetSymbolConfig(params)
         symbol_configurations_dict = dict()
         for symbol_configuration in symbol_configurations:
+            symbol = symbol_configuration['symbol']
             leverage = self.safe_float(symbol_configuration, 'leverage')
-            symbol = self.safe_string(symbol_configuration, 'symbol')
             raw_margin_type = self.safe_string(symbol_configuration, 'marginType')
 
             symbol_configurations_dict[symbol] = {
