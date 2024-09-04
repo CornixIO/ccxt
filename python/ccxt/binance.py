@@ -836,8 +836,8 @@ class binance(Exchange):
             raw_margin_type = self.safe_string(symbol_configuration, 'marginType')
 
             symbol_configurations_dict[symbol] = {
-                'leverage': leverage,
                 'symbol': symbol,
+                'leverage': leverage,
                 'margin_type': 'cross' if raw_margin_type == 'CROSSED' else 'isolated',
             }
         return symbol_configurations_dict
