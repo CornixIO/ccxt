@@ -842,22 +842,6 @@ class binance(Exchange):
             }
         return symbol_configurations_dict
 
-    def append_symbol_empty_position(self, position_list, market_id):
-        if market_id:
-            symbol_position_list = [position for position in position_list
-                                    if self.safe_string(position, 'symbol') == market_id]
-            if len(symbol_position_list) == 0:
-                position_list.append({'symbol': market_id, 'notional': 0, 'positionSide': 'BOTH'})
-            elif len(symbol_position_list) == 1:
-                pos = symbol_position_list[0]
-                if pos['positionSide'] == 'BOTH':
-                    return
-                position_list.append({
-                    'positionSide': 'SHORT' if pos['positionSide'] == 'LONG' else 'LONG',
-                    'symbol': market_id,
-                    'notional': 0
-                })
-
     def get_futures_positions(self, symbol=None, fetch_maintenance_margin=True):
         _type = self.safe_string(self.options, 'defaultType')
         if _type == "future":
@@ -871,11 +855,9 @@ class binance(Exchange):
         market_id = self.market_id(symbol) if symbol else None
         params = {"symbol": market_id} if symbol else {}
         raw_risk_positions = position_risk_func(params)
-        self.append_symbol_empty_position(raw_risk_positions, market_id)
         symbol_configurations_dict = symbol_conf_func(params) if symbol_conf_func else dict()
         if fetch_maintenance_margin:
             account_positions = account_func().get("positions", list())
-            self.append_symbol_empty_position(account_positions, market_id)
             positions_to_return = self.parse_positions_with_maintenance_margin(account_positions, raw_risk_positions,
                                                                                symbol_configurations_dict)
         else:
