@@ -179,6 +179,7 @@ class kucoinfutures(kucoin):
                         'position/margin/auto-deposit-status',
                         'position/margin/deposit-margin',
                         'position/changeMarginMode',
+                        'changeCrossUserLeverage',
                         'bullet-private',
                     ],
                     'delete': [
@@ -884,6 +885,12 @@ class kucoinfutures(kucoin):
         response = self.futuresPrivatePostPositionChangeMarginMode({"symbol": _id, "marginMode": margin_mode_str})
         new_is_cross = response['data']['marginMode'] == 'CROSS'
         return new_is_cross
+
+    def set_leverage(self, symbol, leverage):
+        self.load_markets()
+        symbol = self.find_symbol(symbol)
+        _id = self.find_market(symbol)["id"]
+        return self.futuresPrivatePostChangeCrossUserLeverage({"symbol": _id, "leverage": leverage})
 
     def fetch_positions(self, symbol=None, params={}):
         """
