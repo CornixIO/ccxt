@@ -1820,6 +1820,7 @@ class kucoin(Exchange, ImplicitAPI):
         #    }
         #
         marketId = self.safe_string(order, 'symbol')
+        market = self.safe_market(marketId, market)
         timestamp = self.safe_integer(order, 'createdAt')
         feeCurrencyId = self.safe_string(order, 'feeCurrency')
         cancelExist = self.safe_value(order, 'cancelExist', False)
@@ -3371,7 +3372,7 @@ class kucoin(Exchange, ImplicitAPI):
         headers = headers if (headers is not None) else {}
         url = self.urls['api'][api]
         isSandbox = url.find('sandbox') >= 0
-        if path == 'symbols' and not isSandbox:
+        if path in {'symbols', 'position/changeMarginMode'} and not isSandbox:
             endpoint = '/api/v2/' + self.implode_params(path, params)
         if query:
             if (method == 'GET') or (method == 'DELETE'):
