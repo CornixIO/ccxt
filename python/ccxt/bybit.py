@@ -3146,9 +3146,7 @@ class bybit(Exchange):
         """
         self.load_markets()
         self.check_required_symbol('fetchOrder', symbol)
-        request = {
-            'orderId': id,
-        }
+        request = {'orderId': id} if id is not None else {}
         params, isStop = self.has_stop_params(params, should_omit=False)
         original_params = copy(params)
         result = self.fetch_closed_orders(symbol, None, None, self.extend(request, params))
