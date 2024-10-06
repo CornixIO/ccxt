@@ -4665,7 +4665,7 @@ class bybit(Exchange):
         is_copy_trading_leader = self.safe_bool(result, 'isMasterTrader')
         unified_margin_status = self.safe_integer(result, 'unifiedMarginStatus')
         return {
-            'margin_mode': margin_mode_mapping.get(margin_mode, margin_mode),
+            'margin_mode': margin_mode_mapping.get(margin_mode),
             'is_copy_trading_leader': is_copy_trading_leader,
             'unified_margin_status': unified_margin_status,
             'info': result
