@@ -1884,7 +1884,8 @@ class binance(Exchange):
             numTrades = len(trades)
             if numTrades > 0:
                 cost, fee = self.parse_trades_cost_fee(symbol, trades)
-        fee = fee or self.parse_fee(order)  # ws
+        if fee is None:
+            fee = self.parse_fee(order)  # ws
         average = None
         if cost is not None:
             if filled:
