@@ -4154,8 +4154,10 @@ class bybit(Exchange):
          *
         """
         request = {}
+        enableUnifiedMargin, enableUnifiedAccount = self.is_unified_enabled()
+        isUnifiedAccount = (enableUnifiedMargin or enableUnifiedAccount)
         clientOrderId = self.safe_string_2(params, 'clientOrderId', 'orderLinkId')
-        if clientOrderId is not None:
+        if clientOrderId is not None and isUnifiedAccount:
             request['orderLinkId'] = clientOrderId
         else:
             request['orderId'] = id
