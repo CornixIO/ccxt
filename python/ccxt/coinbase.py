@@ -319,6 +319,7 @@ class coinbase(Exchange, ImplicitAPI):
                     'INSUFFICIENT_FUND': BadRequest,
                     'PERMISSION_DENIED': PermissionDenied,
                     'Missing required scopes': PermissionDenied,  # 403 Missing required scopes
+                    'order with this orderID was not found': OrderNotFound,
                 },
                 'broad': {
                     'request timestamp expired': InvalidNonce,  # {"errors":[{"id":"authentication_error","message":"request timestamp expired"}]}
