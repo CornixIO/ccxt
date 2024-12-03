@@ -226,7 +226,6 @@ class coinbasepro(Exchange, ImplicitAPI):
                     'Private rate limit exceeded': RateLimitExceeded,
                     'Trading pair not available': PermissionDenied,
                     'Product not found': InvalidOrder,
-                    'order with this orderID was not found': OrderNotFound,
                 },
                 'broad': {
                     'Order already done': OrderNotFound,
@@ -236,6 +235,7 @@ class coinbasepro(Exchange, ImplicitAPI):
                     'under maintenance': OnMaintenance,
                     'size is too small': InvalidOrder,
                     'Cancel only mode': OnMaintenance,  # https://github.com/ccxt/ccxt/issues/7690
+                    'order with this orderID was not found': OrderNotFound,
                 },
             },
         })
