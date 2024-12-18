@@ -2291,6 +2291,8 @@ class binance(Exchange):
             request['startTime'] = since
         if limit is not None:
             request['limit'] = limit
+        else:
+            request['limit'] = 1000
         response = getattr(self, method)(self.extend(request, params))
         #
         # spot trade
