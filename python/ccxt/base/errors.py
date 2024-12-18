@@ -12,6 +12,13 @@ error_hierarchy = {
             'BadRequest': {
                 'BadSymbol': {},
             },
+            'OperationRejected': {
+                'NoChange': {
+                    'MarginModeAlreadySet': {},
+                },
+                'MarketClosed': {},
+                'ManualInteractionNeeded': {},
+            },
             'BadResponse': {
                 'NullResponse': {},
             },
@@ -30,17 +37,20 @@ error_hierarchy = {
             },
             'NotSupported': {},
         },
-        'NetworkError': {
-            'DDoSProtection': {
-                'RateLimitExceeded': {
-                    'AccountRateLimitExceeded': {}
+        'OperationFailed':
+        {
+            'NetworkError': {
+                'DDoSProtection': {
+                    'RateLimitExceeded': {
+                        'AccountRateLimitExceeded': {}
+                    },
                 },
-            },
-            'ExchangeNotAvailable': {
-                'OnMaintenance': {},
-            },
-            'InvalidNonce': {},
-            'RequestTimeout': {},
+                'ExchangeNotAvailable': {
+                    'OnMaintenance': {},
+                },
+                'InvalidNonce': {},
+                'RequestTimeout': {},
+            }
         },
     },
 }
@@ -83,6 +93,26 @@ class BadRequest(ExchangeError):
 
 
 class BadSymbol(BadRequest):
+    pass
+
+
+class OperationRejected(ExchangeError):
+    pass
+
+
+class NoChange(OperationRejected):
+    pass
+
+
+class MarginModeAlreadySet(NoChange):
+    pass
+
+
+class MarketClosed(OperationRejected):
+    pass
+
+
+class ManualInteractionNeeded(OperationRejected):
     pass
 
 
@@ -142,7 +172,11 @@ class NotSupported(ExchangeError):
     pass
 
 
-class NetworkError(BaseError):
+class OperationFailed(BaseError):
+    pass
+
+
+class NetworkError(OperationFailed):
     pass
 
 

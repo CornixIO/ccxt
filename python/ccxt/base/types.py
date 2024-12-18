@@ -220,6 +220,18 @@ class Transaction(TypedDict):
     internal: Bool
 
 
+class TransferEntry(TypedDict):
+    info: Dict[str, any]
+    id: Str
+    timestamp: Int
+    datetime: Str
+    currency: Str
+    amount: Num
+    fromAccount: Str
+    toAccount: Str
+    status: Str
+
+
 class Ticker(TypedDict):
     info: Dict[str, Any]
     symbol: Str
@@ -252,6 +264,20 @@ class MarginMode(TypedDict):
     marginMode: Str
 
 
+MarginModes = Dict[str, MarginMode]
+
+
+class Leverage(TypedDict):
+    info: Dict[str, Any]
+    symbol: Str
+    marginMode: Str
+    longLeverage: Num
+    shortLeverage: Num
+
+
+Leverages = Dict[str, Leverage]
+
+
 class Greeks(TypedDict):
     symbol: Str
     timestamp: Int
@@ -272,6 +298,60 @@ class Greeks(TypedDict):
     lastPrice: Num
     underlyingPrice: Num
     info: Dict[str, Any]
+
+
+class Conversion(TypedDict):
+    info: Dict[str, Any]
+    timestamp: Int
+    datetime: Str
+    id: Str
+    fromCurrency: Str
+    fromAmount: Num
+    toCurrency: Str
+    toAmount: Num
+    price: Num
+    fee: Num
+
+
+class Option(TypedDict):
+    info: Dict[str, Any]
+    currency: Str
+    symbol: Str
+    timestamp: Int
+    datetime: Str
+    impliedVolatility: Num
+    openInterest: Num
+    bidPrice: Num
+    askPrice: Num
+    midPrice: Num
+    markPrice: Num
+    lastPrice: Num
+    underlyingPrice: Num
+    change: Num
+    percentage: Num
+    baseVolume: Num
+    quoteVolume: Num
+
+
+OptionChain = Dict[str, Option]
+
+
+class MarketMarginModes(TypedDict):
+    cross: bool
+    isolated: bool
+
+
+class MinMax(TypedDict):
+    min: Num
+    max: Num
+
+
+class MarketLimits(TypedDict):
+    amount: Optional[MinMax]
+    cost: Optional[MinMax]
+    leverage: Optional[MinMax]
+    price: Optional[MinMax]
+    market: Optional[MinMax]
 
 
 class MarketInterface(TypedDict):
@@ -325,9 +405,125 @@ class LastPrice(TypedDict):
     info: Dict[str, Any]
 
 
+class MarginModification(TypedDict):
+    info: Dict[str, any]
+    symbol: str
+    type: Optional[Literal['add', 'reduce', 'set']]
+    marginMode: Optional[Literal['isolated', 'cross']]
+    amount: Optional[float]
+    code: Str
+    status: Str
+    timestamp: Int
+    datetime: Str
+
+
+class CrossBorrowRate(TypedDict):
+    info: Dict[str, any]
+    currency: Str
+    rate: float
+    period: Optional[float]
+    timestamp: Int
+    datetime: Str
+
+
+class IsolatedBorrowRate(TypedDict):
+    info: Dict[str, any]
+    symbol: str
+    base: str
+    baseRate: float
+    quote: str
+    quoteRate: float
+    period: Int
+    timestamp: Int
+    datetime: Str
+
+
+class FundingRate(TypedDict):
+    symbol: Str
+    timestamp: Int
+    fundingRate: Num
+    datetime: Str
+    markPrice: Num
+    indexPrice: Num
+    interestRate: Num
+    estimatedSettlePrice: Num
+    fundingTimestamp: Int
+    fundingDatetime: Str
+    nextFundingTimestamp: Int
+    nextFundingDatetime: Str
+    nextFundingRate: Num
+    previousFundingTimestamp: Int
+    previousFundingDatetime: Str
+    previousFundingRate: Num
+    info: Dict[str, Any]
+    interval: Str
+
+
+class LeverageTier:
+    tier: Num
+    symbol: Str
+    currency: Str
+    minNotional: Num
+    maxNotional: Num
+    maintenanceMarginRate: Num
+    maxLeverage: Num
+    info: Dict[str, Any]
+
+
+class LedgerEntry:
+    id: Str
+    info: Any
+    timestamp: Int
+    datetime: Str
+    direction: Str
+    account: Str
+    referenceId: Str
+    referenceAccount: Str
+    type: Str
+    currency: Str
+    amount: Str
+    before: float
+    after: float
+    status: Str
+    fee: Fee
+
+
+class DepositAddress:
+    info: Any
+    currency: Str
+    network: Optional[Str]
+    address: Str
+    tag: Optional[Str]
+
+
+class LongShortRatio:
+    info: Any
+    symbol: Str
+    timestamp: Optional[Int]
+    datetime: Optional[Str]
+    timeframe: Optional[Str]
+    longShortRatio: float
+
+
+class BorrowInterest:
+    info: Any
+    symbol: Optional[Str]
+    currency: Optional[Str]
+    interest: Optional[Num]
+    interestRate: Optional[Num]
+    amountBorrowed: Optional[Num]
+    marginMode: Optional[Str]
+    timestamp: Optional[Int]
+    datetime: Optional[Str]
+
+
+FundingRates = Dict[Str, FundingRate]
 LastPrices = Dict[Str, LastPrice]
 Currencies = Dict[Str, CurrencyInterface]
 TradingFees = Dict[Str, TradingFeeInterface]
+IsolatedBorrowRates = Dict[Str, IsolatedBorrowRate]
+CrossBorrowRates = Dict[Str, CrossBorrowRate]
+LeverageTiers = Dict[Str, List[LeverageTier]]
 
 Market = Optional[MarketInterface]
 Currency = Optional[CurrencyInterface]

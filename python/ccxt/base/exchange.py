@@ -384,9 +384,6 @@ class Exchange(object):
             else:
                 setattr(self, key, settings[key])
 
-        if self.api:
-            self.define_rest_api(self.api, 'request')
-
         if self.markets:
             self.set_markets(self.markets)
 
@@ -402,7 +399,11 @@ class Exchange(object):
                 if isinstance(attr, types.MethodType):
                     setattr(cls, camelcase, getattr(cls, name))
                 else:
-                    setattr(self, camelcase, attr)
+                    if hasattr(self, camelcase):
+                        if attr is not None:
+                            setattr(self, camelcase, attr)
+                    else:
+                        setattr(self, camelcase, attr)
 
         self.tokenBucket = self.extend({
             'refillRate': 1.0 / self.rateLimit if self.rateLimit > 0 else float('inf'),
@@ -443,98 +444,6 @@ class Exchange(object):
         elif 'api_backup' in self.urls:
             self.urls['api'] = self.urls['api_backup']
             del self.urls['api_backup']
-
-    @classmethod
-    def define_rest_api(cls, api, method_name, paths=[]):
-        delimiters = re.compile('[^a-zA-Z0-9]')
-        entry = getattr(cls, method_name)  # returns a function (instead of a bound method)
-        for key, value in api.items():
-            if isinstance(value, int) or isinstance(value, float):
-                uppercase_method = paths[-1].upper()
-                lowercase_method = paths[-1].lower()
-                camelcase_method = lowercase_method.capitalize()
-                temp_paths = paths[:-1]
-                path = key.strip()
-                split_path = delimiters.split(path)
-                lowercase_path = [x.strip().lower() for x in split_path]
-                camelcase_suffix = ''.join([Exchange.capitalize(x) for x in split_path])
-                underscore_suffix = '_'.join([x for x in lowercase_path if len(x)])
-                camelcase_prefix = ''
-                underscore_prefix = ''
-                if len(temp_paths):
-                    camelcase_prefix = temp_paths[0]
-                    underscore_prefix = temp_paths[0]
-                    if len(temp_paths) > 1:
-                        camelcase_prefix += ''.join([Exchange.capitalize(x) for x in temp_paths[1:]])
-                        underscore_prefix += '_' + '_'.join([x.strip() for p in temp_paths[1:] for x in delimiters.split(p)])
-                        api_argument = temp_paths
-                    else:
-                        api_argument = temp_paths[0]
-                camelcase = camelcase_prefix + camelcase_method + Exchange.capitalize(camelcase_suffix)
-                underscore = underscore_prefix + '_' + lowercase_method + '_' + underscore_suffix.lower()
-
-                def partialer():
-                    outer_kwargs = {'path': path, 'api': api_argument, 'method': uppercase_method}
-
-                    @functools.wraps(entry)
-                    def inner(_self, params=None):
-                        """
-                        Inner is called when a generated method (publicGetX) is called.
-                        _self is a reference to self created by function.__get__(exchange, type(exchange))
-                        https://en.wikipedia.org/wiki/Closure_(computer_programming) equivalent to functools.partial
-                        """
-                        inner_kwargs = dict(outer_kwargs)  # avoid mutation
-                        if params is not None:
-                            inner_kwargs['params'] = params
-                        return entry(_self, **inner_kwargs)
-                    return inner
-                to_bind = partialer()
-                setattr(cls, camelcase, to_bind)
-                setattr(cls, underscore, to_bind)
-            elif isinstance(value, list):
-                uppercase_method = key.upper()
-                lowercase_method = key.lower()
-                camelcase_method = lowercase_method.capitalize()
-                for path in value:
-                    path = path.strip()
-                    split_path = delimiters.split(path)
-                    lowercase_path = [x.strip().lower() for x in split_path]
-                    camelcase_suffix = ''.join([Exchange.capitalize(x) for x in split_path])
-                    underscore_suffix = '_'.join([x for x in lowercase_path if len(x)])
-                    camelcase_prefix = ''
-                    underscore_prefix = ''
-                    if len(paths):
-                        camelcase_prefix = paths[0]
-                        underscore_prefix = paths[0]
-                        if len(paths) > 1:
-                            camelcase_prefix += ''.join([Exchange.capitalize(x) for x in paths[1:]])
-                            underscore_prefix += '_' + '_'.join([x.strip() for p in paths[1:] for x in delimiters.split(p)])
-                            api_argument = paths
-                        else:
-                            api_argument = paths[0]
-                    camelcase = camelcase_prefix + camelcase_method + Exchange.capitalize(camelcase_suffix)
-                    underscore = underscore_prefix + '_' + lowercase_method + '_' + underscore_suffix.lower()
-
-                    def partialer():
-                        outer_kwargs = {'path': path, 'api': api_argument, 'method': uppercase_method}
-
-                        @functools.wraps(entry)
-                        def inner(_self, params=None):
-                            """
-                            Inner is called when a generated method (publicGetX) is called.
-                            _self is a reference to self created by function.__get__(exchange, type(exchange))
-                            https://en.wikipedia.org/wiki/Closure_(computer_programming) equivalent to functools.partial
-                            """
-                            inner_kwargs = dict(outer_kwargs)  # avoid mutation
-                            if params is not None:
-                                inner_kwargs['params'] = params
-                            return entry(_self, **inner_kwargs)
-                        return inner
-                    to_bind = partialer()
-                    setattr(cls, camelcase, to_bind)
-                    setattr(cls, underscore, to_bind)
-            else:
-                cls.define_rest_api(value, method_name, paths + [key])
 
     def throttle(self):
         now = float(self.milliseconds())
@@ -1710,6 +1619,152 @@ class Exchange(object):
         digit_precision = self.convert_amount_into_digit_precision(amount)
         return 1 / (10 ** digit_precision)
 
+    def safe_ledger_entry(self, entry: object, currency: Currency = None):
+        currency = self.safe_currency(None, currency)
+        direction = self.safe_string(entry, 'direction')
+        before = self.safe_string(entry, 'before')
+        after = self.safe_string(entry, 'after')
+        amount = self.safe_string(entry, 'amount')
+        if amount is not None:
+            if before is None and after is not None:
+                before = Precise.string_sub(after, amount)
+            elif before is not None and after is None:
+                after = Precise.string_add(before, amount)
+        if before is not None and after is not None:
+            if direction is None:
+                if Precise.string_gt(before, after):
+                    direction = 'out'
+                if Precise.string_gt(after, before):
+                    direction = 'in'
+        fee = self.safe_value(entry, 'fee')
+        if fee is not None:
+            fee['cost'] = self.safe_number(fee, 'cost')
+        timestamp = self.safe_integer(entry, 'timestamp')
+        info = self.safe_dict(entry, 'info', {})
+        return {
+            'id': self.safe_string(entry, 'id'),
+            'timestamp': timestamp,
+            'datetime': self.iso8601(timestamp),
+            'direction': direction,
+            'account': self.safe_string(entry, 'account'),
+            'referenceId': self.safe_string(entry, 'referenceId'),
+            'referenceAccount': self.safe_string(entry, 'referenceAccount'),
+            'type': self.safe_string(entry, 'type'),
+            'currency': currency['code'],
+            'amount': self.parse_number(amount),
+            'before': self.parse_number(before),
+            'after': self.parse_number(after),
+            'status': self.safe_string(entry, 'status'),
+            'fee': fee,
+            'info': info,
+        }
+
+    def safe_currency_structure(self, currency: object):
+        return self.extend({
+            'info': None,
+            'id': None,
+            'numericId': None,
+            'code': None,
+            'precision': None,
+            'type': None,
+            'name': None,
+            'active': None,
+            'deposit': None,
+            'withdraw': None,
+            'fee': None,
+            'fees': {},
+            'networks': {},
+            'limits': {
+                'deposit': {
+                    'min': None,
+                    'max': None,
+                },
+                'withdraw': {
+                    'min': None,
+                    'max': None,
+                },
+            },
+        }, currency)
+
+    def safe_market_structure(self, market: dict = None):
+        cleanStructure = {
+            'id': None,
+            'lowercaseId': None,
+            'symbol': None,
+            'base': None,
+            'quote': None,
+            'settle': None,
+            'baseId': None,
+            'quoteId': None,
+            'settleId': None,
+            'type': None,
+            'spot': None,
+            'margin': None,
+            'swap': None,
+            'future': None,
+            'option': None,
+            'index': None,
+            'active': None,
+            'contract': None,
+            'linear': None,
+            'inverse': None,
+            'subType': None,
+            'taker': None,
+            'maker': None,
+            'contractSize': None,
+            'expiry': None,
+            'expiryDatetime': None,
+            'strike': None,
+            'optionType': None,
+            'precision': {
+                'amount': None,
+                'price': None,
+                'cost': None,
+                'base': None,
+                'quote': None,
+            },
+            'limits': {
+                'leverage': {
+                    'min': None,
+                    'max': None,
+                },
+                'amount': {
+                    'min': None,
+                    'max': None,
+                },
+                'price': {
+                    'min': None,
+                    'max': None,
+                },
+                'cost': {
+                    'min': None,
+                    'max': None,
+                },
+            },
+            'marginModes': {
+                'cross': None,
+                'isolated': None,
+            },
+            'created': None,
+            'info': None,
+        }
+        if market is not None:
+            result = self.extend(cleanStructure, market)
+            # set None swap/future/etc
+            if result['spot']:
+                if result['contract'] is None:
+                    result['contract'] = False
+                if result['swap'] is None:
+                    result['swap'] = False
+                if result['future'] is None:
+                    result['future'] = False
+                if result['option'] is None:
+                    result['option'] = False
+                if result['index'] is None:
+                    result['index'] = False
+            return result
+        return cleanStructure
+
     def set_markets(self, markets, currencies=None):
         values = list(markets.values()) if type(markets) is dict else markets
         for i in range(0, len(values)):
@@ -2334,6 +2389,19 @@ class Exchange(object):
             value = value if (value is not None) else defaultValue
         return [value, params]
 
+    def handle_option_and_params_2(self, params: object, methodName1: str, optionName1: str, optionName2: str, defaultValue=None):
+        value = None
+        value, params = self.handle_option_and_params(params, methodName1, optionName1, defaultValue)
+        # if still None, try optionName2
+        value2 = None
+        value2, params = self.handle_option_and_params(params, methodName1, optionName2, value)
+        return [value2, params]
+
+    def handle_option(self, methodName: str, optionName: str, defaultValue=None):
+        # eslint-disable-next-line no-unused-vars
+        result, empty = self.handle_option_and_params({}, methodName, optionName, defaultValue)
+        return result
+
     def load_trading_limits(self, symbols=None, reload=False, params={}):
         if self.has['fetchTradingLimits']:
             if reload or not('limitsLoaded' in list(self.options.keys())):
@@ -2554,6 +2622,22 @@ class Exchange(object):
         stringifiedNumber = str(number)
         convertedNumber = float(stringifiedNumber)
         return int(convertedNumber)
+
+    def parse_to_numeric(self, number):
+        stringVersion = self.number_to_string(number)  # self will convert 1.0 and 1 to "1" and 1.1 to "1.1"
+        # keep self in mind:
+        # in JS: 1 == 1.0 is True;  1 == 1.0 is True
+        # in Python: 1 == 1.0 is True
+        # in PHP 1 == 1.0 is True, but 1 == 1.0 is False
+        if stringVersion.find('.') >= 0:
+            return float(stringVersion)
+        return int(stringVersion)
+
+    def is_round_number(self, value: float):
+        # self method is similar to isInteger, but self is more loyal and does not check for types.
+        # i.e. isRoundNumber(1.000) returns True, while isInteger(1.000) returns False
+        res = self.parse_to_numeric((value % 1))
+        return res == 0
 
     def parse_ledger(self, data, currency=None, since=None, limit=None, params={}):
         array = self.to_array(data)
