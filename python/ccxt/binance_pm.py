@@ -37,10 +37,10 @@ from ccxt.base.decimal_to_precision import TICK_SIZE
 from ccxt.base.precise import Precise
 
 
-class binance(Exchange, ImplicitAPI):
+class binance_pm(Exchange, ImplicitAPI):
 
     def describe(self):
-        return self.deep_extend(super(binance, self).describe(), {
+        return self.deep_extend(super(binance_pm, self).describe(), {
             'id': 'binance',
             'name': 'Binance',
             'countries': ['JP', 'MT'],  # Japan, Malta
@@ -1302,7 +1302,7 @@ class binance(Exchange, ImplicitAPI):
                 # POST https://fapi.binance.com/fapi/v1/marginType 400 Bad Request
                 # binanceusdm
                 'throwMarginModeAlreadySet': False,
-                'fetchPositions': 'positionRisk',  # or 'account' or 'option'
+                'fetchPositions': 'account',  # or 'account' or 'option'
                 'recvWindow': 10 * 1000,  # 10 sec
                 'timeDifference': 0,  # the difference between system clock and Binance clock
                 'adjustForTimeDifference': False,  # controls the adjustment logic upon instantiation
@@ -2689,7 +2689,7 @@ class binance(Exchange, ImplicitAPI):
             return subType == 'linear'
 
     def set_sandbox_mode(self, enable: bool):
-        super(binance, self).set_sandbox_mode(enable)
+        super(binance_pm, self).set_sandbox_mode(enable)
         self.options['sandboxMode'] = enable
 
     def create_expired_option_market(self, symbol: str):
@@ -2805,7 +2805,7 @@ class binance(Exchange, ImplicitAPI):
         if isOption and not (marketId in self.markets_by_id):
             # handle expired option contracts
             return self.create_expired_option_market(marketId)
-        return super(binance, self).safe_market(marketId, market, delimiter, marketType)
+        return super(binance_pm, self).safe_market(marketId, market, delimiter, marketType)
 
     def cost_to_precision(self, symbol, cost):
         return self.decimal_to_precision(cost, TRUNCATE, self.markets[symbol]['precision']['quote'], self.precisionMode, self.paddingMode)
@@ -10031,6 +10031,32 @@ class binance(Exchange, ImplicitAPI):
             'marginMode': None,
             'percentage': None,
         })
+
+    def get_position_maintenance_margin(self, position_info):
+        margin = self.safe_float(position_info, "initialMargin", 0.) + \
+            self.safe_float(position_info, "unrealizedProfit", 0.) - \
+            self.safe_float(position_info, "openOrderInitialMargin", 0.)
+        return margin
+
+    def parse_get_position(self, position):
+        position_info = self.safe_value(position, 'info')
+        liq_price = self.safe_float(position, 'liquidationPrice', 0.)
+        is_hedged = self.safe_bool(position, 'hedged')
+        maintenance_margin = self.get_position_maintenance_margin(position)
+        side = self.safe_string(position, 'side')
+        result = {"info": position_info, "symbol": self.safe_string(position, 'symbol'),
+                  "quantity": self.safe_float(position, 'contracts', 0.),
+                  "leverage": self.safe_float(position, 'leverage', None),
+                  "maintenance_margin": maintenance_margin,
+                  "margin_type": self.safe_float(position, 'marginMode', None),
+                  "liquidation_price": max(liq_price, 0), "side": side,
+                  "is_long": side == 'long' if is_hedged else None}
+        return result
+
+    def get_positions(self, symbol=None, params=None, **kwargs):
+        params = {} if params is None else params
+        symbols = [symbol] if symbol else None
+        return [self.parse_get_position(position) for position in self.fetch_positions(symbols=symbols, params=params)]
 
     def fetch_positions(self, symbols: Strings = None, params={}):
         """
