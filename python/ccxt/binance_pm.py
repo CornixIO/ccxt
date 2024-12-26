@@ -10048,7 +10048,7 @@ class binance_pm(Exchange, ImplicitAPI):
                   "quantity": self.safe_float(position, 'contracts', 0.),
                   "leverage": self.safe_float(position, 'leverage', None),
                   "maintenance_margin": maintenance_margin,
-                  "margin_type": self.safe_float(position, 'marginMode', None),
+                  "margin_type": 'cross',  # PortfolioMargin currently only support cross margin
                   "liquidation_price": max(liq_price, 0), "side": side,
                   "is_long": side == 'long' if is_hedged else None}
         return result
@@ -10429,7 +10429,10 @@ class binance_pm(Exchange, ImplicitAPI):
             raise NotSupported(self.id + ' fetchFundingHistory() supports linear and inverse contracts only')
         return self.parse_incomes(response, market, since, limit)
 
-    def set_leverage(self, leverage: Int, symbol: Str = None, params={}):
+    def change_margin_type(self, symbol, is_cross):
+        pass
+
+    def set_leverage(self, symbol: Str, leverage: Int, params={}):
         """
         set the level of leverage for a market
 
