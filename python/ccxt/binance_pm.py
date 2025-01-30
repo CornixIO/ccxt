@@ -36,6 +36,9 @@ from ccxt.base.decimal_to_precision import TRUNCATE
 from ccxt.base.decimal_to_precision import TICK_SIZE
 from ccxt.base.precise import Precise
 
+PERMISSION_TO_VALUE = {"spot": ["enableSpotAndMarginTrading"], "futures": ["enableFutures"],
+                       "withdrawal": ["enableWithdrawals"]}
+
 
 class binance_pm(Exchange, ImplicitAPI):
 
@@ -9878,6 +9881,18 @@ class binance_pm(Exchange, ImplicitAPI):
                 'info': bracket,
             })
         return tiers
+
+    def get_api_account_details(self):
+        response = self.sapi_get_account_apirestrictions()
+        permissions = self.extract_trading_permissions(PERMISSION_TO_VALUE, response=response)
+        return {
+            'info': response,
+            "creation": self.safe_integer(response, "createTime"),
+            "expiration": self.safe_integer(response, "tradingAuthorityExpirationTime"),
+            "permissions": permissions,
+            'unified_account_with_inverse': response.get('enablePortfolioMarginTrading', False),
+            "ip_restrict": self.safe_value(response, "ipRestrict")
+        }
 
     def fetch_position(self, symbol: str, params={}):
         """
