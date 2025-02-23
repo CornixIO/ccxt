@@ -3570,10 +3570,7 @@ class bybit(Exchange):
         #     }
         #
         result = self.safe_value(response, 'result', {})
-        return self.safe_order({
-            'info': response,
-            'id': self.safe_string(result, 'orderId'),
-        })
+        return self.parse_order(result, market)
 
     def cancel_usdc_order(self, id, symbol: Optional[str] = None, params={}):
         self.check_required_symbol('cancelUsdcOrder', symbol)
