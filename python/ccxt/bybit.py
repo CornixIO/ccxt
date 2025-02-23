@@ -3515,6 +3515,7 @@ class bybit(Exchange):
         request = {
             'symbol': market['id'],
             'orderId': id,
+            'category': self.get_category()
             # 'orderLinkId': 'string',  # unique client order id, max 36 characters
             # 'takeProfit': 123.45,  # take profit price, only take effect upon opening the position
             # 'stopLoss': 123.45,  # stop loss price, only take effect upon opening the position
@@ -3525,12 +3526,6 @@ class bybit(Exchange):
             # Valid for option only.
             # 'orderIv': '0',  # Implied volatility; parameters are passed according to the real value; for example, for 10%, 0.1 is passed
         }
-        if self.is_linear():
-            request['category'] = 'linear'
-        elif self.is_inverse():
-            request['category'] = 'inverse'
-        elif self.is_option():
-            request['category'] = 'option'
         if amount is not None:
             request['qty'] = self.amount_to_precision(symbol, amount)
         if price is not None:
