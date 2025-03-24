@@ -285,6 +285,14 @@ class hyperliquid(Exchange, ImplicitAPI):
             }
         return result
 
+    def is_swap(self):
+        default_type = self.safe_string(self.options, 'defaultType')
+        return default_type == "swap"
+
+    def is_spot(self):
+        default_type = self.safe_string(self.options, 'defaultType')
+        return default_type == "spot"
+
     def fetch_markets(self, params={}) -> List[Market]:
         """
         retrieves data on all markets for hyperliquid
@@ -295,14 +303,12 @@ class hyperliquid(Exchange, ImplicitAPI):
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :returns dict[]: an array of objects representing market data
         """
-        rawPromises = [
-            self.fetch_swap_markets(params),
-            self.fetch_spot_markets(params),
-        ]
-        promises = rawPromises
-        swapMarkets = promises[0]
-        spotMarkets = promises[1]
-        return self.array_concat(swapMarkets, spotMarkets)
+        if self.is_spot():
+            return self.fetch_spot_markets(params)
+        elif self.is_swap():
+            return self.fetch_swap_markets(params)
+        else:
+            raise NotImplementedError
 
     def fetch_swap_markets(self, params={}) -> List[Market]:
         """
@@ -537,9 +543,6 @@ class hyperliquid(Exchange, ImplicitAPI):
         symbol = base + '/' + quote
         contract = True
         swap = True
-        if contract:
-            if swap:
-                symbol = symbol + ':' + settle
         fees = self.safe_dict(self.fees, 'swap', {})
         taker = self.safe_number(fees, 'taker')
         maker = self.safe_number(fees, 'maker')
@@ -2287,6 +2290,7 @@ class hyperliquid(Exchange, ImplicitAPI):
         #     }
         #
         entry = self.safe_dict(position, 'position', {})
+        position_type = self.safe_string(position, 'type')
         coin = self.safe_string(entry, 'coin')
         marketId = self.coin_to_market_id(coin)
         market = self.safe_market(marketId, None)
@@ -2311,8 +2315,10 @@ class hyperliquid(Exchange, ImplicitAPI):
             'timestamp': None,
             'datetime': None,
             'isolated': isIsolated,
-            'hedged': None,
+            'hedged': position_type != 'oneWay',
             'side': side,
+            'is_long': None if position_type == 'oneWay' else side == 'long',
+            'quantity': self.parse_number(size),
             'contracts': self.parse_number(size),
             'contractSize': None,
             'entryPrice': self.safe_number(entry, 'entryPx'),
@@ -2321,12 +2327,15 @@ class hyperliquid(Exchange, ImplicitAPI):
             'leverage': self.safe_number(leverage, 'value'),
             'collateral': self.safe_number(entry, 'marginUsed'),
             'initialMargin': self.parse_number(initialMargin),
+            'maintenance_margin': self.safe_number(entry, 'positionValue'),
             'maintenanceMargin': None,
             'initialMarginPercentage': None,
             'maintenanceMarginPercentage': None,
             'unrealizedPnl': self.parse_number(rawUnrealizedPnl),
             'liquidationPrice': self.safe_number(entry, 'liquidationPx'),
+            'liquidation_price': self.safe_number(entry, 'liquidationPx'),
             'marginMode': marginMode,
+            'margin_type': marginMode,
             'percentage': self.parse_number(percentage),
         })
 
@@ -2993,7 +3002,7 @@ class hyperliquid(Exchange, ImplicitAPI):
     def coin_to_market_id(self, coin: Str):
         if coin.find('/') > -1 or coin.find('@') > -1:
             return coin  # spot
-        return coin + '/USDC:USDC'
+        return coin + '/USDC'
 
     def handle_errors(self, code: int, reason: str, url: str, method: str, headers: dict, body: str, response, requestHeaders, requestBody):
         if not response:
