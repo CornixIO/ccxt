@@ -153,6 +153,9 @@ from ccxt.huobijp import huobijp                            # noqa: F401
 from ccxt.huobipro import huobipro                          # noqa: F401
 from ccxt.huobiru import huobiru                            # noqa: F401
 from ccxt.hyperliquid import hyperliquid                    # noqa: F401
+from ccxt.hyperliquid_abs import hyperliquid_abs            # noqa: F401
+from ccxt.hyperliquid_futures import hyperliquid_futures    # noqa: F401
+from ccxt.hyperliquid_spot import hyperliquid_spot          # noqa: F401
 from ccxt.ice3x import ice3x                                # noqa: F401
 from ccxt.idex import idex                                  # noqa: F401
 from ccxt.independentreserve import independentreserve      # noqa: F401
@@ -281,6 +284,9 @@ exchanges = [
     'huobipro',
     'huobiru',
     'hyperliquid',
+    'hyperliquid_abs',
+    'hyperliquid_futures',
+    'hyperliquid_spot',
     'ice3x',
     'idex',
     'independentreserve',
