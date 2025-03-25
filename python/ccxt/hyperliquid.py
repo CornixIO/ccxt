@@ -2262,6 +2262,11 @@ class hyperliquid(Exchange, ImplicitAPI):
             result.append(self.parse_position(data[i], None))
         return self.filter_by_array_positions(result, 'symbol', symbols, False)
 
+    def get_position_maintenance_margin(self, position):
+        margin = self.safe_float(position, "marginUsed", 0.) + \
+                 self.safe_float(position, "unrealizedPnl", 0.)
+        return margin
+
     def parse_position(self, position: dict, market: Market = None):
         #
         #     {
@@ -2327,7 +2332,7 @@ class hyperliquid(Exchange, ImplicitAPI):
             'leverage': self.safe_number(leverage, 'value'),
             'collateral': self.safe_number(entry, 'marginUsed'),
             'initialMargin': self.parse_number(initialMargin),
-            'maintenance_margin': self.safe_number(entry, 'positionValue'),
+            'maintenance_margin': self.get_position_maintenance_margin(entry),
             'maintenanceMargin': None,
             'initialMarginPercentage': None,
             'maintenanceMarginPercentage': None,
