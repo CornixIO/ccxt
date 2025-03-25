@@ -548,7 +548,7 @@ class hyperliquid(Exchange, ImplicitAPI):
         maker = self.safe_number(fees, 'maker')
         amountPrecision = self.safe_integer(market, 'szDecimals')
         return self.safe_market_structure({
-            'id': baseId,
+            'id': symbol,
             'symbol': symbol,
             'base': base,
             'quote': quote,
