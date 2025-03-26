@@ -2577,6 +2577,16 @@ class Exchange(object):
         convertedNumber = float(stringifiedNumber)
         return int(convertedNumber)
 
+    def parse_to_numeric(self, number):
+        stringVersion = self.number_to_string(number)  # self will convert 1.0 and 1 to "1" and 1.1 to "1.1"
+        # keep self in mind:
+        # in JS: 1 == 1.0 is True;  1 == 1.0 is True
+        # in Python: 1 == 1.0 is True
+        # in PHP 1 == 1.0 is True, but 1 == 1.0 is False
+        if stringVersion.find('.') >= 0:
+            return float(stringVersion)
+        return int(stringVersion)
+
     def parse_ledger(self, data, currency=None, since=None, limit=None, params={}):
         array = self.to_array(data)
         result = []
