@@ -1,9 +1,6 @@
-from typing import List
-
 from ccxt.base.types import Market, Str
-from ccxt.hyperliquid import hyperliquid
-
 from ccxt.base.types import Str, Int
+from ccxt.hyperliquid import hyperliquid
 
 
 class hyperliquid_abs(hyperliquid):
