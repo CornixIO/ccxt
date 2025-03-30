@@ -16,6 +16,6 @@ class hyperliquid_abs(hyperliquid):
     def replace_k_with_1000(markets):
         for market in markets:
             if market['symbol'].startswith('k'):
-                stripped_symbol = market['symbol'].lstrip('k')
+                stripped_symbol = market['symbol'][1:]
                 market['symbol'] = f'1000{stripped_symbol}'
         return markets
