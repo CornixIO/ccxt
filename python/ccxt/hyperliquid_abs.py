@@ -1,3 +1,5 @@
+from typing import List
+
 from ccxt.base.types import Market, Str
 from ccxt.hyperliquid import hyperliquid
 
@@ -12,3 +14,11 @@ class hyperliquid_abs(hyperliquid):
     def fetch_order_trades(self, id: str, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
         symbol_trades = self.fetch_my_trades(symbol, since, limit, params=params)
         return self.filter_by_array(symbol_trades, 'order', values=[id], indexed=False)
+
+    @staticmethod
+    def replace_k_with_1000(markets):
+        for market in markets:
+            if market['symbol'].startswith('k'):
+                stripped_symbol = market['symbol'].lstrip('k')
+                market['symbol'] = f'1000{stripped_symbol}'
+        return markets
