@@ -1,6 +1,6 @@
 from typing import Any
 
-from ccxt.base.errors import AuthenticationError
+from ccxt.base.errors import PermissionDenied
 from ccxt.base.types import Str, Int
 from ccxt.hyperliquid import hyperliquid
 
@@ -10,7 +10,7 @@ class hyperliquid_abs(hyperliquid):
         return self.deep_extend(super().describe(), {
             'exceptions': {
                 'broad': {
-                    'User or API Wallet ': AuthenticationError,
+                    'User or API Wallet ': PermissionDenied,
                 }
             }
         })
