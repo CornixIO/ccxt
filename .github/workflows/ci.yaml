@@ -1,0 +1,40 @@
+name: Build and Upload Python Package to GitHub Release
+
+on:
+  push:
+    tags:
+    - '*'
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛎 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install build tool
+        run: |
+          python -m pip install --upgrade pip
+          # pip install build
+          pip install setuptools wheel
+
+      - name: 🏗 Build the package
+        working-directory: python
+        run: |
+          echo $PWD
+          # python -m build
+          python setup.py sdist bdist_wheel
+
+      - name: 🟣 Upload artifact to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: python/dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
