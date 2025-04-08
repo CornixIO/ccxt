@@ -1,5 +1,6 @@
 from typing import Any
 
+from ccxt.base.errors import ExchangeNotAvailable
 from ccxt.base.errors import PermissionDenied
 from ccxt.base.types import Str, Int
 from ccxt.hyperliquid import hyperliquid
@@ -11,6 +12,7 @@ class hyperliquid_abs(hyperliquid):
             'exceptions': {
                 'broad': {
                     'User or API Wallet ': PermissionDenied,
+                    '502 Server Error': ExchangeNotAvailable,
                 }
             }
         })
@@ -22,6 +24,9 @@ class hyperliquid_abs(hyperliquid):
     def fetch_order_trades(self, id: str, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
         symbol_trades = self.fetch_my_trades(symbol, since, limit, params=params)
         return self.filter_by_array(symbol_trades, 'order', values=[id], indexed=False)
+
+    def fetch_ticker(self, symbol: str, params={}):
+        return self.fetch_tickers([symbol])[symbol]
 
     @staticmethod
     def replace_k_with_1000(markets):
