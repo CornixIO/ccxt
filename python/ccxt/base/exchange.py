@@ -3200,18 +3200,18 @@ class Exchange(object):
             result = self.array_concat(result, reducedFeeValues)
         return result
 
-    def safe_ticker(self, ticker, market=None):
-        open = self.safe_value(ticker, 'open')
-        close = self.safe_value(ticker, 'close')
-        last = self.safe_value(ticker, 'last')
-        change = self.safe_value(ticker, 'change')
-        percentage = self.safe_value(ticker, 'percentage')
-        average = self.safe_value(ticker, 'average')
-        vwap = self.safe_value(ticker, 'vwap')
-        baseVolume = self.safe_value(ticker, 'baseVolume')
-        quoteVolume = self.safe_value(ticker, 'quoteVolume')
+    def safe_ticker(self, ticker: dict, market: Market = None):
+        open = self.omit_zero(self.safe_string(ticker, 'open'))
+        close = self.omit_zero(self.safe_string(ticker, 'close'))
+        last = self.omit_zero(self.safe_string(ticker, 'last'))
+        change = self.omit_zero(self.safe_string(ticker, 'change'))
+        percentage = self.omit_zero(self.safe_string(ticker, 'percentage'))
+        average = self.omit_zero(self.safe_string(ticker, 'average'))
+        vwap = self.safe_string(ticker, 'vwap')
+        baseVolume = self.safe_string(ticker, 'baseVolume')
+        quoteVolume = self.safe_string(ticker, 'quoteVolume')
         if vwap is None:
-            vwap = Precise.string_div(quoteVolume, baseVolume)
+            vwap = Precise.string_div(self.omit_zero(quoteVolume), baseVolume)
         if (last is not None) and (close is None):
             close = last
         elif (last is None) and (close is not None):
@@ -3221,6 +3221,13 @@ class Exchange(object):
                 change = Precise.string_sub(last, open)
             if average is None:
                 average = Precise.string_div(Precise.string_add(last, open), '2')
+                # precision = 18
+                # if market is not None and self.is_tick_precision():
+                #     marketPrecision = self.safe_dict(market, 'precision')
+                #     precisionPrice = self.safe_string(marketPrecision, 'price')
+                #     if precisionPrice is not None:
+                #         precision = self.precision_from_string(precisionPrice)
+                # average = Precise.string_div(Precise.string_add(last, open), '2', precision)
         if (percentage is None) and (change is not None) and (open is not None) and Precise.string_gt(open, '0'):
             percentage = Precise.string_mul(Precise.string_div(change, open), '100')
         if (change is None) and (percentage is not None) and (open is not None):
@@ -3230,15 +3237,15 @@ class Exchange(object):
         # timestamp and symbol operations don't belong in safeTicker
         # they should be done in the derived classes
         return self.extend(ticker, {
-            'bid': self.safe_number(ticker, 'bid'),
+            'bid': self.parse_number(self.omit_zero(self.safe_string(ticker, 'bid'))),
             'bidVolume': self.safe_number(ticker, 'bidVolume'),
-            'ask': self.safe_number(ticker, 'ask'),
+            'ask': self.parse_number(self.omit_zero(self.safe_string(ticker, 'ask'))),
             'askVolume': self.safe_number(ticker, 'askVolume'),
-            'high': self.safe_number(ticker, 'high'),
-            'low': self.safe_number(ticker, 'low'),
-            'open': self.parse_number(open),
-            'close': self.parse_number(close),
-            'last': self.parse_number(last),
+            'high': self.parse_number(self.omit_zero(self.safe_string(ticker, 'high'))),
+            'low': self.parse_number(self.omit_zero(self.safe_string(ticker, 'low'))),
+            'open': self.parse_number(self.omit_zero(open)),
+            'close': self.parse_number(self.omit_zero(close)),
+            'last': self.parse_number(self.omit_zero(last)),
             'change': self.parse_number(change),
             'percentage': self.parse_number(percentage),
             'average': self.parse_number(average),
@@ -3246,6 +3253,8 @@ class Exchange(object):
             'baseVolume': self.parse_number(baseVolume),
             'quoteVolume': self.parse_number(quoteVolume),
             'previousClose': self.safe_number(ticker, 'previousClose'),
+            'indexPrice': self.safe_number(ticker, 'indexPrice'),
+            'markPrice': self.safe_number(ticker, 'markPrice'),
         })
 
     def safe_symbol(self, marketId, market=None, delimiter=None, marketType=None):
