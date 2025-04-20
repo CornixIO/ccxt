@@ -23,4 +23,5 @@ jobs:
         working-directory: python
         run: |
           pip install bumpversion
-          bumpversion build --tag
+          bumpversion build
+          git log
