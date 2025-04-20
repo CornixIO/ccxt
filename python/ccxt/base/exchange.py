@@ -3221,13 +3221,6 @@ class Exchange(object):
                 change = Precise.string_sub(last, open)
             if average is None:
                 average = Precise.string_div(Precise.string_add(last, open), '2')
-                # precision = 18
-                # if market is not None and self.is_tick_precision():
-                #     marketPrecision = self.safe_dict(market, 'precision')
-                #     precisionPrice = self.safe_string(marketPrecision, 'price')
-                #     if precisionPrice is not None:
-                #         precision = self.precision_from_string(precisionPrice)
-                # average = Precise.string_div(Precise.string_add(last, open), '2', precision)
         if (percentage is None) and (change is not None) and (open is not None) and Precise.string_gt(open, '0'):
             percentage = Precise.string_mul(Precise.string_div(change, open), '100')
         if (change is None) and (percentage is not None) and (open is not None):
