@@ -1,0 +1,30 @@
+name: CCXT CI
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  bump-version:
+    if: "!contains(github.event.head_commit.message, 'Bump version')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Set up Python
+        id: setup_python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Bump version
+        working-directory: python
+        run: |
+          git config --global user.name "DevOps"
+          git config --global user.email "devops@cornix.io"
+          pip install bumpversion
+          bumpversion build
+          git push --force --follow-tags
