@@ -22,6 +22,8 @@ jobs:
       - name: Bump version
         working-directory: python
         run: |
+          git config --global user.name "DevOps"
+          git config --global user.email "devops@cornix.io"
           pip install bumpversion
           bumpversion build
           git log
