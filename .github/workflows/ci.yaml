@@ -28,4 +28,4 @@ jobs:
           git config --global user.email "devops@cornix.io"
           pip install bumpversion
           bumpversion build
-          git push --force
+          git push --force origin/master
