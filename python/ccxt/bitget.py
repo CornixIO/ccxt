@@ -3784,6 +3784,9 @@ class bitget(Exchange, ImplicitAPI):
         orderSource = self.safe_string(order, 'orderSource')
         if orderSource and 'plan' in orderSource:
             is_triggered = True
+        planType = self.safe_string(order, 'planType', '')
+        if planType in {'live', 'cancelled'}:
+            is_triggered = False
         return self.safe_order({
             'info': order,
             'id': self.safe_string_2(order, 'orderId', 'data'),
