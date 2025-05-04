@@ -23,12 +23,8 @@ class hyperliquid_abs(hyperliquid):
 
     def fetch_order_trades(self, id: str, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
         trades = self.fetch_my_trades(None, since, limit, params=params)
-        market = self.market(symbol)
-        if original_symbol := market.get('original_symbol'):
-            symbols_to_filter = [original_symbol]
-        else:
-            symbols_to_filter = [symbol]
-        symbol_trades = self.filter_by_array(trades, 'symbol', values=symbols_to_filter, indexed=False)
+        symbol_to_filter = self.symbol(symbol)
+        symbol_trades = self.filter_by_array(trades, 'symbol', values=[symbol_to_filter], indexed=False)
         return self.filter_by_array(symbol_trades, 'order', values=[id], indexed=False)
 
     def fetch_ticker(self, symbol: str, params={}):
