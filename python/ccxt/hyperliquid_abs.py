@@ -22,7 +22,9 @@ class hyperliquid_abs(hyperliquid):
         return market_id.split(':')[0]
 
     def fetch_order_trades(self, id: str, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
-        symbol_trades = self.fetch_my_trades(symbol, since, limit, params=params)
+        self.load_markets()
+        symbol_to_filter = self.symbol(symbol)
+        symbol_trades = self.fetch_my_trades(symbol_to_filter, since, limit, params=params)
         return self.filter_by_array(symbol_trades, 'order', values=[id], indexed=False)
 
     def fetch_ticker(self, symbol: str, params={}):
@@ -31,7 +33,13 @@ class hyperliquid_abs(hyperliquid):
     @staticmethod
     def replace_k_with_1000(markets):
         for market in markets:
-            if market['symbol'].startswith('k'):
+            original_symbol = market['symbol']
+            if original_symbol.startswith('k'):
                 stripped_symbol = market['symbol'][1:]
                 market['symbol'] = f'1000{stripped_symbol}'
+                market['original_symbol'] = original_symbol
         return markets
+
+    def symbol(self, symbol):
+        market = self.market(symbol)
+        return self.safe_string(market, 'original_symbol', symbol) or self.safe_string(market, 'symbol', symbol)
