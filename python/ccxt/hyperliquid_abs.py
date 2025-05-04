@@ -22,9 +22,9 @@ class hyperliquid_abs(hyperliquid):
         return market_id.split(':')[0]
 
     def fetch_order_trades(self, id: str, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
-        trades = self.fetch_my_trades(None, since, limit, params=params)
+        self.load_markets()
         symbol_to_filter = self.symbol(symbol)
-        symbol_trades = self.filter_by_array(trades, 'symbol', values=[symbol_to_filter], indexed=False)
+        symbol_trades = self.fetch_my_trades(symbol_to_filter, since, limit, params=params)
         return self.filter_by_array(symbol_trades, 'order', values=[id], indexed=False)
 
     def fetch_ticker(self, symbol: str, params={}):
