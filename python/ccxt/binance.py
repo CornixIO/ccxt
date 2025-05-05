@@ -33,11 +33,14 @@ from ccxt.base.types import Str, Int
 STATUSES_MAPPING = {
     'NEW': 'open',
     'PARTIALLY_FILLED': 'open',
+    'ACCEPTED': 'open',
     'FILLED': 'closed',
     'CANCELED': 'canceled',
+    'CANCELLED': 'canceled',
     'PENDING_CANCEL': 'canceling',  # currently unused
     'REJECTED': 'rejected',
     'EXPIRED': 'canceled',
+    'EXPIRED_IN_MATCH': 'canceled',
 }
 
 PERMISSION_TO_VALUE = {"spot": ["enableSpotAndMarginTrading"], "futures": ["enableFutures"],
