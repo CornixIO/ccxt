@@ -205,10 +205,13 @@ class bitmex(Exchange):
             leverage = 0 if position["crossMargin"] else position["leverage"]
             margin_type = "cross" if leverage == 0 else "isolated"
             market = self.markets_by_id[market_id]
+            if maintenance_margin := position.get("maintMargin", 0):
+                maintenance_margin /= 100000000
+
             result = {'info': position, "symbol": market["symbol"],
                       "quantity": position.get("currentQty", 0),
                       "leverage": leverage, "margin_type": margin_type,
-                      "maintenance_margin": position.get("maintMargin", 0) / 100000000,
+                      "maintenance_margin": maintenance_margin,
                       "liquidation_price": self.safe_float(position, "liquidationPrice", 0)}
             positions_to_return.append(result)
         return positions_to_return
