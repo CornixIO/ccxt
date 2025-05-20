@@ -9,6 +9,7 @@ class bingx_futures(bingx_abs):
     def __init__(self, config={}):
         super().__init__(config)
         self.options['defaultType'] = 'swap'
+        self.swapV2PrivateGetTradeOrder = self._swapV2PrivateGetTradeOrder
 
     def fetch_markets(self, params={}) -> List[Market]:
         return self.fetch_swap_markets(params)
@@ -19,3 +20,8 @@ class bingx_futures(bingx_abs):
             market_obj['symbol'] = market_obj['symbol'].replace(':USDT', '')
             market_obj['symbol'] = market_obj['symbol'].replace(':USDC', '')
         return market_obj
+
+    def _swapV2PrivateGetTradeOrder(self, request):
+        if 'clientOrderId' in request:
+            request.pop('orderId', None)
+        return super().swapV2PrivateGetTradeOrder(request)
