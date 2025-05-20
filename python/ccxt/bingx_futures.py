@@ -23,5 +23,5 @@ class bingx_futures(bingx_abs):
 
     def _swapV2PrivateGetTradeOrder(self, request):
         if 'clientOrderId' in request:
-            request.pop('orderId')
+            request.pop('orderId', None)
         return super().swapV2PrivateGetTradeOrder(request)
