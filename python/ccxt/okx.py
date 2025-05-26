@@ -1001,8 +1001,8 @@ class okx(Exchange):
             self.get_relevant_type_details_from_market(market)
 
         settle = self.safe_currency_code(settle_id)
-        base = self.safe_currency_code(base_id)
-        quote = self.safe_currency_code(quote_id)
+        base = self.safe_currency_code(base_id) or ''
+        quote = self.safe_currency_code(quote_id) or ''
         symbol = base + '/' + quote
 
         expiry = None
