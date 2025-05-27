@@ -117,6 +117,7 @@ from ccxt.btcturk import btcturk                            # noqa: F401
 from ccxt.buda import buda                                  # noqa: F401
 from ccxt.bw import bw                                      # noqa: F401
 from ccxt.bybit import bybit                                # noqa: F401
+from ccxt.bybit_spot_margin import bybit_spot_margin        # noqa: F401
 from ccxt.bytetrade import bytetrade                        # noqa: F401
 from ccxt.cex import cex                                    # noqa: F401
 from ccxt.chilebit import chilebit                          # noqa: F401
