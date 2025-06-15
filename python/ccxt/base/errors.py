@@ -96,6 +96,26 @@ class NullResponse(BadResponse):
     pass
 
 
+class OperationRejected(ExchangeError):
+    pass
+
+
+class NoChange(OperationRejected):
+    pass
+
+
+class MarginModeAlreadySet(NoChange):
+    pass
+
+
+class MarketClosed(OperationRejected):
+    pass
+
+
+class ManualInteractionNeeded(OperationRejected):
+    pass
+
+
 class InsufficientFunds(ExchangeError):
     pass
 
