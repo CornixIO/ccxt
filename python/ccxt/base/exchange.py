@@ -538,6 +538,8 @@ class Exchange(object):
                     to_bind = partialer()
                     setattr(cls, camelcase, to_bind)
                     setattr(cls, underscore, to_bind)
+            elif isinstance(value, dict) and 'cost' in value:
+                cls.define_rest_api({key: value['cost']}, method_name, paths)
             else:
                 cls.define_rest_api(value, method_name, paths + [key])
 

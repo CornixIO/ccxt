@@ -2,12 +2,12 @@ from typing import Any
 
 from ccxt.binance import binance
 
-BINANCE_FUTURES = 'Binance'
+BINANCE = 'Binance'
 
 
-class binance_futures(binance):
+class binance_spot(binance):
     def describe(self) -> Any:
-        return self.deep_extend(super(binance_futures, self).describe(), {
+        return self.deep_extend(super(binance_spot, self).describe(), {
             'options': {
                 'fetchMarkets': ['spot'],
                 'defaultType': 'spot',
