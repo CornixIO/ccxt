@@ -22,3 +22,11 @@ class binance_futures(binance):
             symbol = symbol.replace(':USDT', '').replace(':USDC', '')
             market_obj['symbol'] = symbol
         return market_obj
+
+    @staticmethod
+    def is_inverse():
+        return False
+
+    @staticmethod
+    def is_linear():
+        return True

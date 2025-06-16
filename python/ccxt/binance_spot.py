@@ -13,3 +13,11 @@ class binance_spot(binance):
                 'defaultType': 'spot',
             },
         })
+
+    @staticmethod
+    def is_inverse():
+        return False
+
+    @staticmethod
+    def is_linear():
+        return False
