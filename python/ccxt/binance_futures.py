@@ -24,9 +24,9 @@ class binance_futures(binance):
         return market_obj
 
     @staticmethod
-    def is_inverse():
+    def is_inverse(*args, **kwargs):
         return False
 
     @staticmethod
-    def is_linear():
+    def is_linear(*args, **kwargs):
         return True
