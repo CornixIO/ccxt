@@ -1,8 +1,7 @@
 from typing import Any
 
 from ccxt.binance import binance
-
-from base.types import Market
+from ccxt.base.types import Market
 
 BINANCE_FUTURES = 'Binance Futures'
 
