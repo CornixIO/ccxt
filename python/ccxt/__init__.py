@@ -78,6 +78,9 @@ from ccxt.bequant import bequant                            # noqa: F401
 from ccxt.bibox import bibox                                # noqa: F401
 from ccxt.bigone import bigone                              # noqa: F401
 from ccxt.binance import binance                            # noqa: F401
+from ccxt.binance_spot import binance_spot                            # noqa: F401
+from ccxt.binance_futures import binance_futures                            # noqa: F401
+from ccxt.binance_inverse import binance_inverse                            # noqa: F401
 from ccxt.binanceje import binanceje                        # noqa: F401
 from ccxt.binanceus import binanceus                        # noqa: F401
 from ccxt.bingx import bingx                                # noqa: F401
