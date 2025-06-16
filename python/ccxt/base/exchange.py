@@ -2358,6 +2358,18 @@ class Exchange(object):
             value = value if (value is not None) else defaultValue
         return [value, params]
 
+    def handle_option_and_params_2(self, params: object, methodName1: str, optionName1: str, optionName2: str, defaultValue=None):
+        value = None
+        value, params = self.handle_option_and_params(params, methodName1, optionName1)
+        if value is not None:
+            # omit optionName2 too from params
+            params = self.omit(params, optionName2)
+            return [value, params]
+        # if still None, try optionName2
+        value2 = None
+        value2, params = self.handle_option_and_params(params, methodName1, optionName2, defaultValue)
+        return [value2, params]
+
     def load_trading_limits(self, symbols=None, reload=False, params={}):
         if self.has['fetchTradingLimits']:
             if reload or not('limitsLoaded' in list(self.options.keys())):
