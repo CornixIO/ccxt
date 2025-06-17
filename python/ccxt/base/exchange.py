@@ -2601,6 +2601,12 @@ class Exchange(object):
             return float(stringVersion)
         return int(stringVersion)
 
+    def is_round_number(self, value: float):
+        # self method is similar to isInteger, but self is more loyal and does not check for types.
+        # i.e. isRoundNumber(1.000) returns True, while isInteger(1.000) returns False
+        res = self.parse_to_numeric((value % 1))
+        return res == 0
+
     def parse_ledger(self, data, currency=None, since=None, limit=None, params={}):
         array = self.to_array(data)
         result = []
