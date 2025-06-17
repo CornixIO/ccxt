@@ -10,6 +10,7 @@ class binance_inverse(binance_abs):
         return self.deep_extend(super(binance_inverse, self).describe(), {
             'options': {
                 'fetchMarkets': ['inverse'],
-                'defaultType': 'delivery'
+                'defaultType': 'delivery',
+                'defaultSubType': 'inverse',
             },
         })

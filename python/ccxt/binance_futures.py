@@ -12,5 +12,6 @@ class binance_futures(binance_abs):
             'options': {
                 'fetchMarkets': ['linear'],
                 'defaultType': 'future',
+                'defaultSubType': 'linear',
             },
         })
