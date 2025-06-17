@@ -28,7 +28,6 @@ class binance_abs(binance):
     def parse_market(self, market: dict) -> Market:
         market_obj = super().parse_market(market)
         if market_obj is not None:
-            symbol = market_obj['symbol']
-            symbol = symbol.replace(':USDT', '').replace(':USDC', '')
+            symbol = market_obj['symbol'].split(':')[0]
             market_obj['symbol'] = symbol
         return market_obj
