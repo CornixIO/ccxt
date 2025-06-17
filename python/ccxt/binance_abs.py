@@ -1,8 +1,6 @@
 from ccxt.binance import binance
-from ccxt.base.types import Market
-
-from base.errors import BadSymbol
-from base.types import MarketInterface
+from ccxt.base.types import Market, MarketInterface
+from ccxt.base.errors import BadSymbol
 
 PERMISSION_TO_VALUE = {"spot": ["enableSpotAndMarginTrading"], "futures": ["enableFutures"],
                        "withdrawal": ["enableWithdrawals"]}
