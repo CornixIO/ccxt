@@ -1,12 +1,11 @@
 from typing import Any
 
-from ccxt.binancecoinm import binancecoinm
-from ccxt.base.types import Market
+from ccxt.binance_abs import binance_abs
 
 BINANCE_COINS = 'Binance Coin-Futures'
 
 
-class binance_inverse(binancecoinm):
+class binance_inverse(binance_abs):
     def describe(self) -> Any:
         return self.deep_extend(super(binance_inverse, self).describe(), {
             'options': {
@@ -14,19 +13,3 @@ class binance_inverse(binancecoinm):
                 'defaultType': 'delivery'
             },
         })
-
-    def parse_market(self, market: dict) -> Market:
-        market_obj = super().parse_market(market)
-        if market_obj is not None:
-            symbol = market_obj['symbol']
-            symbol = symbol.replace(':USDT', '').replace(':USDC', '')
-            market_obj['symbol'] = symbol
-        return market_obj
-
-    @staticmethod
-    def is_inverse(*args, **kwargs):
-        return True
-
-    @staticmethod
-    def is_linear(*args, **kwargs):
-        return False

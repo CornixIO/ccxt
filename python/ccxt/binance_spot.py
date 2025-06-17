@@ -1,11 +1,11 @@
 from typing import Any
 
-from ccxt.binance import binance
+from ccxt.binance_abs import binance_abs
 
 BINANCE = 'Binance'
 
 
-class binance_spot(binance):
+class binance_spot(binance_abs):
     def describe(self) -> Any:
         return self.deep_extend(super(binance_spot, self).describe(), {
             'options': {
@@ -13,11 +13,3 @@ class binance_spot(binance):
                 'defaultType': 'spot',
             },
         })
-
-    @staticmethod
-    def is_inverse(*args, **kwargs):
-        return False
-
-    @staticmethod
-    def is_linear(*args, **kwargs):
-        return False
