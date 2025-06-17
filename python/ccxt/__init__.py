@@ -91,6 +91,7 @@ from ccxt.bitfinex import bitfinex                          # noqa: F401
 from ccxt.bitfinex2 import bitfinex2                        # noqa: F401
 from ccxt.bitflyer import bitflyer                          # noqa: F401
 from ccxt.bitforex import bitforex                          # noqa: F401
+from ccxt.bitget_abs import bitget_abs                      # noqa: F401
 from ccxt.bitget_spot import bitget_spot                    # noqa: F401
 from ccxt.bitget_inverse import bitget_inverse              # noqa: F401
 from ccxt.bitget_futures import bitget_futures              # noqa: F401
@@ -228,6 +229,7 @@ exchanges = [
     'bitfinex2',
     'bitflyer',
     'bitforex',
+    'bitget_abs',
     'bitget_spot',
     'bitget_inverse',
     'bitget_linear',
