@@ -8,7 +8,7 @@ PERMISSION_TO_VALUE = {"spot": ["enableSpotAndMarginTrading"], "futures": ["enab
 class binance_abs(binance):
     def is_inverse(self, *args, **kwargs):
         default_type = self.safe_string(self.options, 'defaultType')
-        return default_type == 'inverse'
+        return default_type == 'delivery'
 
     def is_linear(self, *args, **kwargs):
         default_type = self.safe_string(self.options, 'defaultType')
