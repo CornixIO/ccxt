@@ -1,6 +1,9 @@
 from ccxt.binance import binance
 from ccxt.base.types import Market
 
+from base.errors import BadSymbol
+from base.types import MarketInterface
+
 PERMISSION_TO_VALUE = {"spot": ["enableSpotAndMarginTrading"], "futures": ["enableFutures"],
                        "withdrawal": ["enableWithdrawals"]}
 
@@ -24,6 +27,11 @@ class binance_abs(binance):
             "permissions": permissions,
             "ip_restrict": self.safe_value(response, "ipRestrict")
         }
+
+    def market(self, symbol: str | None) -> MarketInterface:
+        if symbol is None:
+            raise BadSymbol(self.id + ' does not have market symbol None')
+        return super().market(symbol)
 
     def parse_market(self, market: dict) -> Market:
         market_obj = super().parse_market(market)
