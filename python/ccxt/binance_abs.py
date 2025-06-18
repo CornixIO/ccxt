@@ -68,8 +68,16 @@ class binance_abs(binance):
             precision = {
                 'base': self.safe_integer(market, 'baseAssetPrecision'),
                 'quote': self.safe_integer(market, 'quotePrecision'),
-                'amount': self.safe_integer(market, 'quantityPrecision'),
-                'price': self.safe_integer(market, 'pricePrecision'),
+                'amount': self.safe_string_2(market, 'quantityPrecision', 'quantityScale'),
+                'price': self.safe_string_2(market, 'pricePrecision', 'priceScale'),
             }
+
+            if precision.get('price') is None and 'PRICE_FILTER' in filters_by_type:
+                _filter = self.safe_value(filters_by_type, 'PRICE_FILTER', {})
+                precision['price'] = self.precision_from_string(_filter['tickSize'])
+            if precision.get('amount') is None and 'LOT_SIZE' in filters_by_type:
+                _filter = self.safe_value(filters_by_type, 'LOT_SIZE', {})
+                step_size = self.safe_string(_filter, 'stepSize')
+                precision['amount'] = self.precision_from_string(step_size)
             parsed_market['precision'] = precision
         return parsed_market
