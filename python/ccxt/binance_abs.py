@@ -75,10 +75,10 @@ class binance_abs(binance):
                 'price': self.safe_integer_2(market, 'pricePrecision', 'priceScale'),
             }
 
-            if precision.get('price') is None and 'PRICE_FILTER' in filters_by_type:
+            if 'PRICE_FILTER' in filters_by_type:
                 _filter = self.safe_value(filters_by_type, 'PRICE_FILTER', {})
                 precision['price'] = self.precision_from_string(_filter['tickSize'])
-            if precision.get('amount') is None and 'LOT_SIZE' in filters_by_type:
+            if 'LOT_SIZE' in filters_by_type:
                 _filter = self.safe_value(filters_by_type, 'LOT_SIZE', {})
                 step_size = self.safe_string(_filter, 'stepSize')
                 precision['amount'] = self.precision_from_string(step_size)
