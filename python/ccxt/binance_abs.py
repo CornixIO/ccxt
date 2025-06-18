@@ -68,8 +68,8 @@ class binance_abs(binance):
             precision = {
                 'base': self.safe_integer(market, 'baseAssetPrecision'),
                 'quote': self.safe_integer(market, 'quotePrecision'),
-                'amount': self.safe_string_2(market, 'quantityPrecision', 'quantityScale'),
-                'price': self.safe_string_2(market, 'pricePrecision', 'priceScale'),
+                'amount': self.safe_integer_2(market, 'quantityPrecision', 'quantityScale'),
+                'price': self.safe_integer_2(market, 'pricePrecision', 'priceScale'),
             }
 
             if precision.get('price') is None and 'PRICE_FILTER' in filters_by_type:
