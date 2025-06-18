@@ -40,7 +40,10 @@ class binance_abs(binance):
     def market(self, symbol: str | None) -> MarketInterface:
         if symbol is None:
             raise BadSymbol(self.id + ' does not have market symbol None')
-        return super().market(symbol)
+        try:
+            return super().market(symbol)
+        except Exception:
+            raise BadSymbol(self.id + ' does not have market symbol ' + symbol)
 
     def parse_market(self, market: dict) -> Market:
         parsed_market = super().parse_market(market)
