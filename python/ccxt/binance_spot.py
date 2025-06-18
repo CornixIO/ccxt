@@ -10,6 +10,7 @@ class binance_spot(binance_abs):
         return self.deep_extend(super(binance_spot, self).describe(), {
             'options': {
                 'fetchMarkets': ['spot'],
+                'fetchMargins': False,
                 'defaultType': 'spot',
             },
         })
