@@ -1,12 +1,20 @@
+from typing import Any
+
 from ccxt.base.errors import BadSymbol
 from ccxt.base.types import Market, MarketInterface
 from ccxt.binance import binance
+from ccxt.base.decimal_to_precision import ROUND, DECIMAL_PLACES
 
 PERMISSION_TO_VALUE = {"spot": ["enableSpotAndMarginTrading"], "futures": ["enableFutures"],
                        "withdrawal": ["enableWithdrawals"]}
 
 
 class binance_abs(binance):
+    def describe(self) -> Any:
+        return self.deep_extend(super(binance_abs, self).describe(), {
+            'precisionMode': DECIMAL_PLACES,
+        })
+
     def is_inverse(self, *args, **kwargs):
         default_type = self.safe_string(self.options, 'defaultType')
         return default_type == 'delivery'
@@ -25,6 +33,9 @@ class binance_abs(binance):
             "permissions": permissions,
             "ip_restrict": self.safe_value(response, "ipRestrict")
         }
+
+    def cost_to_precision(self, symbol, cost):
+        return self.decimal_to_precision(cost, ROUND, self.markets[symbol]['precision']['price'], self.precisionMode)
 
     def market(self, symbol: str | None) -> MarketInterface:
         if symbol is None:
@@ -53,4 +64,12 @@ class binance_abs(binance):
                     max_num_algo_orders = self.safe_float(_filter, 'limit')
                 parsed_market['limits']['conditional_orders'] = {'max': max_num_algo_orders}
             parsed_market['limits']['exchange_total_orders'] = {'max': 1000}
+
+            precision = {
+                'base': self.safe_integer(market, 'baseAssetPrecision'),
+                'quote': self.safe_integer(market, 'quotePrecision'),
+                'amount': self.safe_integer(market, 'quantityPrecision'),
+                'price': self.safe_integer(market, 'pricePrecision'),
+            }
+            parsed_market['precision'] = precision
         return parsed_market
