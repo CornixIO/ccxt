@@ -19,7 +19,6 @@ class hyperliquid_abs(hyperliquid):
 
     def parse_order_status(self, status: Str):
         statuses: dict = {
-            'rejected': 'canceled',
             'positionIncreaseAtOpenInterestCapRejected': 'canceled',
         }
         if parsed_status := statuses.get(status):
