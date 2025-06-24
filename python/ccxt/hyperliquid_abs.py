@@ -19,15 +19,12 @@ class hyperliquid_abs(hyperliquid):
 
     def parse_order_status(self, status: Str):
         statuses: dict = {
-            'triggered': 'open',
-            'filled': 'closed',
-            'open': 'open',
-            'canceled': 'canceled',
             'rejected': 'canceled',
-            'marginCanceled': 'canceled',
             'positionIncreaseAtOpenInterestCapRejected': 'canceled',
         }
-        return self.safe_string(statuses, status, status)
+        if status in statuses:
+            return self.safe_string(statuses, status, status)
+        return super().parse_order_status(status)
 
     @staticmethod
     def replace_symbol_k_with_1000(symbol: Str):
