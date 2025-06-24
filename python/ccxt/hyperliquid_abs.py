@@ -22,8 +22,8 @@ class hyperliquid_abs(hyperliquid):
             'rejected': 'canceled',
             'positionIncreaseAtOpenInterestCapRejected': 'canceled',
         }
-        if status in statuses:
-            return self.safe_string(statuses, status, status)
+        if parsed_status := statuses.get(status):
+            return parsed_status
         return super().parse_order_status(status)
 
     @staticmethod
