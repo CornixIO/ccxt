@@ -17,6 +17,14 @@ class hyperliquid_abs(hyperliquid):
             }
         })
 
+    def parse_order_status(self, status: Str):
+        statuses: dict = {
+            'positionIncreaseAtOpenInterestCapRejected': 'canceled',
+        }
+        if parsed_status := statuses.get(status):
+            return parsed_status
+        return super().parse_order_status(status)
+
     @staticmethod
     def replace_symbol_k_with_1000(symbol: Str):
         if symbol.startswith('k'):
