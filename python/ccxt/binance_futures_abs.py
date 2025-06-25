@@ -22,14 +22,11 @@ class binance_futures_abs(binance_abs):
         return False
 
     def load_markets(self, reload=False, params={}):
+        load_leverage = self.safe_string(params, 'load_leverage')
+        params = self.omit(params, 'load_leverage')
         parsed_markets = super().load_markets(reload=reload, params=params)
-        if (getattr(self, '_should_load_leverage_tiers', True) and
-                not any('risk' in _parsed_market['limits'] for _parsed_market in parsed_markets.values())):
-            self._should_load_leverage_tiers = False
-            try:
-                leverage_tiers = super().fetch_leverage_tiers()
-            finally:
-                self._should_load_leverage_tiers = True
+        if load_leverage:
+            leverage_tiers = super().fetch_leverage_tiers()
 
             relevant_markets = dict()
             for parsed_market in parsed_markets.values():
