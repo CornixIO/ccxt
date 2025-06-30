@@ -1,7 +1,6 @@
 from typing import Any
 
-from ccxt.base.errors import ExchangeNotAvailable
-from ccxt.base.errors import PermissionDenied
+from ccxt.base.errors import ExchangeNotAvailable, PermissionDenied, InvalidNonce
 from ccxt.base.types import Str, Int
 from ccxt.hyperliquid import hyperliquid
 
@@ -13,6 +12,7 @@ class hyperliquid_abs(hyperliquid):
                 'broad': {
                     'User or API Wallet ': PermissionDenied,
                     '502 Server Error': ExchangeNotAvailable,
+                    'Invalid nonce': InvalidNonce,
                 }
             }
         })
