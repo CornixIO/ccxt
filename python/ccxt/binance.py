@@ -739,7 +739,8 @@ class binance(Exchange):
 
     def get_position_maintenance_margin(self, account_position):
         if self.safe_bool(account_position, 'isolated'):
-            return self.safe_float(account_position, 'isolatedWallet')
+            return self.safe_float(account_position, 'isolatedWallet') + \
+                self.safe_float(account_position, 'unrealizedProfit')
         else:
             return self.safe_float(account_position, "positionInitialMargin", 0.)
 
