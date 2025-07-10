@@ -748,8 +748,8 @@ class binance(Exchange):
             position_side = self.safe_string(position, "positionSide")
             if not account_position or position_side == account_position.get("positionSide"):
                 side = self.get_position_side(position)
-                maintenance_margin = self.get_position_maintenance_margin(account_position) \
-                    if account_position else None
+                maintenance_margin = \
+                    self.get_position_maintenance_margin(account_position) if account_position else None
                 market = self.find_market(position["symbol"])
                 if type(market) is dict:
                     liq_price = self.safe_float(position, "liquidationPrice", 0)
