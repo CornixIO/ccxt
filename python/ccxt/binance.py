@@ -738,18 +738,18 @@ class binance(Exchange):
         return side
 
     def get_position_maintenance_margin(self, account_position):
-        initial_margin = self.safe_float(account_position, "initialMargin", 0.)
-        open_order_initial_margin = self.safe_float(account_position, "openOrderInitialMargin", 0.)
-        margin = initial_margin + self.safe_float(account_position, "unrealizedProfit", 0.) - open_order_initial_margin
-        return margin, initial_margin, open_order_initial_margin
+        if self.safe_bool(account_position, 'isolated'):
+            return self.safe_float(account_position, 'isolatedWallet')
+        else:
+            return self.safe_float(account_position, "positionInitialMargin", 0.)
 
     def parse_position(self, position, account_position=None):
         if position:
             position_side = self.safe_string(position, "positionSide")
             if not account_position or position_side == account_position.get("positionSide"):
                 side = self.get_position_side(position)
-                maintenance_margin, initial_margin, open_order_initial_margin = \
-                    self.get_position_maintenance_margin(account_position) if account_position else (None, None, None)
+                maintenance_margin = self.get_position_maintenance_margin(account_position) \
+                    if account_position else None
                 market = self.find_market(position["symbol"])
                 if type(market) is dict:
                     liq_price = self.safe_float(position, "liquidationPrice", 0)
@@ -757,8 +757,6 @@ class binance(Exchange):
                               "quantity": self.safe_float(position, "positionAmt", 0.),
                               "leverage": self.safe_float(position, "leverage", None),
                               "maintenance_margin": maintenance_margin, "margin_type": position["marginType"],
-                              'initial_margin': initial_margin,
-                              'open_order_initial_margin': open_order_initial_margin,
                               "liquidation_price": max(liq_price, 0), "side": side,
                               "is_long": None if position_side == "BOTH" else position_side == "LONG"}
                     return result
