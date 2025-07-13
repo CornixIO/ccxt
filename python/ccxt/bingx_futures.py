@@ -100,6 +100,8 @@ class bingx_futures(bingx_abs):
         if market_obj is not None:
             symbol = market_obj['symbol']
             symbol = symbol.replace(':USDT', '').replace(':USDC', '')
+            if '/USDC' in symbol:
+                market_obj['active'] = False
             market_obj['symbol'] = symbol
             market_obj['limits']['leverage']['max'] = self.get_symbol_max_leverage(symbol)
         return market_obj
