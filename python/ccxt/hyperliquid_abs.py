@@ -1,8 +1,7 @@
 from typing import Any
 
-from ccxt.base.errors import ExchangeNotAvailable
-from ccxt.base.errors import PermissionDenied
-from ccxt.base.types import Str, Int
+from ccxt.base.errors import ExchangeNotAvailable, PermissionDenied, InvalidNonce
+from ccxt.base.types import Str, Int, Market, Order
 from ccxt.hyperliquid import hyperliquid
 
 
@@ -13,9 +12,25 @@ class hyperliquid_abs(hyperliquid):
                 'broad': {
                     'User or API Wallet ': PermissionDenied,
                     '502 Server Error': ExchangeNotAvailable,
+                    'Invalid nonce': InvalidNonce,
                 }
             }
         })
+
+    def parse_order_status(self, status: Str):
+        statuses: dict = {
+            'positionIncreaseAtOpenInterestCapRejected': 'rejected',
+        }
+        if parsed_status := statuses.get(status):
+            return parsed_status
+        return super().parse_order_status(status)
+
+    def parse_order(self, order: dict, market: Market = None) -> Order:
+        order_dict = super().parse_order(order, market=market)
+        exchange_status = self.safe_string_2(order, 'status', 'ccxtStatus')
+        if exchange_status == 'positionIncreaseAtOpenInterestCapRejected':
+            order_dict['reject_reason'] = 'exceeds maximum limit allowed'
+        return order_dict
 
     @staticmethod
     def replace_symbol_k_with_1000(symbol: Str):
