@@ -1,7 +1,7 @@
 from typing import Any
 
-from ccxt.base.errors import BadSymbol
-from ccxt.base.types import Market, MarketInterface
+from ccxt.base.errors import BadSymbol, ArgumentsRequired
+from ccxt.base.types import Market, MarketInterface, Str, Int
 from ccxt.binance import binance
 from ccxt.base.decimal_to_precision import ROUND, DECIMAL_PLACES
 
@@ -84,3 +84,13 @@ class binance_abs(binance):
                 precision['amount'] = self.precision_from_string(step_size)
             parsed_market['precision'] = precision
         return parsed_market
+
+    def fetch_order_trades(self, id: str, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
+        if symbol is None:
+            raise ArgumentsRequired(self.id + ' fetchOrderTrades() requires a symbol argument')
+        self.load_markets()
+        params = self.omit(params, 'type')
+        request: dict = {
+            'orderId': id,
+        }
+        return self.fetch_my_trades(symbol, since, limit, self.extend(request, params))
