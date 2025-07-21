@@ -17,4 +17,6 @@ class bitget_futures(bitget_abs):
             parsed_market['limits']['market'] = {
                 'max': float(max_market_order_quantity or 0.),
             }
+        if max_order_quantity := market.get('maxOrderQty'):
+            parsed_market['limits']['amount']['max'] = float(max_order_quantity or 0.)
         return parsed_market
