@@ -171,6 +171,7 @@ class kucoinfutures(kucoin):
                         'position',
                         'positions',
                         'funding-history',
+                        'batchGetCrossOrderLimit',
                     ],
                     'post': [
                         'withdrawals',
