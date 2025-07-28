@@ -83,7 +83,6 @@ from ccxt.binanceus import binanceus                        # noqa: F401
 from ccxt.bingx import bingx                                # noqa: F401
 from ccxt.bingx_abs import bingx_abs                        # noqa: F401
 from ccxt.bingx_futures import bingx_futures                # noqa: F401
-from ccxt.bingx_limits import BINGX_LIMITS                  # noqa: F401
 from ccxt.bingx_spot import bingx_spot                      # noqa: F401
 from ccxt.bit2c import bit2c                                # noqa: F401
 from ccxt.bitbank import bitbank                            # noqa: F401
@@ -222,7 +221,6 @@ exchanges = [
     'bingx',
     'bingx_abs',
     'bingx_futures',
-    'bingx_limits',
     'bingx_spot',
     'bit2c',
     'bitbank',
