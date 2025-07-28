@@ -1,7 +1,6 @@
 from typing import List
 from ccxt.bingx_abs import bingx_abs
 from ccxt.base.types import Market
-from ccxt.bingx_limits import BINGX_LIMITS
 
 BINGX_FUTURES = 'BingX Futures'
 
@@ -16,6 +15,8 @@ class bingx_futures(bingx_abs):
         return self.fetch_swap_markets(params)
 
     def parse_market(self, market: dict) -> Market:
+        from ccxt.bingx_limits import BINGX_LIMITS
+
         market_obj = super().parse_market(market)
         if market_obj is not None:
             symbol = market_obj['symbol']
