@@ -2051,6 +2051,11 @@ class okx(Exchange):
             tradeMode = marginMode if margin else 'cash'
             request['tdMode'] = tradeMode
         elif contract:
+            if market['swap'] or market['future']:
+                positionSide = None
+                positionSide, params = self.handle_option_and_params(params, 'createOrder', 'positionSide')
+                if positionSide is not None:
+                    request['posSide'] = positionSide
             request['tdMode'] = marginMode
         postOnly = self.is_post_only(isMarketOrder, type == 'post_only', params)
         params = self.omit(params, ['currency', 'ccy', 'marginMode', 'timeInForce', 'stopPrice', 'triggerPrice', 'clientOrderId', 'stopLossPrice', 'takeProfitPrice', 'slOrdPx', 'tpOrdPx', 'margin'])
@@ -4689,12 +4694,14 @@ class okx(Exchange):
     def set_leverage(self, symbol, margin_type, leverage, params={}):
         """
         set the level of leverage for a market
-        see https://www.okx.com/docs-v5/en/#rest-api-account-set-leverage
+
+        https://www.okx.com/docs-v5/en/#rest-api-account-set-leverage
+
         :param float leverage: the rate of leverage
         :param str symbol: unified market symbol
-        :param dict params: extra parameters specific to the okx api endpoint
-        :param str margin_type: 'cross' or 'isolated'
-        :param str|None params['posSide']: 'long' or 'short' for isolated margin long/short mode on futures and swap markets
+        :param dict [params]: extra parameters specific to the exchange API endpoint
+        :param str [params.marginMode]: 'cross' or 'isolated'
+        :param str [params.posSide]: 'long' or 'short' or 'net' for isolated margin long/short mode on futures and swap markets, default is 'net'
         :returns dict: response from the exchange
         """
         if symbol is None:
@@ -4704,24 +4711,20 @@ class okx(Exchange):
         if (leverage < 1) or (leverage > 125):
             raise BadRequest(self.id + ' setLeverage() leverage should be between 1 and 125')
         self.load_markets()
-        if (margin_type != 'cross') and (margin_type != 'isolated'):
+        market = self.market(symbol)
+        marginMode = margin_type
+        if (marginMode != 'cross') and (marginMode != 'isolated'):
             raise BadRequest(self.id + ' setLeverage() requires a marginMode parameter that must be either cross or isolated')
-        market = self.find_market(symbol)
-        request = {
+        request: dict = {
             'lever': leverage,
-            'mgnMode': margin_type,
-            'instId': market['id']
+            'mgnMode': marginMode,
+            'instId': market['id'],
         }
-        # Only applicable to cross MARGIN of Multi-currency margin and Portfolio margin - currently not in use
-        # if margin_type == "cross":
-        #     request['ccy'] = market['settleId']
-        default_type = self.safe_value(self.options, "defaultType")
-        if default_type == "future" and margin_type == 'isolated':
-            pos_side = self.safe_string(params, 'posSide')
-            if pos_side is None:
-                raise ArgumentsRequired(self.id + ' setLeverage() requires a posSide argument for isolated margin')
-            if pos_side != 'long' and pos_side != 'short':
-                raise BadRequest(self.id + ' setLeverage() requires the posSide argument to be either "long" or "short"')
+        posSide = self.safe_string(params, 'posSide', 'net')
+        if marginMode == 'isolated':
+            if posSide != 'long' and posSide != 'short' and posSide != 'net':
+                raise BadRequest(self.id + ' setLeverage() requires the posSide argument to be either "long", "short" or "net"')
+            request['posSide'] = posSide
         response = self.privatePostAccountSetLeverage(self.extend(request, params))
         #
         #     {
@@ -4738,6 +4741,38 @@ class okx(Exchange):
         #     }
         #
         return response
+
+    def fetch_position_mode(self, symbol = None, params={}):
+        """
+
+        https://www.okx.com/docs-v5/en/#trading-account-rest-api-get-account-configuration
+
+        fetchs the position mode, hedged or one way, hedged for binance is set identically for all linear markets or all inverse markets
+        :param str symbol: unified symbol of the market to fetch the order book for
+        :param dict [params]: extra parameters specific to the exchange API endpoint
+        :param str [params.accountId]: if you have multiple accounts, you must specify the account id to fetch the position mode
+        :returns dict: an object detailing whether the market is in hedged or one-way mode
+        """
+        accounts = self.fetch_accounts()
+        length = len(accounts)
+        selectedAccount = None
+        if length > 1:
+            accountId = self.safe_string(params, 'accountId')
+            if accountId is None:
+                accountIds = self.get_list_from_object_values(accounts, 'id')
+                raise ExchangeError(self.id + ' fetchPositionMode() can not detect position mode, because you have multiple accounts. Set params["accountId"] to desired id from: ' + ', '.join(accountIds))
+            else:
+                accountsById = self.index_by(accounts, 'id')
+                selectedAccount = self.safe_dict(accountsById, accountId)
+        else:
+            selectedAccount = accounts[0]
+        posMode = self.safe_string(selectedAccount, 'position_mode')  # long_short_mode, net_mode
+        isHedged = posMode == 'long_short_mode'
+        return {
+            'info': selectedAccount,
+            'hedged': isHedged,
+        }
+
 
     def set_position_mode(self, hedged, symbol=None, params={}):
         """
