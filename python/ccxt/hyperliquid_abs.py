@@ -17,14 +17,6 @@ class hyperliquid_abs(hyperliquid):
             }
         })
 
-    def parse_order_status(self, status: Str):
-        statuses: dict = {
-            'positionIncreaseAtOpenInterestCapRejected': 'rejected',
-        }
-        if parsed_status := statuses.get(status):
-            return parsed_status
-        return super().parse_order_status(status)
-
     def parse_order(self, order: dict, market: Market = None) -> Order:
         order_dict = super().parse_order(order, market=market)
         exchange_status = self.safe_string_2(order, 'status', 'ccxtStatus')
