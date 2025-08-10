@@ -10,6 +10,9 @@ class bingx_abs(bingx):
 
     def describe(self) -> Any:
         return self.deep_extend(super().describe(), {
+            'commonCurrencies': {
+                'TONCOIN': 'TON',
+            },
             'exceptions': {
                 'exact': {
                     '100413': PermissionDenied,
