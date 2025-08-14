@@ -1133,7 +1133,7 @@ class kucoinfutures(kucoin):
             'datetime': self.iso8601(timestamp),
             'maintenance_margin': self.safe_number(position, 'posMargin'),
             'entryPrice': self.safe_number(position, 'avgEntryPrice'),
-            'leverage': self.safe_number(position, 'realLeverage'),
+            'leverage': self.safe_number_2(position, 'realLeverage', 'leverage'),
             'unrealized_pnl': self.parse_number(unrealisedPnl),
             'contracts': self.parse_number(Precise.string_abs(size)),
             'quantity': quantity,
