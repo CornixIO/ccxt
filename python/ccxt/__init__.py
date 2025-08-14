@@ -66,6 +66,7 @@ from ccxt.base.errors import DDoSProtection                 # noqa: F401
 from ccxt.base.errors import RateLimitExceeded              # noqa: F401
 from ccxt.base.errors import AccountRateLimitExceeded       # noqa: F401
 from ccxt.base.errors import ExchangeNotAvailable           # noqa: F401
+from ccxt.base.errors import OperationFailed                # noqa: F401
 from ccxt.base.errors import OnMaintenance                  # noqa: F401
 from ccxt.base.errors import InvalidNonce                   # noqa: F401
 from ccxt.base.errors import RequestTimeout                 # noqa: F401
@@ -78,6 +79,9 @@ from ccxt.bequant import bequant                            # noqa: F401
 from ccxt.bibox import bibox                                # noqa: F401
 from ccxt.bigone import bigone                              # noqa: F401
 from ccxt.binance import binance                            # noqa: F401
+from ccxt.binance_spot import binance_spot                            # noqa: F401
+from ccxt.binance_futures import binance_futures                            # noqa: F401
+from ccxt.binance_inverse import binance_inverse                            # noqa: F401
 from ccxt.binanceje import binanceje                        # noqa: F401
 from ccxt.binanceus import binanceus                        # noqa: F401
 from ccxt.bingx import bingx                                # noqa: F401
