@@ -258,10 +258,16 @@ class Ticker(TypedDict):
 Tickers = Dict[str, Ticker]
 
 
+OrderBooks = Dict[str, OrderBook]
+
+
 class MarginMode(TypedDict):
     info: Dict[str, Any]
     symbol: Str
     marginMode: Str
+
+
+MarginModes = Dict[str, MarginMode]
 
 
 class Leverage(TypedDict):
@@ -270,6 +276,9 @@ class Leverage(TypedDict):
     marginMode: Str
     longLeverage: Num
     shortLeverage: Num
+
+
+Leverages = Dict[str, Leverage]
 
 
 class Greeks(TypedDict):
@@ -292,6 +301,60 @@ class Greeks(TypedDict):
     lastPrice: Num
     underlyingPrice: Num
     info: Dict[str, Any]
+
+
+class Conversion(TypedDict):
+    info: Dict[str, Any]
+    timestamp: Int
+    datetime: Str
+    id: Str
+    fromCurrency: Str
+    fromAmount: Num
+    toCurrency: Str
+    toAmount: Num
+    price: Num
+    fee: Num
+
+
+class Option(TypedDict):
+    info: Dict[str, Any]
+    currency: Str
+    symbol: Str
+    timestamp: Int
+    datetime: Str
+    impliedVolatility: Num
+    openInterest: Num
+    bidPrice: Num
+    askPrice: Num
+    midPrice: Num
+    markPrice: Num
+    lastPrice: Num
+    underlyingPrice: Num
+    change: Num
+    percentage: Num
+    baseVolume: Num
+    quoteVolume: Num
+
+
+OptionChain = Dict[str, Option]
+
+
+class MarketMarginModes(TypedDict):
+    cross: bool
+    isolated: bool
+
+
+class MinMax(TypedDict):
+    min: Num
+    max: Num
+
+
+class MarketLimits(TypedDict):
+    amount: Optional[MinMax]
+    cost: Optional[MinMax]
+    leverage: Optional[MinMax]
+    price: Optional[MinMax]
+    market: Optional[MinMax]
 
 
 class MarketInterface(TypedDict):
@@ -440,6 +503,27 @@ class DepositAddress:
     network: Optional[Str]
     address: Str
     tag: Optional[Str]
+
+
+class LongShortRatio:
+    info: Any
+    symbol: Str
+    timestamp: Optional[Int]
+    datetime: Optional[Str]
+    timeframe: Optional[Str]
+    longShortRatio: float
+
+
+class BorrowInterest:
+    info: Any
+    symbol: Optional[Str]
+    currency: Optional[Str]
+    interest: Optional[Num]
+    interestRate: Optional[Num]
+    amountBorrowed: Optional[Num]
+    marginMode: Optional[Str]
+    timestamp: Optional[Int]
+    datetime: Optional[Str]
 
 
 LastPrices = Dict[Str, LastPrice]

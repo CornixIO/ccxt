@@ -538,6 +538,8 @@ class Exchange(object):
                     to_bind = partialer()
                     setattr(cls, camelcase, to_bind)
                     setattr(cls, underscore, to_bind)
+            elif isinstance(value, dict) and 'cost' in value:
+                cls.define_rest_api({key: value['cost']}, method_name, paths)
             else:
                 cls.define_rest_api(value, method_name, paths + [key])
 
@@ -2356,6 +2358,47 @@ class Exchange(object):
             value = value if (value is not None) else defaultValue
         return [value, params]
 
+    def handle_option_and_params_2(self, params: object, methodName1: str, optionName1: str, optionName2: str, defaultValue=None):
+        value = None
+        value, params = self.handle_option_and_params(params, methodName1, optionName1)
+        if value is not None:
+            # omit optionName2 too from params
+            params = self.omit(params, optionName2)
+            return [value, params]
+        # if still None, try optionName2
+        value2 = None
+        value2, params = self.handle_option_and_params(params, methodName1, optionName2, defaultValue)
+        return [value2, params]
+
+    def parse_leverage_tiers(self, response: Any, symbols: List[str] = None, marketIdKey=None):
+        # marketIdKey should only be None when response is a dictionary
+        symbols = self.market_symbols(symbols)
+        tiers = {}
+        symbolsLength = 0
+        if symbols is not None:
+            symbolsLength = len(symbols)
+        noSymbols = (symbols is None) or (symbolsLength == 0)
+        if isinstance(response, list):
+            for i in range(0, len(response)):
+                item = response[i]
+                id = self.safe_string(item, marketIdKey)
+                market = self.safe_market(id, None, None, 'swap')
+                symbol = market['symbol']
+                contract = self.safe_bool(market, 'contract', False)
+                if contract and (noSymbols or self.in_array(symbol, symbols)):
+                    tiers[symbol] = self.parse_market_leverage_tiers(item, market)
+        else:
+            keys = list(response.keys())
+            for i in range(0, len(keys)):
+                marketId = keys[i]
+                item = response[marketId]
+                market = self.safe_market(marketId, None, None, 'swap')
+                symbol = market['symbol']
+                contract = self.safe_bool(market, 'contract', False)
+                if contract and (noSymbols or self.in_array(symbol, symbols)):
+                    tiers[symbol] = self.parse_market_leverage_tiers(item, market)
+        return tiers
+
     def load_trading_limits(self, symbols=None, reload=False, params={}):
         if self.has['fetchTradingLimits']:
             if reload or not('limitsLoaded' in list(self.options.keys())):
@@ -2586,6 +2629,12 @@ class Exchange(object):
         if stringVersion.find('.') >= 0:
             return float(stringVersion)
         return int(stringVersion)
+
+    def is_round_number(self, value: float):
+        # self method is similar to isInteger, but self is more loyal and does not check for types.
+        # i.e. isRoundNumber(1.000) returns True, while isInteger(1.000) returns False
+        res = self.parse_to_numeric((value % 1))
+        return res == 0
 
     def parse_ledger(self, data, currency=None, since=None, limit=None, params={}):
         array = self.to_array(data)
@@ -2889,6 +2938,105 @@ class Exchange(object):
         if code is None and currency is not None:
             code = currency['code']
         return code
+
+    def safe_currency_structure(self, currency: object):
+        # derive data from networks: deposit, withdraw, active, fee, limits, precision
+        networks = self.safe_dict(currency, 'networks', {})
+        keys = list(networks.keys())
+        length = len(keys)
+        if length != 0:
+            for i in range(0, length):
+                key = keys[i]
+                network = networks[key]
+                deposit = self.safe_bool(network, 'deposit')
+                currencyDeposit = self.safe_bool(currency, 'deposit')
+                if currencyDeposit is None or deposit:
+                    currency['deposit'] = deposit
+                withdraw = self.safe_bool(network, 'withdraw')
+                currencyWithdraw = self.safe_bool(currency, 'withdraw')
+                if currencyWithdraw is None or withdraw:
+                    currency['withdraw'] = withdraw
+                # set network 'active' to False if D or W is disabled
+                active = self.safe_bool(network, 'active')
+                if active is None:
+                    if deposit and withdraw:
+                        currency['networks'][key]['active'] = True
+                    elif deposit is not None and withdraw is not None:
+                        currency['networks'][key]['active'] = False
+                active = self.safe_bool(currency['networks'][key], 'active')  # dict might have been updated on above lines, so access directly instead of `network` variable
+                currencyActive = self.safe_bool(currency, 'active')
+                if currencyActive is None or active:
+                    currency['active'] = active
+                # find lowest fee(which is more desired)
+                fee = self.safe_string(network, 'fee')
+                feeMain = self.safe_string(currency, 'fee')
+                if feeMain is None or Precise.string_lt(fee, feeMain):
+                    currency['fee'] = self.parse_number(fee)
+                # find lowest precision(which is more desired)
+                precision = self.safe_string(network, 'precision')
+                precisionMain = self.safe_string(currency, 'precision')
+                if precisionMain is None or Precise.string_gt(precision, precisionMain):
+                    currency['precision'] = self.parse_number(precision)
+                # limits
+                limits = self.safe_dict(network, 'limits')
+                limitsMain = self.safe_dict(currency, 'limits')
+                if limitsMain is None:
+                    currency['limits'] = {}
+                # deposits
+                limitsDeposit = self.safe_dict(limits, 'deposit')
+                limitsDepositMain = self.safe_dict(limitsMain, 'deposit')
+                if limitsDepositMain is None:
+                    currency['limits']['deposit'] = {}
+                limitsDepositMin = self.safe_string(limitsDeposit, 'min')
+                limitsDepositMax = self.safe_string(limitsDeposit, 'max')
+                limitsDepositMinMain = self.safe_string(limitsDepositMain, 'min')
+                limitsDepositMaxMain = self.safe_string(limitsDepositMain, 'max')
+                # find min
+                if limitsDepositMinMain is None or Precise.string_lt(limitsDepositMin, limitsDepositMinMain):
+                    currency['limits']['deposit']['min'] = self.parse_number(limitsDepositMin)
+                # find max
+                if limitsDepositMaxMain is None or Precise.string_gt(limitsDepositMax, limitsDepositMaxMain):
+                    currency['limits']['deposit']['max'] = self.parse_number(limitsDepositMax)
+                # withdrawals
+                limitsWithdraw = self.safe_dict(limits, 'withdraw')
+                limitsWithdrawMain = self.safe_dict(limitsMain, 'withdraw')
+                if limitsWithdrawMain is None:
+                    currency['limits']['withdraw'] = {}
+                limitsWithdrawMin = self.safe_string(limitsWithdraw, 'min')
+                limitsWithdrawMax = self.safe_string(limitsWithdraw, 'max')
+                limitsWithdrawMinMain = self.safe_string(limitsWithdrawMain, 'min')
+                limitsWithdrawMaxMain = self.safe_string(limitsWithdrawMain, 'max')
+                # find min
+                if limitsWithdrawMinMain is None or Precise.string_lt(limitsWithdrawMin, limitsWithdrawMinMain):
+                    currency['limits']['withdraw']['min'] = self.parse_number(limitsWithdrawMin)
+                # find max
+                if limitsWithdrawMaxMain is None or Precise.string_gt(limitsWithdrawMax, limitsWithdrawMaxMain):
+                    currency['limits']['withdraw']['max'] = self.parse_number(limitsWithdrawMax)
+        return self.extend({
+            'info': None,
+            'id': None,
+            'numericId': None,
+            'code': None,
+            'precision': None,
+            'type': None,
+            'name': None,
+            'active': None,
+            'deposit': None,
+            'withdraw': None,
+            'fee': None,
+            'fees': {},
+            'networks': {},
+            'limits': {
+                'deposit': {
+                    'min': None,
+                    'max': None,
+                },
+                'withdraw': {
+                    'min': None,
+                    'max': None,
+                },
+            },
+        }, currency)
 
     def safe_market_structure(self, market: dict = None):
         cleanStructure = {
