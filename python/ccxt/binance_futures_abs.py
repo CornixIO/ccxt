@@ -1,3 +1,5 @@
+from ccxt.base.errors import ArgumentsRequired, NotSupported
+from ccxt.base.types import Int, Str
 from ccxt.binance_abs import binance_abs
 
 
@@ -35,3 +37,43 @@ class binance_futures_abs(binance_abs):
                     relevant_markets[symbol] = parsed_market
             return relevant_markets
         return parsed_markets
+
+    def set_leverage(self, leverage: Int, symbol: Str = None, params={}):
+        """
+        set the level of leverage for a market
+
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Change-Initial-Leverage
+        https://developers.binance.com/docs/derivatives/coin-margined-futures/trade/rest-api/Change-Initial-Leverage
+        https://developers.binance.com/docs/derivatives/portfolio-margin/account/Change-UM-Initial-Leverage
+        https://developers.binance.com/docs/derivatives/portfolio-margin/account/Change-CM-Initial-Leverage
+
+        :param float leverage: the rate of leverage
+        :param str symbol: unified market symbol
+        :param dict [params]: extra parameters specific to the exchange API endpoint
+        :param boolean [params.portfolioMargin]: set to True if you would like to set the leverage for a trading pair in a portfolio margin account
+        :returns dict: response from the exchange
+        """
+        if symbol is None:
+            raise ArgumentsRequired(self.id + ' setLeverage() requires a symbol argument')
+        self.load_markets()
+        market = self.market(symbol)
+        request: dict = {
+            'symbol': market['id'],
+            'leverage': leverage,
+        }
+        isPortfolioMargin = None
+        isPortfolioMargin, params = self.handle_option_and_params_2(params, 'setLeverage', 'papi', 'portfolioMargin', False)
+        response = None
+        if market['linear']:
+            if isPortfolioMargin:
+                response = self.papiPostUmLeverage(self.extend(request, params))
+            else:
+                response = self.fapiPrivatePostLeverage(self.extend(request, params))
+        elif market['inverse']:
+            if isPortfolioMargin:
+                response = self.papiPostCmLeverage(self.extend(request, params))
+            else:
+                response = self.dapiPrivatePostLeverage(self.extend(request, params))
+        else:
+            raise NotSupported(self.id + ' setLeverage() supports linear and inverse contracts only')
+        return response
