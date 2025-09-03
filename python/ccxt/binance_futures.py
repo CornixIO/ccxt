@@ -19,6 +19,9 @@ class binance_futures(binance_futures_abs):
                 'linear': {
                     'exact': {
                         '-4400': ExchangeError,
+                        '-4401': ExchangeError,
+                        '-4402': ExchangeError,
+                        '-4403': ExchangeError,
                     }
                 },
             }
