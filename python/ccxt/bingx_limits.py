@@ -1,4 +1,4 @@
-{
+BINGX_LIMITS = {
     "0G/USDT": {
         "leverage": {
             "max": 25
