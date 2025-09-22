@@ -1,5 +1,6 @@
 from typing import Any
 from ccxt.base.errors import PermissionDenied
+from ccxt.base.errors import OrderNotFound
 from ccxt.bingx import bingx
 
 
@@ -16,6 +17,7 @@ class bingx_abs(bingx):
             'exceptions': {
                 'exact': {
                     '100413': PermissionDenied,
+                    '109421': OrderNotFound,
                 }
             }
         })
