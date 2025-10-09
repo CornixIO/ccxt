@@ -4,7 +4,7 @@
 # https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 from ccxt.kucoin import kucoin
-from ccxt.base.types import OrderSide, Strings, Tickers
+from ccxt.base.types import OrderSide, Strings, Tickers, Str
 from typing import Optional
 from typing import List
 from ccxt.base.errors import PermissionDenied
@@ -83,7 +83,7 @@ class kucoinfutures(kucoin):
                 'fetchOpenOrders': True,
                 'fetchOrder': True,
                 'fetchOrderBook': True,
-                'fetchPositionMode': False,
+                'fetchPositionMode': True,
                 'fetchPositions': True,
                 'fetchPremiumIndexOHLCV': False,
                 'fetchStatus': True,
@@ -172,6 +172,7 @@ class kucoinfutures(kucoin):
                         'positions',
                         'funding-history',
                         'batchGetCrossOrderLimit',
+                        'position/getPositionMode',  # v2
                     ],
                     'post': [
                         'withdrawals',
@@ -180,6 +181,7 @@ class kucoinfutures(kucoin):
                         'position/margin/auto-deposit-status',
                         'position/margin/deposit-margin',
                         'position/changeMarginMode',
+                        'position/switchPositionMode',  # v2
                         'changeCrossUserLeverage',
                         'bullet-private',
                     ],
@@ -315,8 +317,12 @@ class kucoinfutures(kucoin):
                 # endpoint versions
                 'versions': {
                     'futuresPrivate': {
+                        'GET': {
+                            'position/getPositionMode': 'v2',
+                        },
                         'POST': {
                             'transfer-out': 'v2',
+                            'position/switchPositionMode': 'v2',
                         },
                     },
                     'futuresPublic': {
@@ -955,6 +961,61 @@ class kucoinfutures(kucoin):
                 'positionCost': self.safe_number(listItem, 'positionCost'),
             })
         return fees
+
+    def fetch_position_mode(self, symbol: Str = None, params={}):
+        """
+        fetchs the position mode, hedged or one way
+
+        https://www.kucoin.com/docs/rest/futures-trading/positions/get-position-mode
+
+        :param str|None symbol: not used by kucoinfutures fetchPositionMode()
+        :param dict params: extra parameters specific to the exchange API endpoint
+        :returns dict: an object detailing whether the market is in hedged or one-way mode
+        """
+        self.load_markets()
+        response = self.futuresPrivateGetPositionGetPositionMode(params)
+        #
+        #     {
+        #         "code": "200000",
+        #         "data": {
+        #             "positionMode": "1"
+        #         }
+        #     }
+        #
+        data = self.safe_value(response, 'data', {})
+        positionMode = self.safe_string(data, 'positionMode')
+        hedged = positionMode == '1'
+        return {
+            'info': response,
+            'hedged': hedged,
+        }
+
+    def set_position_mode(self, hedged: bool, symbol: Str = None, params={}):
+        """
+        set hedged to True or False for a market
+
+        https://www.kucoin.com/docs-new/3475097e0
+
+        :param bool hedged: set to True to use two way position
+        :param str [symbol]: not used by kucoinfutures setPositionMode()
+        :param dict [params]: extra parameters specific to the exchange API endpoint
+        :returns dict: a response from the exchange
+        """
+        self.load_markets()
+        posMode = '1' if hedged else '0'
+        request: dict = {
+            'positionMode': posMode,
+        }
+        response = self.futuresPrivatePostPositionSwitchPositionMode(self.extend(request, params))
+        #
+        #     {
+        #         "code": "200000",
+        #         "data": {
+        #             "positionMode": 1
+        #         }
+        #     }
+        #
+        return response
 
     def change_auto_deposit(self, symbol, is_auto_deposit):
         assert is_auto_deposit is not None
