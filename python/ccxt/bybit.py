@@ -3052,26 +3052,13 @@ class bybit(Exchange):
         status = self.parse_order_status(rawStatus)
         side = self.safe_string_lower(order, 'side')
         fee = None
-        feeCostString = self.safe_string(order, 'cumExecFee')
-        feeCurrency = self.safe_string(order, 'feeCurrency')  # ws
-        if feeCostString:
-            feeCurrencyCode = None
-            if market['spot']:
-                if Precise.string_gt(feeCostString, '0'):
-                    if side == 'buy':
-                        feeCurrencyCode = market['base']
-                    else:
-                        feeCurrencyCode = market['quote']
-                else:
-                    if side == 'buy':
-                        feeCurrencyCode = market['quote']
-                    else:
-                        feeCurrencyCode = market['base']
-            else:
-                feeCurrencyCode = market['base'] if market['inverse'] else market['settle']
+        cumFeeDetail = self.safe_dict(order, 'cumFeeDetail', {})
+        feeCoins = list(cumFeeDetail.keys())
+        feeCoinId = self.safe_string(feeCoins, 0)
+        if feeCoinId is not None:
             fee = {
-                'cost': feeCostString,
-                'currency': feeCurrency or feeCurrencyCode,
+                'cost': self.safe_number(cumFeeDetail, feeCoinId),
+                'currency': feeCoinId,
             }
         clientOrderId = self.safe_string(order, 'orderLinkId')
         if (clientOrderId is not None) and (len(clientOrderId) < 1):
