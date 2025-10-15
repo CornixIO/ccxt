@@ -4,7 +4,7 @@
 # https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 from ccxt.kucoin import kucoin
-from ccxt.base.types import OrderSide, Strings, Tickers, Str
+from ccxt.base.types import OrderSide, Strings, Tickers, Position, Str, Market
 from typing import Optional
 from typing import List
 from ccxt.base.errors import PermissionDenied
@@ -173,6 +173,7 @@ class kucoinfutures(kucoin):
                         'funding-history',
                         'batchGetCrossOrderLimit',
                         'position/getPositionMode',  # v2
+                        'v2/positions',  # v2
                     ],
                     'post': [
                         'withdrawals',
@@ -319,6 +320,7 @@ class kucoinfutures(kucoin):
                     'futuresPrivate': {
                         'GET': {
                             'position/getPositionMode': 'v2',
+                            'positions': 'v2',
                         },
                         'POST': {
                             'transfer-out': 'v2',
@@ -1042,21 +1044,18 @@ class kucoinfutures(kucoin):
         _id = self.find_market(symbol)["id"]
         return self.futuresPrivatePostChangeCrossUserLeverage({"symbol": _id, "leverage": leverage})
 
-    def fetch_positions(self, symbol=None, params={}):
+    def fetch_positions(self, symbols: Strings = None, params={}) -> List[Position]:
         """
         fetch all open positions
-        :param [str]|None symbols: list of unified market symbols
-        :param dict params: extra parameters specific to the kucoinfutures api endpoint
-        :returns [dict]: a list of `position structure <https://docs.ccxt.com/#/?id=position-structure>`
+
+        https://docs.kucoin.com/futures/#get-position-list
+
+        :param str[]|None symbols: list of unified market symbols
+        :param dict [params]: extra parameters specific to the exchange API endpoint
+        :returns dict[]: a list of `position structure <https://docs.ccxt.com/#/?id=position-structure>`
         """
         self.load_markets()
-        if symbol:
-            response = self.futuresPrivateGetPosition({"symbol": self.market_id(symbol)})
-            position = self.safe_value(response, 'data')
-            positions = [position]
-        else:
-            response = self.futuresPrivateGetPositions(params)
-            positions = self.safe_value(response, 'data')
+        response = self.futuresPrivateGetPositions(params)
         #
         #    {
         #        "code": "200000",
@@ -1103,19 +1102,10 @@ class kucoinfutures(kucoin):
         #        ]
         #    }
         #
+        data = self.safe_list(response, 'data')
+        return self.parse_positions(data, symbols)
 
-        return self.parse_positions(positions)
-
-    def parse_positions(self, positions):
-        results = list()
-        for position in positions:
-            market_id = self.safe_string(position, 'symbol')
-            if market_id not in self.markets_by_id:
-                continue
-            results.append(self.parse_position(position))
-        return results
-
-    def parse_position(self, position, market=None):
+    def parse_position(self, position: dict, market: Market = None):
         #
         #    {
         #        "code": "200000",
@@ -1161,57 +1151,85 @@ class kucoinfutures(kucoin):
         #            }
         #        ]
         #    }
+        # position history
+        #             {
+        #                 "closeId": "300000000000000030",
+        #                 "positionId": "300000000000000009",
+        #                 "uid": 99996908309485,
+        #                 "userId": "6527d4fc8c7f3d0001f40f5f",
+        #                 "symbol": "XBTUSDM",
+        #                 "settleCurrency": "XBT",
+        #                 "leverage": "0.0",
+        #                 "type": "LIQUID_LONG",
+        #                 "side": null,
+        #                 "closeSize": null,
+        #                 "pnl": "-1.0000003793999999",
+        #                 "realisedGrossCost": "0.9993849748999999",
+        #                 "withdrawPnl": "0.0",
+        #                 "roe": null,
+        #                 "tradeFee": "0.0006154045",
+        #                 "fundingFee": "0.0",
+        #                 "openTime": 1713785751181,
+        #                 "closeTime": 1713785752784,
+        #                 "openPrice": null,
+        #                 "closePrice": null
+        #             }
         #
         symbol = self.safe_string(position, 'symbol')
         market = self.safe_market(symbol, market)
-        timestamp = self.safe_number(position, 'currentTimestamp')
+        timestamp = self.safe_integer(position, 'currentTimestamp')
         size = self.safe_string(position, 'currentQty')
         side = None
-        if Precise.string_gt(size, '0'):
-            side = 'long'
-        elif Precise.string_lt(size, '0'):
-            side = 'short'
-        is_linear = self.safe_value(market, 'linear')
-        quantity = self.safe_float(position, 'currentQty')
-        if is_linear:
-            contract_size = self.safe_value(market, 'contractSize')
-            quantity = quantity * contract_size
+        type = self.safe_string_lower(position, 'type')
+        if size is not None:
+            if Precise.string_gt(size, '0'):
+                side = 'long'
+            elif Precise.string_lt(size, '0'):
+                side = 'short'
+        elif type is not None:
+            if type.find('long') > -1:
+                side = 'long'
+            else:
+                side = 'short'
         notional = Precise.string_abs(self.safe_string(position, 'posCost'))
         initialMargin = self.safe_string(position, 'posInit')
         initialMarginPercentage = Precise.string_div(initialMargin, notional)
         # marginRatio = Precise.string_div(maintenanceRate, collateral)
         unrealisedPnl = self.safe_string(position, 'unrealisedPnl')
         crossMode = self.safe_value(position, 'crossMode')
-        auto_deposit = self.safe_value(position, 'autoDeposit')
         # currently crossMode is always set to False and only isolated positions are supported
-        margin_type = 'cross' if crossMode or auto_deposit else 'isolated'
-        contract_size = self.safe_value(market, 'contractSize')
+        marginMode = None
+        if crossMode is not None:
+            marginMode = 'cross' if crossMode else 'isolated'
         return self.safe_position({
             'info': position,
-            'id': None,
+            'id': self.safe_string_2(position, 'id', 'positionId'),
             'symbol': self.safe_string(market, 'symbol'),
             'timestamp': timestamp,
             'datetime': self.iso8601(timestamp),
-            'maintenance_margin': self.safe_number(position, 'posMargin'),
-            'entryPrice': self.safe_number(position, 'avgEntryPrice'),
+            'lastUpdateTimestamp': self.safe_integer(position, 'closeTime'),
+            'initialMargin': self.parse_number(initialMargin),
+            'initialMarginPercentage': self.parse_number(initialMarginPercentage),
+            'maintenanceMargin': self.safe_number(position, 'posMaint'),
+            'maintenanceMarginPercentage': self.safe_number(position, 'maintMarginReq'),
+            'entryPrice': self.safe_number_2(position, 'avgEntryPrice', 'openPrice'),
+            'notional': self.parse_number(notional),
             'leverage': self.safe_number_2(position, 'realLeverage', 'leverage'),
-            'unrealized_pnl': self.parse_number(unrealisedPnl),
+            'unrealizedPnl': self.parse_number(unrealisedPnl),
             'contracts': self.parse_number(Precise.string_abs(size)),
-            'quantity': quantity,
-            'contract_size': contract_size,
-            #     realisedPnl: position['realised_pnl'],
-            'margin_ratio': None,
-            'liquidation_price': self.safe_number(position, 'liquidationPrice'),
-            'mark_price': self.safe_number(position, 'markPrice'),
-            'last_price': None,
+            'contractSize': self.safe_value(market, 'contractSize'),
+            'realizedPnl': self.safe_number_2(position, 'realisedPnl', 'pnl'),
+            'marginRatio': None,
+            'liquidationPrice': self.safe_number(position, 'liquidationPrice'),
+            'markPrice': self.safe_number(position, 'markPrice'),
+            'lastPrice': None,
             'collateral': self.safe_number(position, 'maintMargin'),
-            'margin_type': margin_type,
+            'marginMode': marginMode,
             'side': side,
             'percentage': None,
+            'stopLossPrice': None,
+            'takeProfitPrice': None,
         })
-
-    def get_positions(self, symbol=None, params=None):
-        return self.fetch_positions(symbol, params)
 
     def create_order(self, symbol: str, type, side: OrderSide, amount, price=None, params={}):
         """
