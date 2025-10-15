@@ -1050,13 +1050,8 @@ class kucoinfutures(kucoin):
         :returns [dict]: a list of `position structure <https://docs.ccxt.com/#/?id=position-structure>`
         """
         self.load_markets()
-        if symbol:
-            response = self.futuresPrivateGetPosition({"symbol": self.market_id(symbol)})
-            position = self.safe_value(response, 'data')
-            positions = [position]
-        else:
-            response = self.futuresPrivateGetPositions(params)
-            positions = self.safe_value(response, 'data')
+        response = self.futuresPrivateGetPositions(params)
+        positions = self.safe_value(response, 'data')
         #
         #    {
         #        "code": "200000",
@@ -1104,16 +1099,7 @@ class kucoinfutures(kucoin):
         #    }
         #
 
-        return self.parse_positions(positions)
-
-    def parse_positions(self, positions):
-        results = list()
-        for position in positions:
-            market_id = self.safe_string(position, 'symbol')
-            if market_id not in self.markets_by_id:
-                continue
-            results.append(self.parse_position(position))
-        return results
+        return self.parse_positions(positions, [symbol] if symbol else None)
 
     def parse_position(self, position, market=None):
         #
