@@ -33,9 +33,10 @@ class hyperliquid_abs(hyperliquid):
             return symbol
 
     def coin_to_market_id(self, coin: Str):
-        market_id = super().coin_to_market_id(coin)
+        market_id = self.replace_symbol_k_with_1000(coin)
+        market_id = super().coin_to_market_id(market_id)
         market_id = market_id.split(':')[0]
-        return self.replace_symbol_k_with_1000(market_id)
+        return market_id
 
     def fetch_order_trades(self, id: str, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
         symbol_trades = self.fetch_my_trades(symbol, since, limit, params=params)
