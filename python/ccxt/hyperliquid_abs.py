@@ -38,6 +38,10 @@ class hyperliquid_abs(hyperliquid):
         market_id = market_id.split(':')[0]
         return market_id
 
+    def safe_currency_code(self, currency_id, currency=None):
+        currency_id = self.replace_symbol_k_with_1000(currency_id)
+        return super().safe_currency_code(currency_id)
+
     def fetch_order_trades(self, id: str, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
         symbol_trades = self.fetch_my_trades(symbol, since, limit, params=params)
         return self.filter_by_array(symbol_trades, 'order', values=[id], indexed=False)
