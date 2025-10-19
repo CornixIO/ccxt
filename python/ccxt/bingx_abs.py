@@ -18,6 +18,7 @@ class bingx_abs(bingx):
                 'exact': {
                     '100413': PermissionDenied,
                     '109421': OrderNotFound,
+                    '112415': PermissionDenied,  # {"code":112415,"msg":"Transaction failed. As per compliance requirements, your account needs to complete advanced verification.","data":{}}
                 }
             }
         })
