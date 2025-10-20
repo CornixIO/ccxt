@@ -114,6 +114,10 @@ from ccxt.bitz import bitz                                  # noqa: F401
 from ccxt.bl3p import bl3p                                  # noqa: F401
 from ccxt.bleutrade import bleutrade                        # noqa: F401
 from ccxt.braziliex import braziliex                        # noqa: F401
+from ccxt.blofin import blofin                              # noqa: F401
+from ccxt.blofin_abs import blofin_abs                      # noqa: F401
+from ccxt.blofin_futures import blofin_futures              # noqa: F401
+from ccxt.blofin_inverse import blofin_inverse              # noqa: F401
 from ccxt.btcalpha import btcalpha                          # noqa: F401
 from ccxt.btcbox import btcbox                              # noqa: F401
 from ccxt.btcmarkets import btcmarkets                      # noqa: F401
@@ -252,6 +256,10 @@ exchanges = [
     'bl3p',
     'bleutrade',
     'braziliex',
+    'blofin',
+    'blofin_abs',
+    'blofin_futures',
+    'blofin_inverse',
     'btcalpha',
     'btcbox',
     'btcmarkets',

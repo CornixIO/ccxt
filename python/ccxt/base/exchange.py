@@ -3816,13 +3816,13 @@ class Exchange(object):
             return
         return string_number
 
-    def handle_margin_mode_and_params(self, methodName, params={}):
+    def handle_margin_mode_and_params(self, methodName, params={}, defaultValue=None):
         """
          * @ignore
         :param dict params: extra parameters specific to the exchange api endpoint
         :returns [str|None, dict]: the marginMode in lowercase as specified by params["marginMode"], params["defaultMarginMode"] self.options["marginMode"] or self.options["defaultMarginMode"]
         """
-        defaultMarginMode = self.safe_string_2(self.options, 'marginMode', 'defaultMarginMode')
+        defaultMarginMode = self.safe_string_2(self.options, 'marginMode', 'defaultMarginMode', default_value=defaultValue)
         methodOptions = self.safe_value(self.options, methodName, {})
         methodMarginMode = self.safe_string_2(methodOptions, 'marginMode', 'defaultMarginMode', defaultMarginMode)
         marginMode = self.safe_string_lower_2(params, 'marginMode', 'defaultMarginMode', methodMarginMode)
@@ -3939,3 +3939,11 @@ class Exchange(object):
         sorted = self.sort_by(rates, 'timestamp')
         symbol = None if (market is None) else market['symbol']
         return self.filter_by_symbol_since_limit(sorted, symbol, since, limit)
+
+    @staticmethod
+    def string_to_base64(s):
+        return Exchange.binary_to_base64(Exchange.encode(s))
+
+    @staticmethod
+    def base64_to_string(s):
+        return Exchange.decode(base64.b64decode(s))
