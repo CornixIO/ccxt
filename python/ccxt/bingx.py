@@ -302,6 +302,11 @@ class bingx(Exchange, ImplicitAPI):
                                 'quote/klines': 1,
                             },
                         },
+                        'private': {
+                            'get': {
+                                'user/balance': 2,
+                            },
+                        },
                     },
                 },
                 'cswap': {
@@ -2169,7 +2174,7 @@ class bingx(Exchange, ImplicitAPI):
                 #     }
                 #
             else:
-                response = self.swapV2PrivateGetUserBalance(marketTypeQuery)
+                response = self.swapV3PrivateGetUserBalance(marketTypeQuery)
                 #
                 #     {
                 #         "code": 0,
