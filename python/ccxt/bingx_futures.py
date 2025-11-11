@@ -29,3 +29,12 @@ class bingx_futures(bingx_abs):
         if 'clientOrderId' in request:
             request.pop('orderId', None)
         return super().swapV2PrivateGetTradeOrder(request)
+
+    def safe_balance(self, balance):
+        for coin, balance_dict in balance.items():
+            if coin == 'info':
+                continue
+            if not balance_dict['free'] and not balance_dict['used']:
+                balance_dict['free'] = 0.0
+                balance_dict['used'] = 0.0
+        return super().safe_balance(balance)
