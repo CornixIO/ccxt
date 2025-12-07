@@ -11,12 +11,5 @@ class blofin_inverse(blofin_abs):
         self.options['defaultType'] = 'swap'
         self.options['defaultSubType'] = 'inverse'
 
-    def create_order_request(self, symbol: str, type: OrderType, side: OrderSide, amount: float, price: Num = None, params={}):
-        order_request = super().create_order_request(symbol, type, side, amount, price, params)
-        market = self.market(symbol)
-        contractSize = market['contractSize']
-        order_request['size'] = Precise.string_div(str(order_request['size']), str(contractSize))
-        return order_request
-
     def fetch_balance(self, params={}) -> Balances:
         return super().fetch_balance(params | {'accountType': 'inverse_contract'})

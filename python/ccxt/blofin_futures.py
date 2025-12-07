@@ -11,6 +11,9 @@ class blofin_futures(blofin_abs):
         self.options['defaultType'] = 'swap'
         self.options['defaultSubType'] = 'linear'
 
+    def get_quantity(self, quantity: float, contract_size: float) -> float:
+        return float(Precise.string_div(str(quantity), str(contract_size)))
+
     def create_order_request(self, symbol: str, type: OrderType, side: OrderSide, amount: float, price: Num = None, params={}):
         order_request = super().create_order_request(symbol, type, side, amount, price, params)
         market = self.market(symbol)

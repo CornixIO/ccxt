@@ -23,16 +23,19 @@ class blofin_abs(blofin):
             },
         })
 
+    def get_quantity(self, quantity: float, contract_size: float) -> float:
+        return quantity
+
     def parse_market(self, market: dict) -> Market:
         market_obj = super().parse_market(market)
         if market_obj is not None:
             info = market_obj['info']
             market_obj['symbol'] = market_obj['symbol'].split(':')[0]
-            contract_size_str = str(market_obj['contractSize'])
+            contract_size = float(market_obj['contractSize'])
             limits = market_obj['limits']
-            limits['amount']['max'] = float(Precise.string_mul(info['maxLimitSize'], contract_size_str))
-            limits['markets'] = {'min': 0., 'max': float(Precise.string_mul(info['maxMarketSize'], contract_size_str))}
-            market_obj['precision']['amount'] = float(Precise.string_mul(str(market_obj['precision']['amount']), str(contract_size_str)))
+            limits['amount']['max'] = self.get_quantity(float(info['maxLimitSize']), contract_size)
+            limits['markets'] = {'min': 0., 'max': self.get_quantity(float(info['maxMarketSize']), contract_size)}
+            market_obj['precision']['amount'] = self.get_quantity(float(market_obj['precision']['amount']), contract_size)
             contract_type = info['contractType']
             market_obj['linear'] = contract_type == 'linear'
             market_obj['inverse'] = contract_type == 'inverse'
@@ -102,7 +105,7 @@ class blofin_abs(blofin):
         position['realizedPnl'] = None
         position['maintenance_margin'] = position['collateral']
         position['display_maintenance_margin'] = position['collateral']
-        quantity_abs = float(Precise.string_mul(str(position['contracts']), str(position['contractSize'])))
+        quantity_abs = self.get_quantity(position['contracts'], position['contractSize'])
         quantity = quantity_abs * (1 if position['is_long'] else -1)
         position['quantity'] = quantity
         if position['notional'] is None:
@@ -115,9 +118,9 @@ class blofin_abs(blofin):
         market = market or self.market(order['symbol'])
         contractSize = market['contractSize']
         if order['amount'] is not None:
-            order['amount'] = float(Precise.string_mul(str(order['amount']), str(contractSize)))
+            order['amount'] = self.get_quantity(order['amount'], contractSize)
         if order['filled'] is not None:
-            order['filled'] = float(Precise.string_mul(str(order['filled']), str(contractSize)))
+            order['filled'] = self.get_quantity(order['filled'], contractSize)
         if order['remaining'] is not None:
-            order['remaining'] = float(Precise.string_mul(str(order['remaining']), str(contractSize)))
+            order['remaining'] = self.get_quantity(order['remaining'], contractSize)
         return order
