@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
 from ccxt.base.errors import OrderNotFound
 from ccxt.base.precise import Precise
@@ -96,6 +96,10 @@ class blofin_abs(blofin):
             return super().cancel_order(order['id'], symbol)
         except OrderNotFound:
             super().cancel_order(id, symbol, params | {'trigger': True})
+
+    def parse_positions(self, positions, symbols: Optional[List[str]] = None, params={}):
+        filtered_positions = [position for position in positions if position.get('instId') in self.markets_by_id]
+        return super().parse_positions(filtered_positions, symbols, params)
 
     def parse_position(self, position: dict, market: Market = None):
         position = super().parse_position(position, market)
