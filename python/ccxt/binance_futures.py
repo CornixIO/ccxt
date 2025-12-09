@@ -54,6 +54,7 @@ class binance_futures(binance_futures_abs):
 
     def fetch_order_trades(self, id: str, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
         if params.get('stop'):
+            params.pop('stop')
             order = self.fetch_order(id, symbol, params)
             return super().fetch_order_trades(order['id'], symbol, since, limit, params)
         else:
