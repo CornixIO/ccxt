@@ -1,9 +1,8 @@
 from typing import Any
 
-from build.lib.ccxt.base.types import Int
-from ccxt.binance_futures_abs import binance_futures_abs
 from ccxt.base.errors import ExchangeError, OrderNotFound
-from ccxt.base.types import Str
+from ccxt.base.types import Int, Str
+from ccxt.binance_futures_abs import binance_futures_abs
 
 BINANCE_FUTURES = 'Binance Futures'
 
