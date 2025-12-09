@@ -915,6 +915,9 @@ class Exchange(object):
             return _float
         return int(_float) if _float.is_integer() else _float
 
+    def create_safe_dictionary(self):
+        return {}
+
     @staticmethod
     def convert_to_real_value(value):
         import ast
