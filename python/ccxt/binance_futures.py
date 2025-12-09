@@ -33,7 +33,7 @@ class binance_futures(binance_futures_abs):
         return super().parse_order_status(status)
 
     def fetch_order(self, id: str, symbol: Str = None, params={}):
-        if params.get('stop') and params.get('clientOrderId'):
+        if params.get('stop'):
             params.pop('stop')
             try:
                 return super().fetch_order(id, symbol, params)
@@ -43,7 +43,7 @@ class binance_futures(binance_futures_abs):
             return super().fetch_order(id, symbol, params)
 
     def cancel_order(self, id: str, symbol: Str = None, params={}):
-        if params.get('stop') and params.get('clientOrderId'):
+        if params.get('stop'):
             params.pop('stop')
             try:
                 return super().cancel_order(id, symbol, params)
