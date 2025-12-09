@@ -33,6 +33,9 @@ class binance_futures(binance_futures_abs):
         return super().parse_order_status(status)
 
     def fetch_order(self, id: str, symbol: Str = None, params={}):
+        clientOrderId = self.safe_string(params, 'clientOrderId')
+        if clientOrderId is None:
+            raise Exception(f'{self.id} fetchOrder() requires a clientOrderId param')
         if params.get('type') == 'stop':
             params.pop('type')
             try:
@@ -43,6 +46,9 @@ class binance_futures(binance_futures_abs):
             return super().fetch_order(id, symbol, params)
 
     def cancel_order(self, id: str, symbol: Str = None, params={}):
+        clientOrderId = self.safe_string(params, 'clientOrderId')
+        if clientOrderId is None:
+            raise Exception(f'{self.id} cancelOrder() requires a clientOrderId param')
         if params.get('type') == 'stop':
             params.pop('type')
             try:
