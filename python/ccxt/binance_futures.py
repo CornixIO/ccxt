@@ -1,5 +1,6 @@
 from typing import Any
 
+from build.lib.ccxt.base.types import Int
 from ccxt.binance_futures_abs import binance_futures_abs
 from ccxt.base.errors import ExchangeError, OrderNotFound
 from ccxt.base.types import Str
@@ -51,3 +52,13 @@ class binance_futures(binance_futures_abs):
                 return super().cancel_order(id, symbol, params | {'stop': True})
         else:
             return super().cancel_order(id, symbol, params)
+
+    def fetch_order_trades(self, id: str, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
+        if params.get('stop'):
+            try:
+                order = self.fetch_order(id, symbol, params)
+                return super().fetch_order_trades(order['id'], symbol, since, limit, params)
+            except OrderNotFound:
+                return []
+        else:
+            return super().fetch_order_trades(id, symbol, since, limit, params)
