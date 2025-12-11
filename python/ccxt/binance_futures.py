@@ -27,18 +27,15 @@ class binance_futures(binance_futures_abs):
             }
         })
 
-    def parse_order_status(self, status: Str):
-        if status in ['TRIGGERED', 'FINISHED']:
-            return 'open'
-        return super().parse_order_status(status)
-
     def fetch_order(self, id: str, symbol: Str = None, params={}):
         if params.get('stop'):
             params.pop('stop')
             try:
                 return super().fetch_order(id, symbol, params)
             except OrderNotFound:
-                return super().fetch_order(id, symbol, params | {'stop': True})
+                algo_order = super().fetch_order(id, symbol, params | {'stop': True})
+                if algo_order['status'] == 'closed':
+                    return super().fetch_order(id, symbol, params)
         else:
             return super().fetch_order(id, symbol, params)
 
