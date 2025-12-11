@@ -28,7 +28,7 @@ class binance_futures(binance_futures_abs):
         })
 
     def parse_order_status(self, status: Str):
-        if status == 'TRIGGERED':
+        if status in ['TRIGGERED', 'FINISHED']:
             return 'open'
         return super().parse_order_status(status)
 
