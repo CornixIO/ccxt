@@ -3947,3 +3947,6 @@ class Exchange(object):
     @staticmethod
     def base64_to_string(s):
         return Exchange.decode(base64.b64decode(s))
+
+    def create_safe_dictionary(self):
+        return {}
