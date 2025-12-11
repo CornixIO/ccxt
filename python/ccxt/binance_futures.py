@@ -36,6 +36,7 @@ class binance_futures(binance_futures_abs):
                 algo_order = super().fetch_order(id, symbol, params | {'stop': True})
                 if algo_order['status'] == 'closed':
                     return super().fetch_order(id, symbol, params)
+                return algo_order
         else:
             return super().fetch_order(id, symbol, params)
 
