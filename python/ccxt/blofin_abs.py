@@ -41,43 +41,45 @@ class blofin_abs(blofin):
             market_obj['inverse'] = contract_type == 'inverse'
         return market_obj
 
-    def fetch_order_by_algo_client_order_id(self, symbol: Str = None, client_order_id: Str = None, params={}) -> Order:
+    def get_trade_order_detail(self, symbol: Str = None, params={}) -> Order:
         self.load_markets()
         market = self.market(symbol)
         request: dict = {
             'instId': market['id'],
-            'algoClientOrderId': client_order_id,
         }
         response = self.privateGetTradeOrderDetail(request | params)
         data = self.safe_value(response, 'data', None)
         if data is None:
-            raise OrderNotFound(f'{self.id} fetchOrder() could not find order {client_order_id}')
+            raise OrderNotFound(f'{self.id} fetchOrder() could not find order {params}')
         return self.parse_order(data, market)
 
-    def fetch_order(self, id: str, symbol: Str = None, params={}) -> Order:
+    def get_trade_order_tpsl_detail(self, symbol: Str = None, params={}) -> Order:
         self.load_markets()
         market = self.market(symbol)
         request: dict = {
             'instId': market['id'],
         }
-        fetch_search_order = []
-        clientOrderId = self.safe_string(params, 'clientOrderId')
-        if clientOrderId is None:
-            raise Exception(f'{self.id} fetchOrder() requires a clientOrderId param')
-        is_stop = params.pop('type', '') == 'stop'
-        if is_stop:
-            fetch_search_order.append([self.privateGetTradeOrderDetail, {'algoClientOrderId': clientOrderId}])
-            fetch_search_order.append([self.privateGetTradeOrderTpslDetail, {'clientOrderId': clientOrderId}])
-        else:
-            fetch_search_order.append([self.privateGetTradeOrderDetail, {'clientOrderId': clientOrderId}])
-        for fetch, request_params in fetch_search_order:
-            response = fetch(request | request_params)
-            data = self.safe_value(response, 'data', None)
-            if data is not None:
-                break
-        else:
-            raise OrderNotFound(f'{self.id} fetchOrder() could not find order {id}')
+        response = self.privateGetTradeOrderTpslDetail(request | params)
+        data = self.safe_value(response, 'data', None)
+        if data is None:
+            raise OrderNotFound(f'{self.id} fetchOrder() could not find order {params}')
         return self.parse_order(data, market)
+
+    def fetch_order(self, id: str, symbol: Str = None, params={}) -> Order:
+        if params.get('stop'):
+            params.pop('stop')
+            client_order_id = params.pop('clientOrderId', None)
+            if client_order_id is None:
+                raise Exception(f'{self.id} fetchOrder() requires a clientOrderId param when fetching stop order')
+            try:
+                return self.get_trade_order_detail(symbol, params | {'algoClientOrderId': client_order_id})
+            except OrderNotFound:
+                algo_order = self.get_trade_order_tpsl_detail(symbol, params | {'clientOrderId': client_order_id})
+                if algo_order['status'] == 'closed':
+                    return self.get_trade_order_detail(symbol, params | {'algoClientOrderId': client_order_id})
+                return algo_order
+        else:
+            return self.get_trade_order_detail(symbol, params)
 
     def fetch_markets(self, params={}) -> List[Market]:
         markets = super().fetch_markets(params)
@@ -92,7 +94,7 @@ class blofin_abs(blofin):
             return super().cancel_order(id, symbol, params)
         client_order_id = params.get('clientOrderId')
         try:
-            order = self.fetch_order_by_algo_client_order_id(symbol, client_order_id)
+            order = self.get_trade_order_detail(symbol, {'algoClientOrderId': client_order_id})
             return super().cancel_order(order['id'], symbol)
         except OrderNotFound:
             super().cancel_order(id, symbol, params | {'trigger': True})
