@@ -1,8 +1,8 @@
 from typing import Any
 
+from ccxt.base.errors import ExchangeError, OrderNotFound
+from ccxt.base.types import Int, Str
 from ccxt.binance_futures_abs import binance_futures_abs
-from ccxt.base.errors import ExchangeError
-from ccxt.base.types import Market
 
 BINANCE_FUTURES = 'Binance Futures'
 
@@ -26,3 +26,34 @@ class binance_futures(binance_futures_abs):
                 },
             }
         })
+
+    def fetch_order(self, id: str, symbol: Str = None, params={}):
+        if params.get('stop'):
+            params.pop('stop')
+            try:
+                return super().fetch_order(id, symbol, params)
+            except OrderNotFound:
+                algo_order = super().fetch_order(id, symbol, params | {'stop': True})
+                if algo_order['status'] == 'closed':
+                    return super().fetch_order(id, symbol, params)
+                return algo_order
+        else:
+            return super().fetch_order(id, symbol, params)
+
+    def cancel_order(self, id: str, symbol: Str = None, params={}):
+        if params.get('stop'):
+            params.pop('stop')
+            try:
+                return super().cancel_order(id, symbol, params)
+            except OrderNotFound:
+                return super().cancel_order(id, symbol, params | {'stop': True})
+        else:
+            return super().cancel_order(id, symbol, params)
+
+    def fetch_order_trades(self, id: str, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
+        if params.get('stop'):
+            params.pop('stop')
+            order = self.fetch_order(id, symbol, params)
+            return super().fetch_order_trades(order['id'], symbol, since, limit, params)
+        else:
+            return super().fetch_order_trades(id, symbol, since, limit, params)
