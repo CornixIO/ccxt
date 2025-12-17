@@ -89,8 +89,8 @@ class blofin_abs(blofin):
         return markets
 
     def cancel_order(self, id: str, symbol: Str = None, params={}):
-        order_type = params.pop('type', None)
-        if order_type is None:
+        is_stop = params.pop('stop', None)
+        if not is_stop:
             return super().cancel_order(id, symbol, params)
         client_order_id = params.get('clientOrderId')
         try:
