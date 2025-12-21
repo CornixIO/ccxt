@@ -17,6 +17,7 @@ class bingx_abs(bingx):
             'exceptions': {
                 'exact': {
                     '80012': ExchangeError,
+                    '100004': PermissionDenied,
                     '100413': PermissionDenied,
                     '101253': InsufficientFunds,  # {"code":101253,"msg":"Insufficient margin","data":{}}
                     '109400': BadRequest,
