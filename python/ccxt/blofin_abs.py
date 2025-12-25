@@ -1,6 +1,6 @@
 from typing import Any, List, Optional
 
-from ccxt.base.errors import AuthenticationError, OrderNotFound
+from ccxt.base.errors import AuthenticationError, BadRequest, OrderNotFound
 from ccxt.base.precise import Precise
 from ccxt.base.types import Market, Order, Str
 from ccxt.blofin import blofin
@@ -136,3 +136,25 @@ class blofin_abs(blofin):
         if order['remaining'] is not None:
             order['remaining'] = self.get_quantity(order['remaining'], contractSize)
         return order
+
+    def fetch_leverage(self, symbol: str, params={}):
+        self.load_markets()
+        marginMode = None
+        marginMode, params = self.handle_margin_mode_and_params('fetchLeverages', params)
+        positionSide = self.safe_string(params, 'positionSide', None)
+        if marginMode is None:
+            marginMode = self.safe_string(params, 'marginMode', 'cross')  # cross marginMode
+        if (marginMode != 'cross') and (marginMode != 'isolated'):
+            raise BadRequest(self.id + ' fetchLeverages() requires a marginMode parameter that must be either cross or isolated')
+        market = self.market(symbol)
+        request: dict = {
+            'instId': market['id'],
+            'marginMode': marginMode,
+        }
+        response = self.privateGetAccountBatchLeverageInfo(self.extend(request, params))
+        leverages = self.safe_list(response, 'data', [])
+        for leverage in leverages:
+            leverage_position_side = leverage['positionSide']
+            if marginMode == 'isolated' and leverage_position_side not in [positionSide, 'net']:
+                continue
+            return self.safe_integer(leverage, 'leverage')
