@@ -23,6 +23,7 @@ class blofin_abs(blofin):
             },
             'exceptions': {
                 'exact': {
+                    '152401': AuthenticationError, # {"code":"152401","msg":"Access key does not exist"}
                     '152408': AuthenticationError, # {"code":"152408","msg":"Passphrase error"}
                 }
             }
