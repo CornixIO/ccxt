@@ -13,7 +13,20 @@ class binance_abs(binance):
     def describe(self) -> Any:
         return self.deep_extend(super(binance_abs, self).describe(), {
             'precisionMode': DECIMAL_PLACES,
+            'options': {'broker': {
+                'spot': 'x-MLHZG2J2',
+                'margin': 'x-MLHZG2J2',
+                'future': 'x-v69H3rG1',
+                'swap': 'x-v69H3rG1',
+                'delivery': 'x-sDPWvduU',
+                'option': 'x-sDPWvduU',
+                'inverse': 'x-sDPWvduU',
+            }}
         })
+
+    def get_broker_id(self):
+        broker = self.safe_dict(self.options, 'broker', {})
+        return self.safe_string(broker, self.options['defaultType'])
 
     def is_inverse(self, *args, **kwargs):
         default_type = self.safe_string(self.options, 'defaultType')
