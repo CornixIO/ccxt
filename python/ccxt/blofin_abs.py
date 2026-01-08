@@ -2,7 +2,7 @@ from typing import Any, List, Optional
 
 from ccxt.base.errors import AuthenticationError, BadRequest, OrderNotFound
 from ccxt.base.precise import Precise
-from ccxt.base.types import Market, Order, Str
+from ccxt.base.types import Market, Order, Str, Ticker
 from ccxt.blofin import blofin
 
 
@@ -158,3 +158,8 @@ class blofin_abs(blofin):
             if marginMode == 'isolated' and leverage_position_side not in [positionSide, 'net']:
                 continue
             return self.safe_integer(leverage, 'leverage')
+
+    def parse_ticker(self, ticker: dict, market: Market = None) -> Ticker:
+        parsed_ticker = super().parse_ticker(ticker, market)
+        parsed_ticker['quoteVolume'] = self.parse_number(self.safe_string(ticker, 'volCurrency24h'))
+        return parsed_ticker
