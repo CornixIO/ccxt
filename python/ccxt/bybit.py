@@ -1594,6 +1594,10 @@ class bybit(Exchange):
                         'min': self.safe_number(lotSizeFilter, 'minOrderQty'),
                         'max': self.safe_number(lotSizeFilter, 'maxOrderQty'),
                     },
+                    'market': {
+                        'min': 0.,
+                        'max': self.safe_number(lotSizeFilter, 'maxMarketOrderQty'),
+                    },
                     'price': {
                         'min': None,
                         'max': None,
