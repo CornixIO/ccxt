@@ -1,6 +1,6 @@
 from typing import Any, List, Optional
 
-from ccxt.base.errors import AuthenticationError, BadRequest, OrderNotFound
+from ccxt.base.errors import AuthenticationError, BadRequest, OrderNotFound, PermissionDenied
 from ccxt.base.precise import Precise
 from ccxt.base.types import Market, Order, Str, Ticker
 from ccxt.blofin import blofin
@@ -23,8 +23,9 @@ class blofin_abs(blofin):
             },
             'exceptions': {
                 'exact': {
-                    '152401': AuthenticationError, # {"code":"152401","msg":"Access key does not exist"}
-                    '152408': AuthenticationError, # {"code":"152408","msg":"Passphrase error"}
+                    '152401': AuthenticationError,  # {"code":"152401","msg":"Access key does not exist"}
+                    '152404': PermissionDenied,  # {"code":"152404","msg":"This operation is not supported"}
+                    '152408': AuthenticationError,  # {"code":"152408","msg":"Passphrase error"}
                 }
             }
         })
