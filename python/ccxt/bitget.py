@@ -3781,6 +3781,8 @@ class bitget(Exchange, ImplicitAPI):
             size = Precise.string_div(size, average)
             size = self.amount_to_precision(market['symbol'], size)
         is_triggered = None
+        if self.safe_number(order, 'triggerPrice'):
+            is_triggered = True if self.parse_order_status(rawStatus) == 'closed' else False
         orderSource = self.safe_string(order, 'orderSource')
         if orderSource and 'plan' in orderSource:
             is_triggered = True
