@@ -468,6 +468,17 @@ class MarginModification(TypedDict):
     datetime: Str
 
 
+class OpenInterest(TypedDict):
+    symbol: Str
+    openInterestAmount: Num
+    openInterestValue: Num
+    baseVolume: Num
+    quoteVolume: Num
+    timestamp: Int
+    datetime: Str
+    info: Dict[str, Any]
+
+
 class LeverageTier:
     tier: Num
     symbol: Str
@@ -534,6 +545,7 @@ Market = Optional[MarketInterface]
 Currency = Optional[CurrencyInterface]
 
 FundingRates = Dict[Str, FundingRate]
+OpenInterests = Dict[Str, OpenInterest]
 IsolatedBorrowRates = Dict[Str, IsolatedBorrowRate]
 CrossBorrowRates = Dict[Str, CrossBorrowRate]
 LeverageTiers = Dict[Str, List[LeverageTier]]
