@@ -10,5 +10,6 @@ class okx_spot(okx_abs):
         return self.deep_extend(super(okx_spot, self).describe(), {
             'options': {
                 'defaultType': 'spot',
+                'createMarketBuyOrderRequiresPrice': True,
             },
         })
