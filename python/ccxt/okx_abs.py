@@ -30,6 +30,9 @@ class okx_abs(okx):
             parsed_market['symbol'] = symbol
             parsed_market['limits']['orders'] = {'max': 60}
             parsed_market['limits']['conditional_orders'] = {'max': 20}
+            tick_size = self.safe_string(market, 'tickSz')
+            precision_price = self.parse_number(tick_size)
+            parsed_market['limits']['price'] = {'min': precision_price, 'max': None}
         return parsed_market
 
     def _calculate_position_quantity(self, position: dict, contracts: float, contract_size: float):
