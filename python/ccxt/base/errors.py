@@ -26,6 +26,7 @@ error_hierarchy = {
                 'OrderImmediatelyFillable': {},
                 'OrderNotFillable': {},
                 'DuplicateOrderId': {},
+                'ContractUnavailable': {},
                 'TradesNotFound': {}
             },
             'NotSupported': {},
@@ -116,6 +117,10 @@ class ManualInteractionNeeded(OperationRejected):
     pass
 
 
+class RestrictedLocation(OperationRejected):
+    pass
+
+
 class InsufficientFunds(ExchangeError):
     pass
 
@@ -157,6 +162,10 @@ class OrderNotFillable(InvalidOrder):
 
 
 class DuplicateOrderId(InvalidOrder):
+    pass
+
+
+class ContractUnavailable(InvalidOrder):
     pass
 
 
@@ -236,6 +245,7 @@ __all__ = [
     'BadSymbol',
     'BadResponse',
     'NullResponse',
+    'RestrictedLocation',
     'InsufficientFunds',
     'InvalidAddress',
     'AddressPending',
@@ -247,6 +257,7 @@ __all__ = [
     'OrderImmediatelyFillable',
     'OrderNotFillable',
     'DuplicateOrderId',
+    'ContractUnavailable',
     'NotSupported',
     'OperationFailed',
     'NetworkError',
