@@ -1,7 +1,7 @@
 from typing import Any
 
 from ccxt.base.precise import Precise
-from ccxt.base.types import Market
+from ccxt.base.types import Market, Order
 from ccxt.okx_abs import okx_abs
 
 OKX_FUTURES = 'OKX Futures'
@@ -43,6 +43,26 @@ class okx_futures(okx_abs):
             size = float(size)
         params['sz'] = size
         return super().create_order(symbol, type, side, amount, price, params)
+
+    def parse_order(self, order: dict, market: Market = None) -> Order:
+        parsed_order = super().parse_order(order, market)
+        if parsed_order is not None and market is None:
+            symbol = self.safe_string(parsed_order, 'symbol')
+            if symbol is not None:
+                market = self.safe_market(symbol)
+        contract_size = self.safe_value(market, 'contractSize')
+        if contract_size is not None:
+            amount = self.safe_string(parsed_order, 'amount')
+            if amount is not None:
+                contract_size_string = self.number_to_string(contract_size)
+                amount = Precise.string_mul(amount, contract_size_string)
+                parsed_order['amount'] = self.parse_number(amount)
+            filled = self.safe_string(parsed_order, 'filled')
+            if filled is not None:
+                contract_size_string = self.number_to_string(contract_size)
+                filled = Precise.string_mul(filled, contract_size_string)
+                parsed_order['filled'] = self.parse_number(filled)
+        return parsed_order
 
     def _calculate_position_quantity(self, position: dict, contracts: float, contract_size: float):
         contracts_string = self.number_to_string(contracts)
