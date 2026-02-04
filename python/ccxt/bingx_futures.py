@@ -6,6 +6,8 @@ BINGX_FUTURES = 'BingX Futures'
 
 
 class bingx_futures(bingx_abs):
+    KNOWN_PREFIXES_TO_REMOVE = ['NCSK', 'NCCO', 'NCFX', 'NCSI']
+
     def __init__(self, config={}):
         super().__init__(config)
         self.options['defaultType'] = 'swap'
@@ -21,6 +23,11 @@ class bingx_futures(bingx_abs):
         if market_obj is not None:
             symbol = market_obj['symbol']
             symbol = symbol.replace(':USDT', '').replace(':USDC', '')
+            symbol = symbol.replace('2USD/', '/')
+            for prefix in self.KNOWN_PREFIXES_TO_REMOVE:
+                if symbol.startswith(prefix):
+                    symbol = symbol[len(prefix):]
+                    break
             market_obj['symbol'] = symbol
             limits = BINGX_LIMITS.get(symbol, {})
             if not limits:
