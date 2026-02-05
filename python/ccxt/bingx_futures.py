@@ -29,11 +29,8 @@ class bingx_futures(bingx_abs):
                 limits = BINGX_LIMITS.get(market_obj['id'].replace('-', '/'), {})
             market_obj['limits'].update(limits)
 
-            symbol = symbol.replace('2USD/', '/')
-            for prefix in self.KNOWN_PREFIXES_TO_REMOVE:
-                if symbol.startswith(prefix):
-                    symbol = symbol[len(prefix):]
-                    break
+            if any(symbol.startswith(prefix) for prefix in self.KNOWN_PREFIXES_TO_REMOVE):
+                symbol = market_obj['info']['displayName'].upper().replace(' ', '').replace('-', '/')
             market_obj['symbol'] = symbol
 
         return market_obj
