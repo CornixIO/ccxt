@@ -34,8 +34,8 @@ class bingx_futures(bingx_abs):
                 if symbol.startswith(prefix):
                     symbol = symbol[len(prefix):]
                     break
-
             market_obj['symbol'] = symbol
+
         return market_obj
 
     def _swapV2PrivateGetTradeOrder(self, request):
