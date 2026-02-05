@@ -1,7 +1,6 @@
 from typing import List
 
 from ccxt.base.types import Market
-from ccxt.hyperliquid import hyperliquid
 from ccxt.hyperliquid_abs import hyperliquid_abs
 
 HYPERLIQUID_FUTURES = 'HyperLiquid Futures'
@@ -13,8 +12,13 @@ class hyperliquid_futures(hyperliquid_abs):
         self.options['defaultType'] = 'swap'
 
     def fetch_markets(self, params={}) -> List[Market]:
-        markets = self.fetch_swap_markets(params)
+        markets = self.fetch_swap_markets(params) + self.fetch_hip3_markets(params)
+        relevant_markets = []
         for market in markets:
-            market['symbol'] = market['symbol'].split(':')[0]
-        markets = self.replace_k_with_1000(markets)
-        return markets
+            symbol = market['symbol'].split('-')[-1].split(':')[0]
+            market['symbol'] = symbol
+            if symbol.endswith('/USDC'):
+                relevant_markets.append(market)
+        relevant_markets = self.replace_k_with_1000(relevant_markets)
+        return relevant_markets
+
