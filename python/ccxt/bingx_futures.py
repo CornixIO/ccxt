@@ -27,6 +27,7 @@ class bingx_futures(bingx_abs):
             limits = BINGX_LIMITS.get(symbol, {})
             if not limits:
                 limits = BINGX_LIMITS.get(market_obj['id'].replace('-', '/'), {})
+            market_obj['limits'].update(limits)
 
             symbol = symbol.replace('2USD/', '/')
             for prefix in self.KNOWN_PREFIXES_TO_REMOVE:
@@ -35,7 +36,6 @@ class bingx_futures(bingx_abs):
                     break
 
             market_obj['symbol'] = symbol
-            market_obj['limits'].update(limits)
         return market_obj
 
     def _swapV2PrivateGetTradeOrder(self, request):
