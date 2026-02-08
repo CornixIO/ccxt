@@ -11,6 +11,7 @@ class hyperliquid_abs(hyperliquid):
             'options': {
                 'ref': 'CORNIX',
                 'refSet': True,
+                'builderFee': False,
             },
             'exceptions': {
                 'broad': {
