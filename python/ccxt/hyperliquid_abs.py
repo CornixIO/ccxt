@@ -8,6 +8,10 @@ from ccxt.hyperliquid import hyperliquid
 class hyperliquid_abs(hyperliquid):
     def describe(self) -> Any:
         return self.deep_extend(super().describe(), {
+            'options': {
+                'ref': 'CORNIX',
+                'refSet': True,
+            },
             'exceptions': {
                 'broad': {
                     'User or API Wallet ': PermissionDenied,
