@@ -15,7 +15,7 @@ class hyperliquid_futures(hyperliquid_abs):
         markets = self.fetch_swap_markets(params) + self.fetch_hip3_markets(params)
         relevant_markets = []
         for market in markets:
-            symbol = market['symbol'].split('-')[-1].split(':')[0]
+            symbol = self.clean_symbol(market['symbol'])
             market['symbol'] = symbol
             if symbol.endswith('/USDC'):
                 relevant_markets.append(market)

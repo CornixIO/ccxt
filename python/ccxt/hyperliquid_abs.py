@@ -25,6 +25,10 @@ class hyperliquid_abs(hyperliquid):
         return order_dict
 
     @staticmethod
+    def clean_symbol(symbol: Str) -> Any:
+        return symbol.split('-')[-1].split(':')[0]
+
+    @staticmethod
     def replace_symbol_k_with_1000(symbol: Str):
         if symbol.startswith('k'):
             stripped_symbol = symbol[1:]
@@ -35,7 +39,7 @@ class hyperliquid_abs(hyperliquid):
     def coin_to_market_id(self, coin: Str):
         market_id = self.replace_symbol_k_with_1000(coin)
         market_id = super().coin_to_market_id(market_id)
-        market_id = market_id.split(':')[0]
+        market_id = self.clean_symbol(market_id)
         return market_id
 
     def safe_currency_code(self, currency_id, currency=None):
