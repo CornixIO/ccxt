@@ -21,4 +21,3 @@ class hyperliquid_futures(hyperliquid_abs):
                 relevant_markets.append(market)
         relevant_markets = self.replace_k_with_1000(relevant_markets)
         return relevant_markets
-
