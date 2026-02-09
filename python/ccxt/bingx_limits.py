@@ -939,17 +939,17 @@ BINGX_LIMITS = {
     },
     "ACT/USDT": {
         "leverage": {
-            "max": 20
+            "max": 10
         },
         "risk": [
             {
                 "id": 1,
-                "limit": 5000000,
+                "limit": 800000,
                 "max_leverage": 1
             },
             {
                 "id": 2,
-                "limit": 2500000,
+                "limit": 500000,
                 "max_leverage": 2
             },
             {
@@ -959,23 +959,18 @@ BINGX_LIMITS = {
             },
             {
                 "id": 4,
-                "limit": 100000,
+                "limit": 70000,
                 "max_leverage": 4
             },
             {
                 "id": 5,
-                "limit": 50000,
+                "limit": 60000,
                 "max_leverage": 5
             },
             {
                 "id": 6,
-                "limit": 15000,
+                "limit": 10000,
                 "max_leverage": 10
-            },
-            {
-                "id": 7,
-                "limit": 5000,
-                "max_leverage": 20
             }
         ]
     },
@@ -1733,22 +1728,22 @@ BINGX_LIMITS = {
     },
     "ALPINE/USDT": {
         "leverage": {
-            "max": 20
+            "max": 10
         },
         "risk": [
             {
                 "id": 1,
-                "limit": 5000000,
+                "limit": 800000,
                 "max_leverage": 1
             },
             {
                 "id": 2,
-                "limit": 2500000,
+                "limit": 500000,
                 "max_leverage": 2
             },
             {
                 "id": 3,
-                "limit": 700000,
+                "limit": 250000,
                 "max_leverage": 3
             },
             {
@@ -1765,11 +1760,6 @@ BINGX_LIMITS = {
                 "id": 6,
                 "limit": 10000,
                 "max_leverage": 10
-            },
-            {
-                "id": 7,
-                "limit": 5000,
-                "max_leverage": 20
             }
         ]
     },
@@ -1858,18 +1848,6 @@ BINGX_LIMITS = {
             {
                 "id": 6,
                 "limit": 5000,
-                "max_leverage": 20
-            }
-        ]
-    },
-    "ALTTOWN/USDT": {
-        "leverage": {
-            "max": 20
-        },
-        "risk": [
-            {
-                "id": 1,
-                "limit": 500,
                 "max_leverage": 20
             }
         ]
@@ -2631,18 +2609,6 @@ BINGX_LIMITS = {
                 "id": 8,
                 "limit": 5000,
                 "max_leverage": 50
-            }
-        ]
-    },
-    "ARTX/USDT": {
-        "leverage": {
-            "max": 20
-        },
-        "risk": [
-            {
-                "id": 1,
-                "limit": 500,
-                "max_leverage": 20
             }
         ]
     },
@@ -5320,18 +5286,6 @@ BINGX_LIMITS = {
                 "id": 1,
                 "limit": 100,
                 "max_leverage": 10
-            }
-        ]
-    },
-    "BYTE/USDT": {
-        "leverage": {
-            "max": 20
-        },
-        "risk": [
-            {
-                "id": 1,
-                "limit": 500,
-                "max_leverage": 20
             }
         ]
     },
@@ -8125,13 +8079,13 @@ BINGX_LIMITS = {
     },
     "EPH/USDT": {
         "leverage": {
-            "max": 20
+            "max": 5
         },
         "risk": [
             {
                 "id": 1,
-                "limit": 500,
-                "max_leverage": 20
+                "limit": 50,
+                "max_leverage": 5
             }
         ]
     },
@@ -8241,18 +8195,6 @@ BINGX_LIMITS = {
                 "id": 11,
                 "limit": 5000,
                 "max_leverage": 75
-            }
-        ]
-    },
-    "ESIM/USDT": {
-        "leverage": {
-            "max": 20
-        },
-        "risk": [
-            {
-                "id": 1,
-                "limit": 500,
-                "max_leverage": 20
             }
         ]
     },
@@ -9577,47 +9519,15 @@ BINGX_LIMITS = {
             }
         ]
     },
-    "GASTOWN/USDT": {
-        "leverage": {
-            "max": 10
-        },
-        "risk": [
-            {
-                "id": 1,
-                "limit": 100,
-                "max_leverage": 10
-            }
-        ]
-    },
     "GHST/USDT": {
         "leverage": {
-            "max": 5
+            "max": 20
         },
         "risk": [
             {
                 "id": 1,
-                "limit": 800000,
-                "max_leverage": 1
-            },
-            {
-                "id": 2,
-                "limit": 500000,
-                "max_leverage": 2
-            },
-            {
-                "id": 3,
-                "limit": 250000,
-                "max_leverage": 3
-            },
-            {
-                "id": 4,
-                "limit": 100000,
-                "max_leverage": 4
-            },
-            {
-                "id": 5,
-                "limit": 50000,
-                "max_leverage": 5
+                "limit": 500,
+                "max_leverage": 20
             }
         ]
     },
@@ -13273,18 +13183,6 @@ BINGX_LIMITS = {
             }
         ]
     },
-    "LISA/USDT": {
-        "leverage": {
-            "max": 20
-        },
-        "risk": [
-            {
-                "id": 1,
-                "limit": 500,
-                "max_leverage": 20
-            }
-        ]
-    },
     "LISTA/USDT": {
         "leverage": {
             "max": 50
@@ -14094,17 +13992,17 @@ BINGX_LIMITS = {
     },
     "MAVIA/USDT": {
         "leverage": {
-            "max": 20
+            "max": 10
         },
         "risk": [
             {
                 "id": 1,
-                "limit": 1000000,
+                "limit": 800000,
                 "max_leverage": 1
             },
             {
                 "id": 2,
-                "limit": 800000,
+                "limit": 500000,
                 "max_leverage": 2
             },
             {
@@ -14114,23 +14012,18 @@ BINGX_LIMITS = {
             },
             {
                 "id": 4,
-                "limit": 150000,
+                "limit": 70000,
                 "max_leverage": 4
             },
             {
                 "id": 5,
-                "limit": 50000,
+                "limit": 60000,
                 "max_leverage": 5
             },
             {
                 "id": 6,
                 "limit": 10000,
                 "max_leverage": 10
-            },
-            {
-                "id": 7,
-                "limit": 5000,
-                "max_leverage": 20
             }
         ]
     },
@@ -19198,18 +19091,6 @@ BINGX_LIMITS = {
             }
         ]
     },
-    "OOOO/USDT": {
-        "leverage": {
-            "max": 20
-        },
-        "risk": [
-            {
-                "id": 1,
-                "limit": 500,
-                "max_leverage": 20
-            }
-        ]
-    },
     "OP/USDT": {
         "leverage": {
             "max": 50
@@ -19562,18 +19443,6 @@ BINGX_LIMITS = {
             }
         ]
     },
-    "ORE/USDT": {
-        "leverage": {
-            "max": 20
-        },
-        "risk": [
-            {
-                "id": 1,
-                "limit": 500,
-                "max_leverage": 20
-            }
-        ]
-    },
     "OWL/USDT": {
         "leverage": {
             "max": 20
@@ -19630,7 +19499,7 @@ BINGX_LIMITS = {
             },
             {
                 "id": 3,
-                "limit": 4500000,
+                "limit": 500000,
                 "max_leverage": 3
             },
             {
@@ -19650,12 +19519,12 @@ BINGX_LIMITS = {
             },
             {
                 "id": 7,
-                "limit": 10000,
+                "limit": 5000,
                 "max_leverage": 20
             },
             {
                 "id": 8,
-                "limit": 5000,
+                "limit": 2000,
                 "max_leverage": 50
             }
         ]
@@ -19719,6 +19588,38 @@ BINGX_LIMITS = {
                 "id": 11,
                 "limit": 5000,
                 "max_leverage": 75
+            }
+        ]
+    },
+    "PEAQ/USDT": {
+        "leverage": {
+            "max": 5
+        },
+        "risk": [
+            {
+                "id": 1,
+                "limit": 800000,
+                "max_leverage": 1
+            },
+            {
+                "id": 2,
+                "limit": 500000,
+                "max_leverage": 2
+            },
+            {
+                "id": 3,
+                "limit": 250000,
+                "max_leverage": 3
+            },
+            {
+                "id": 4,
+                "limit": 100000,
+                "max_leverage": 4
+            },
+            {
+                "id": 5,
+                "limit": 20000,
+                "max_leverage": 5
             }
         ]
     },
@@ -21065,6 +20966,48 @@ BINGX_LIMITS = {
             }
         ]
     },
+    "PYR/USDT": {
+        "leverage": {
+            "max": 20
+        },
+        "risk": [
+            {
+                "id": 1,
+                "limit": 2000000,
+                "max_leverage": 1
+            },
+            {
+                "id": 2,
+                "limit": 1000000,
+                "max_leverage": 2
+            },
+            {
+                "id": 3,
+                "limit": 500000,
+                "max_leverage": 4
+            },
+            {
+                "id": 4,
+                "limit": 200000,
+                "max_leverage": 5
+            },
+            {
+                "id": 5,
+                "limit": 100000,
+                "max_leverage": 10
+            },
+            {
+                "id": 6,
+                "limit": 25000,
+                "max_leverage": 15
+            },
+            {
+                "id": 7,
+                "limit": 5000,
+                "max_leverage": 20
+            }
+        ]
+    },
     "PYTH/USDT": {
         "leverage": {
             "max": 75
@@ -21255,6 +21198,18 @@ BINGX_LIMITS = {
                 "id": 5,
                 "limit": 10000,
                 "max_leverage": 50
+            }
+        ]
+    },
+    "RAINPROTOCOL/USDT": {
+        "leverage": {
+            "max": 10
+        },
+        "risk": [
+            {
+                "id": 1,
+                "limit": 100,
+                "max_leverage": 10
             }
         ]
     },
@@ -21848,6 +21803,18 @@ BINGX_LIMITS = {
             {
                 "id": 7,
                 "limit": 5000,
+                "max_leverage": 20
+            }
+        ]
+    },
+    "RNBW/USDT": {
+        "leverage": {
+            "max": 20
+        },
+        "risk": [
+            {
+                "id": 1,
+                "limit": 500,
                 "max_leverage": 20
             }
         ]
@@ -25008,18 +24975,6 @@ BINGX_LIMITS = {
             }
         ]
     },
-    "TEL/USDT": {
-        "leverage": {
-            "max": 20
-        },
-        "risk": [
-            {
-                "id": 1,
-                "limit": 500,
-                "max_leverage": 20
-            }
-        ]
-    },
     "TESTICLE/USDT": {
         "leverage": {
             "max": 10
@@ -25029,18 +24984,6 @@ BINGX_LIMITS = {
                 "id": 1,
                 "limit": 100,
                 "max_leverage": 10
-            }
-        ]
-    },
-    "TFUEL/USDT": {
-        "leverage": {
-            "max": 20
-        },
-        "risk": [
-            {
-                "id": 1,
-                "limit": 500,
-                "max_leverage": 20
             }
         ]
     },
@@ -25657,88 +25600,53 @@ BINGX_LIMITS = {
     },
     "TRIA/USDT": {
         "leverage": {
-            "max": 25
+            "max": 50
         },
         "risk": [
             {
                 "id": 1,
-                "limit": 2500000,
+                "limit": 12500000,
                 "max_leverage": 1
             },
             {
                 "id": 2,
-                "limit": 1750000,
+                "limit": 7500000,
                 "max_leverage": 2
             },
             {
                 "id": 3,
-                "limit": 350000,
+                "limit": 500000,
                 "max_leverage": 3
             },
             {
                 "id": 4,
-                "limit": 175000,
+                "limit": 250000,
                 "max_leverage": 4
             },
             {
                 "id": 5,
-                "limit": 87500,
+                "limit": 125000,
                 "max_leverage": 5
             },
             {
                 "id": 6,
-                "limit": 44500,
-                "max_leverage": 6
-            },
-            {
-                "id": 7,
-                "limit": 37500,
-                "max_leverage": 7
-            },
-            {
-                "id": 8,
-                "limit": 30500,
-                "max_leverage": 8
-            },
-            {
-                "id": 9,
-                "limit": 23500,
-                "max_leverage": 9
-            },
-            {
-                "id": 10,
-                "limit": 20000,
+                "limit": 62500,
                 "max_leverage": 10
             },
             {
-                "id": 11,
-                "limit": 18000,
-                "max_leverage": 11
-            },
-            {
-                "id": 12,
-                "limit": 16000,
-                "max_leverage": 12
-            },
-            {
-                "id": 13,
-                "limit": 14000,
-                "max_leverage": 14
-            },
-            {
-                "id": 14,
-                "limit": 12000,
-                "max_leverage": 16
-            },
-            {
-                "id": 15,
-                "limit": 10000,
+                "id": 7,
+                "limit": 25000,
                 "max_leverage": 20
             },
             {
-                "id": 16,
-                "limit": 5000,
+                "id": 8,
+                "limit": 10000,
                 "max_leverage": 25
+            },
+            {
+                "id": 9,
+                "limit": 5000,
+                "max_leverage": 50
             }
         ]
     },
@@ -27723,17 +27631,17 @@ BINGX_LIMITS = {
     },
     "WOTAMALAILE/USDT": {
         "leverage": {
-            "max": 20
+            "max": 25
         },
         "risk": [
             {
                 "id": 1,
-                "limit": 800000,
+                "limit": 5000000,
                 "max_leverage": 1
             },
             {
                 "id": 2,
-                "limit": 500000,
+                "limit": 2500000,
                 "max_leverage": 2
             },
             {
@@ -27753,13 +27661,18 @@ BINGX_LIMITS = {
             },
             {
                 "id": 6,
-                "limit": 10000,
+                "limit": 20000,
                 "max_leverage": 10
             },
             {
                 "id": 7,
-                "limit": 5000,
+                "limit": 10000,
                 "max_leverage": 20
+            },
+            {
+                "id": 8,
+                "limit": 5000,
+                "max_leverage": 25
             }
         ]
     },
