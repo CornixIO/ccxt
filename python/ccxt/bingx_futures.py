@@ -1,3 +1,4 @@
+import re
 from typing import List
 from ccxt.bingx_abs import bingx_abs
 from ccxt.base.types import Market
@@ -31,6 +32,7 @@ class bingx_futures(bingx_abs):
 
             if any(symbol.startswith(prefix) for prefix in self.KNOWN_PREFIXES_TO_REMOVE):
                 symbol = market_obj['info']['displayName'].upper().replace(' ', '').replace('-', '/')
+            symbol = re.sub(r'\s*\(.*?\)\s*', '', symbol)
             market_obj['symbol'] = symbol
 
         return market_obj
