@@ -32,8 +32,9 @@ class bingx_futures(bingx_abs):
 
             temporary_offline = False
             if any(symbol.startswith(prefix) for prefix in self.KNOWN_PREFIXES_TO_REMOVE):
-                symbol = market_obj['info']['displayName'].upper().replace(' ', '').replace('-', '/')
-                if market_obj['info']['status'] == 25:
+                market_info = market_obj['info']
+                symbol = market_info['displayName'].upper().replace(' ', '').replace('-', '/')
+                if market_info['status'] == 25 and not market_info['offTime']:
                     temporary_offline = True
             symbol = re.sub(r'\s*\(.*?\)\s*', '', symbol)
             market_obj['symbol'] = symbol
