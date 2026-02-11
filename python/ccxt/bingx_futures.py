@@ -30,10 +30,14 @@ class bingx_futures(bingx_abs):
                 limits = BINGX_LIMITS.get(market_obj['id'].replace('-', '/'), {})
             market_obj['limits'].update(limits)
 
+            temporary_offline = False
             if any(symbol.startswith(prefix) for prefix in self.KNOWN_PREFIXES_TO_REMOVE):
                 symbol = market_obj['info']['displayName'].upper().replace(' ', '').replace('-', '/')
+                if market_obj['info']['status'] == 25:
+                    temporary_offline = True
             symbol = re.sub(r'\s*\(.*?\)\s*', '', symbol)
             market_obj['symbol'] = symbol
+            market_obj['temporary_offline'] = temporary_offline
 
         return market_obj
 
