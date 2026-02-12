@@ -1,7 +1,7 @@
 from typing import Any
 
 from ccxt.base.errors import ExchangeNotAvailable, PermissionDenied, InvalidNonce
-from ccxt.base.types import Str, Int, Market, Order
+from ccxt.base.types import Balances, Str, Int, Market, Order
 from ccxt.hyperliquid import hyperliquid
 
 
@@ -63,3 +63,19 @@ class hyperliquid_abs(hyperliquid):
             original_symbol = market['symbol']
             market['symbol'] = self.replace_symbol_k_with_1000(original_symbol)
         return markets
+
+    def get_account_type(self):
+        userAddress, params = self.handle_public_address('userAbstraction', {})
+        request: dict = {
+            'type': 'userAbstraction',
+            'user': userAddress,
+        }
+        response = self.publicPostInfo(self.extend(request, params))
+        account_type = str(response).replace('"', '')
+        return account_type
+
+    def fetch_balance(self, params={}) -> Balances:
+        account_type = self.get_account_type()
+        if account_type == 'unifiedAccount':
+            params['type'] = 'spot'
+        return super().fetch_balance(params)
