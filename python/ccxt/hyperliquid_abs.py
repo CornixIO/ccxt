@@ -1,13 +1,18 @@
 from typing import Any
 
 from ccxt.base.errors import ExchangeNotAvailable, PermissionDenied, InvalidNonce
-from ccxt.base.types import Str, Int, Market, Order
+from ccxt.base.types import Balances, Str, Int, Market, Order
 from ccxt.hyperliquid import hyperliquid
 
 
 class hyperliquid_abs(hyperliquid):
     def describe(self) -> Any:
         return self.deep_extend(super().describe(), {
+            'options': {
+                'ref': 'CORNIX',
+                'refSet': True,
+                'builderFee': False,
+            },
             'exceptions': {
                 'broad': {
                     'User or API Wallet ': PermissionDenied,
@@ -25,6 +30,10 @@ class hyperliquid_abs(hyperliquid):
         return order_dict
 
     @staticmethod
+    def clean_symbol(symbol: Str) -> Any:
+        return symbol.split('-')[-1].split(':')[0]
+
+    @staticmethod
     def replace_symbol_k_with_1000(symbol: Str):
         if symbol.startswith('k'):
             stripped_symbol = symbol[1:]
@@ -35,7 +44,7 @@ class hyperliquid_abs(hyperliquid):
     def coin_to_market_id(self, coin: Str):
         market_id = self.replace_symbol_k_with_1000(coin)
         market_id = super().coin_to_market_id(market_id)
-        market_id = market_id.split(':')[0]
+        market_id = self.clean_symbol(market_id)
         return market_id
 
     def safe_currency_code(self, currency_id, currency=None):
@@ -54,3 +63,19 @@ class hyperliquid_abs(hyperliquid):
             original_symbol = market['symbol']
             market['symbol'] = self.replace_symbol_k_with_1000(original_symbol)
         return markets
+
+    def get_account_type(self):
+        userAddress, params = self.handle_public_address('userAbstraction', {})
+        request: dict = {
+            'type': 'userAbstraction',
+            'user': userAddress,
+        }
+        response = self.publicPostInfo(self.extend(request, params))
+        account_type = str(response).replace('"', '')
+        return account_type
+
+    def fetch_balance(self, params={}) -> Balances:
+        account_type = self.get_account_type()
+        if account_type == 'unifiedAccount':
+            params['type'] = 'spot'
+        return super().fetch_balance(params)
