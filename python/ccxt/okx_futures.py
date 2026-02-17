@@ -15,6 +15,7 @@ class okx_futures(okx_abs):
         return self.deep_extend(super(okx_futures, self).describe(), {
             'options': {
                 'defaultType': 'linear',
+                'fetchMarkets': ['swap'],
             },
         })
 

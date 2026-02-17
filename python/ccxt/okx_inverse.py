@@ -13,5 +13,6 @@ class okx_inverse(okx_abs):
         return self.deep_extend(super(okx_inverse, self).describe(), {
             'options': {
                 'defaultType': 'inverse',
+                'fetchMarkets': ['swap'],
             },
         })
