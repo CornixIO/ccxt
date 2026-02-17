@@ -67,8 +67,7 @@ class okx_abs(okx):
 
     def parse_position(self, position: dict, market: Market = None):
         marketId = self.safe_string(position, 'instId')
-        market = self.safe_market(marketId, market, None, 'contract')
-        if market is None:
+        if marketId not in self.markets_by_id:
             return self.safe_position({})
         position = super().parse_position(position, market)
         side = self.safe_string(position, 'side')
