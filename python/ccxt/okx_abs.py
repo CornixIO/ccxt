@@ -63,7 +63,7 @@ class okx_abs(okx):
 
     def fetch_positions(self, symbols: Strings = None, params={}) -> List[Position]:
         results = super().fetch_positions(symbols, params)
-        return [result for result in results if result['symbol'] is not None]
+        return [result for result in results if result]
 
     def parse_position(self, position: dict, market: Market = None):
         marketId = self.safe_string(position, 'instId')
