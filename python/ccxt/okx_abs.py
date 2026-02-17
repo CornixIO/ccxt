@@ -1,3 +1,6 @@
+from typing import List
+
+from base.types import Strings, Position
 from ccxt import OrderNotFound
 from ccxt.base.precise import Precise
 from ccxt.base.types import Balances, Market, Str, Order, Int
@@ -59,7 +62,15 @@ class okx_abs(okx):
         quantity_string = Precise.string_mul(quantity_abs_string, side_factor_string)
         return self.parse_number(quantity_string)
 
+    def fetch_positions(self, symbols: Strings = None, params={}) -> List[Position]:
+        results = super().fetch_positions(symbols, params)
+        return [result for result in results if result['symbol'] is not None]
+
     def parse_position(self, position: dict, market: Market = None):
+        marketId = self.safe_string(position, 'instId')
+        market = self.safe_market(marketId, market, None, 'contract')
+        if market is None:
+            return self.safe_position({})
         position = super().parse_position(position, market)
         side = self.safe_string(position, 'side')
         hedged = self.safe_value(position, 'hedged', False)
