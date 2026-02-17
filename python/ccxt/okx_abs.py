@@ -91,12 +91,12 @@ class okx_abs(okx):
                 # BACKWARDS
                 result = super().fetch_order(id, symbol, params=params)
                 result['id'] = result['info']['ordId']
+                return result
             raise
 
     def fetch_order_trades(self, id: str, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
         if params.get('stop'):
-            params.pop('stop')
-            order = self.fetch_order(id, symbol, params)
+            order = self.fetch_order(id, symbol, params.copy())
             return super().fetch_order_trades(order['info']['ordId'], symbol, since, limit, params)
         else:
             return super().fetch_order_trades(id, symbol, since, limit, params)
