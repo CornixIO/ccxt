@@ -1,5 +1,6 @@
+from ccxt import OrderNotFound
 from ccxt.base.precise import Precise
-from ccxt.base.types import Balances, Market
+from ccxt.base.types import Balances, Market, Str, Order, Int
 from ccxt.okx import okx
 
 
@@ -81,3 +82,21 @@ class okx_abs(okx):
             notional_string = Precise.string_mul(quantity_abs_string, entry_price_string)
             position['notional'] = self.parse_number(notional_string)
         return position
+
+    def fetch_order(self, id: str, symbol: Str = None, params={}) -> Order:
+        try:
+            return super().fetch_order(id, symbol, params=params)
+        except OrderNotFound:
+            if params.pop('stop', None):
+                # BACKWARDS
+                result = super().fetch_order(id, symbol, params=params)
+                result['id'] = result['info']['ordId']
+            raise
+
+    def fetch_order_trades(self, id: str, symbol: Str = None, since: Int = None, limit: Int = None, params={}):
+        if params.get('stop'):
+            params.pop('stop')
+            order = self.fetch_order(id, symbol, params)
+            return super().fetch_order_trades(order['info']['ordId'], symbol, since, limit, params)
+        else:
+            return super().fetch_order_trades(id, symbol, since, limit, params)
