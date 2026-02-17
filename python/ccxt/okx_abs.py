@@ -35,6 +35,14 @@ class okx_abs(okx):
             parsed_market['limits']['price'] = {'min': precision_price, 'max': None}
         return parsed_market
 
+    def parse_markets(self, markets):
+        parsed_markets = super().parse_markets(markets)
+        relevant_markets = []
+        for parsed_market in parsed_markets:
+            if parsed_market[self.options['defaultType']] is True:
+                relevant_markets.append(parsed_market)
+        return relevant_markets
+
     def _calculate_position_quantity(self, position: dict, contracts: float, contract_size: float):
         contracts_string = self.number_to_string(contracts)
         quantity_abs_string = Precise.string_abs(contracts_string)
