@@ -1,9 +1,8 @@
 from typing import List
 
-from base.types import Strings, Position
 from ccxt import OrderNotFound
 from ccxt.base.precise import Precise
-from ccxt.base.types import Balances, Market, Str, Order, Int
+from ccxt.base.types import Balances, Market, Str, Order, Int, Strings, Position
 from ccxt.okx import okx
 
 
