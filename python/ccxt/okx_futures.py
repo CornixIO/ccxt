@@ -1,8 +1,7 @@
 from typing import Any
 
-from base.types import Trade
 from ccxt.base.precise import Precise
-from ccxt.base.types import Market, Order
+from ccxt.base.types import Market, Order, Trade
 from ccxt.okx_abs import okx_abs
 
 OKX_FUTURES = 'OKX Futures'
