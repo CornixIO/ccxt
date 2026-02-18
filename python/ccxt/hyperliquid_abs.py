@@ -75,6 +75,7 @@ class hyperliquid_abs(hyperliquid):
         return account_type
 
     def fetch_balance(self, params={}) -> Balances:
+        params = params.copy()
         account_type = self.get_account_type()
         if account_type == 'unifiedAccount':
             params['type'] = 'spot'
