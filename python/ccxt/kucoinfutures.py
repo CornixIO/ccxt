@@ -1668,10 +1668,7 @@ class kucoinfutures(kucoin):
         status = 'open' if isActive else 'closed'
         if status == 'closed' and cancelExist:
             status = 'canceled'
-        fee = {
-            'currency': feeCurrency,
-            'cost': feeCost,
-        }
+        fee = {'currency': feeCurrency, 'cost': feeCost} if feeCost and feeCurrency else None
         clientOrderId = self.safe_string(order, 'clientOid')
         timeInForce = self.safe_string(order, 'timeInForce')
         stopPrice = self.safe_number(order, 'stopPrice')
