@@ -135,6 +135,7 @@ class okx_abs(okx):
             'permissions': permissions,
             'read_only': read_only,
             'ip_restrict': bool(ips),
+            'info': account,
         }
 
     def get_api_account_details(self):
