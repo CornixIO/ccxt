@@ -7,7 +7,6 @@ PERMISSION_TO_VALUE = {"spot": ["read_only", "trade"], "futures": ["read_only", 
 ACCOUNT_MODES = {"margin_free": 1, "single_currency_margin": 2, "multi_currency_margin": 3, "portfolio_margin": 4}
 
 
-
 class okx_abs(okx):
     def __init__(self, config={}):
         super().__init__(config)
