@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Any
 
-from ccxt import OrderNotFound
+from ccxt.base.errors import OrderNotFound, AuthenticationError
 from ccxt.base.precise import Precise
 from ccxt.base.types import Balances, Market, Str, Order, Int, Strings, Position
 from ccxt.okx import okx
@@ -13,6 +13,15 @@ class okx_abs(okx):
     def __init__(self, config={}):
         super().__init__(config)
         self.options['brokerId'] = 'b5fa360738a048BC'
+
+    def describe(self) -> Any:
+        return self.deep_extend(super().describe(), {
+            'exceptions': {
+                'exact': {
+                    '50119': AuthenticationError,  # {"msg":"API key doesn't exist","code":"50119"}
+                }
+            }
+        })
 
     def should_filter_balance_asset(self, code: str) -> bool:
         return False
@@ -99,7 +108,7 @@ class okx_abs(okx):
         try:
             order = super().fetch_order(id, symbol, params=params)
             order_id = order['info']['ordId']
-            if order_id != id:
+            if order_id and order_id != id:
                 params_copy = params.copy()
                 params_copy.pop('stop', None)
                 return super().fetch_order(order_id, symbol, params=params_copy)
