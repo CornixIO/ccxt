@@ -5,6 +5,9 @@ from ccxt.base.precise import Precise
 from ccxt.base.types import Balances, Market, Str, Order, Int, Strings, Position
 from ccxt.okx import okx
 
+PERMISSION_TO_VALUE = {"spot": ["read_only", "trade"], "futures": ["read_only", "trade"]}
+ACCOUNT_MODES = {"margin_free": 1, "single_currency_margin": 2, "multi_currency_margin": 3, "portfolio_margin": 4}
+
 
 class okx_abs(okx):
     def __init__(self, config={}):
@@ -110,3 +113,41 @@ class okx_abs(okx):
             return super().fetch_order_trades(order['info']['ordId'], symbol, since, limit, params)
         else:
             return super().fetch_order_trades(id, symbol, since, limit, params)
+
+    def get_parsed_account(self, account):
+        accountId = self.safe_string(account, 'uid')
+        mainUid = self.safe_string(account, 'mainUid')
+        account_mode = self.safe_integer(account, 'acctLv')
+        margin_free = account_mode == ACCOUNT_MODES.get("margin_free")
+        multi_currency_margin = account_mode == ACCOUNT_MODES.get("multi_currency_margin")
+        portfolio_margin = account_mode == ACCOUNT_MODES.get("portfolio_margin")
+        position_mode = self.safe_string(account, 'posMode')
+        role_type = self.safe_integer(account, 'roleType')
+        spot_role_type = self.safe_integer(account, 'spotRoleType')
+        ips = self.safe_string(account, 'ip')
+        exchange_permissions = self.safe_string(account, 'perm').split(',')
+        read_only = 'trade' not in exchange_permissions
+        permissions = self.extract_trading_permissions(PERMISSION_TO_VALUE, permissions_list=exchange_permissions)
+        return {
+            'uid': accountId,
+            'main_uid': mainUid,
+            'margin_free': margin_free,
+            'multi_currency_margin': multi_currency_margin,
+            'portfolio_margin': portfolio_margin,
+            'position_mode': position_mode,
+            'role_type': role_type,
+            'spot_role_type': spot_role_type,
+            'ips': ips,
+            'permissions': permissions,
+            'read_only': read_only,
+            'ip_restrict': bool(ips),
+            'info': account,
+        }
+
+    def get_api_account_details(self):
+        accounts = self.fetch_accounts()
+        for account in accounts:
+            account_info = account['info']
+            if account_info["uid"] == account_info["mainUid"]:
+                return self.get_parsed_account(account_info)
+        return self.get_parsed_account(accounts[0]['info'])
