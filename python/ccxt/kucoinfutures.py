@@ -2061,6 +2061,10 @@ class kucoinfutures(kucoin):
                 timestamp = timestamp * 1000
         priceString = self.safe_string_2(trade, 'price', 'dealPrice')
         amountString = self.safe_string_2(trade, 'size', 'amount')
+        is_linear = self.safe_value(market, 'linear')
+        if is_linear:
+            contract_size = self.safe_string(market, 'contractSize')
+            amountString = Precise.string_mul(contract_size, amountString)
         side = self.safe_string(trade, 'side')
         fee = None
         feeCostString = self.safe_string(trade, 'fee')
