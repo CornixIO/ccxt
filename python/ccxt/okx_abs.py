@@ -103,8 +103,6 @@ class okx_abs(okx):
                 params_copy = params.copy()
                 params_copy.pop('stop', None)
                 return super().fetch_order(order_id, symbol, params=params_copy)
-            if order['id'] is None:
-                order['id'] = order_id
             return order
         except OrderNotFound:
             if params.pop('stop', None):
