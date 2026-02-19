@@ -1,4 +1,3 @@
-from base.types import Account
 from ccxt import OrderNotFound
 from ccxt.base.precise import Precise
 from ccxt.base.types import Balances, Market, Str, Order, Int
