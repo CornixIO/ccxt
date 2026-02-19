@@ -3,7 +3,6 @@ from ccxt.base.precise import Precise
 from ccxt.base.types import Balances, Market, Str, Order, Int
 from ccxt.okx import okx
 
-TO_FLOAT_PARAMS = {'sz', 'slOrdPx', 'slTriggerPx', 'tpOrdPx', 'tpTriggerPx', 'orderPx', 'triggerPx', 'px'}
 PERMISSION_TO_VALUE = {"spot": ["read_only", "trade"], "futures": ["read_only", "trade"]}
 ACCOUNT_MODES = {"margin_free": 1, "single_currency_margin": 2, "multi_currency_margin": 3, "portfolio_margin": 4}
 
