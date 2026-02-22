@@ -40,6 +40,7 @@ class blofin_abs(blofin):
             market_obj['symbol'] = market_obj['symbol'].split(':')[0]
             contract_size = float(market_obj['contractSize'])
             limits = market_obj['limits']
+            limits['amount']['min'] = self.get_quantity(float(info['minSize']), contract_size)
             limits['amount']['max'] = self.get_quantity(float(info['maxLimitSize']), contract_size)
             limits['market'] = {'min': 0., 'max': self.get_quantity(float(info['maxMarketSize']), contract_size)}
             market_obj['precision']['amount'] = self.get_quantity(float(market_obj['precision']['amount']), contract_size)
