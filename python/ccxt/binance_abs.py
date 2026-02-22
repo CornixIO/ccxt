@@ -1,7 +1,7 @@
 from typing import Any
 
 from ccxt.base.decimal_to_precision import DECIMAL_PLACES, ROUND
-from ccxt.base.errors import ArgumentsRequired, BadRequest, BadSymbol, PermissionDenied
+from ccxt.base.errors import ArgumentsRequired, BadRequest, BadSymbol
 from ccxt.base.types import Int, Market, MarketInterface, Str, Strings
 from ccxt.binance import binance
 
