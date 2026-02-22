@@ -21,12 +21,7 @@ class binance_abs(binance):
                 'delivery': 'x-sDPWvduU',
                 'option': 'x-sDPWvduU',
                 'inverse': 'x-sDPWvduU',
-            }},
-            'exceptions': {
-                'exact': {
-                    '-4109': PermissionDenied,
-                }
-            }
+            }}
         })
 
     def get_broker_id(self):
