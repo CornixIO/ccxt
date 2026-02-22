@@ -1,6 +1,6 @@
 from typing import Any
 
-from ccxt.base.errors import ExchangeError, OrderNotFound
+from ccxt.base.errors import ExchangeError, OrderNotFound, PermissionDenied
 from ccxt.base.types import Int, Str
 from ccxt.binance_futures_abs import binance_futures_abs
 
@@ -18,6 +18,7 @@ class binance_futures(binance_futures_abs):
             'exceptions': {
                 'linear': {
                     'exact': {
+                        '-4109': PermissionDenied,
                         '-4400': ExchangeError,
                         '-4401': ExchangeError,
                         '-4402': ExchangeError,
