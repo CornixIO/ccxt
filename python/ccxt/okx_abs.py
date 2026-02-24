@@ -39,6 +39,8 @@ class okx_abs(okx):
         return self.safe_balance(filtered_balance)
 
     def parse_market(self, market: dict) -> Market:
+        if market.get('state') == 'preopen':
+            return None
         parsed_market = super().parse_market(market)
         if parsed_market is not None:
             symbol = parsed_market['symbol'].split(':')[0]
@@ -54,6 +56,8 @@ class okx_abs(okx):
         parsed_markets = super().parse_markets(markets)
         relevant_markets = []
         for parsed_market in parsed_markets:
+            if parsed_market is None:
+                continue
             if parsed_market[self.options['defaultType']] is True:
                 relevant_markets.append(parsed_market)
         return relevant_markets
