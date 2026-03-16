@@ -944,6 +944,9 @@ class Exchange(object):
         except (ValueError, SyntaxError):
             return value
 
+    def array_slice(self, array, first, second=None):
+        return array[first:second] if second else array[first:]
+
     @staticmethod
     def safe_string(dictionary, key, default_value=None):
         return str(dictionary[key]) if Exchange.key_exists(dictionary, key) else default_value
