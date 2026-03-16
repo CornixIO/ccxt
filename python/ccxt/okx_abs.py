@@ -1,6 +1,6 @@
 from typing import List, Any
 
-from ccxt.base.errors import OrderNotFound, AuthenticationError
+from ccxt.base.errors import OrderNotFound, AuthenticationError, BadRequest
 from ccxt.base.precise import Precise
 from ccxt.base.types import Balances, Market, Str, Order, Int, Strings, Position
 from ccxt.okx import okx
@@ -170,3 +170,56 @@ class okx_abs(okx):
             if account_info["uid"] == account_info["mainUid"]:
                 return self.get_parsed_account(account_info)
         return self.get_parsed_account(accounts[0]['info'])
+
+    def set_leverage(self, leverage: int, symbol: Str = None, params={}):
+        """
+        set the level of leverage for a market
+
+        https://www.okx.com/docs-v5/en/#rest-api-account-set-leverage
+
+        :param float leverage: the rate of leverage
+        :param str symbol: unified market symbol
+        :param dict [params]: extra parameters specific to the exchange API endpoint
+        :param str [params.marginMode]: 'cross' or 'isolated'
+        :param str [params.posSide]: 'long' or 'short' or 'net' for isolated margin long/short mode on futures and swap markets, default is 'net'
+        :returns dict: response from the exchange
+        """
+        # WARNING: THIS WILL INCREASE LIQUIDATION PRICE FOR OPEN ISOLATED LONG POSITIONS
+        # AND DECREASE LIQUIDATION PRICE FOR OPEN ISOLATED SHORT POSITIONS
+        if (leverage < 1) or (leverage > 125):
+            raise BadRequest(self.id + ' setLeverage() leverage should be between 1 and 125')
+        self.load_markets()
+        market = self.market(symbol) if symbol else None
+        marginMode = None
+        marginMode, params = self.handle_margin_mode_and_params('setLeverage', params)
+        if marginMode is None:
+            marginMode = self.safe_string(params, 'mgnMode', 'cross')  # cross marginMode
+        if (marginMode != 'cross') and (marginMode != 'isolated'):
+            raise BadRequest(self.id + ' setLeverage() requires a marginMode parameter that must be either cross or isolated')
+        request: dict = {
+            'lever': leverage,
+            'mgnMode': marginMode,
+        }
+        if symbol is not None:
+            request['instId'] = market['id']
+        posSide = self.safe_string(params, 'posSide', 'net')
+        if marginMode == 'isolated':
+            if posSide != 'long' and posSide != 'short' and posSide != 'net':
+                raise BadRequest(self.id + ' setLeverage() requires the posSide argument to be either "long", "short" or "net"')
+            request['posSide'] = posSide
+        response = self.privatePostAccountSetLeverage(self.extend(request, params))
+        #
+        #     {
+        #       "code": "0",
+        #       "data": [
+        #         {
+        #           "instId": "BTC-USDT-SWAP",
+        #           "lever": "5",
+        #           "mgnMode": "isolated",
+        #           "posSide": "long"
+        #         }
+        #       ],
+        #       "msg": ""
+        #     }
+        #
+        return response
