@@ -12,9 +12,15 @@ class coinbase_advanced_spot(coinbase):
         self.options['fetchBalance'] = 'v3PrivateGetBrokerageAccounts'
         self.options.setdefault('networksById', {})
 
+    def _normalize_market_alias(self, market: Market) -> Market:
+        info = market.get('info', {})
+        alias = info.get('alias')
+        market['alias'] = alias.replace('-', '/') if alias else None
+        return market
+
     def fetch_markets(self, params={}) -> List[Market]:
         markets = super().fetch_markets(params)
-        return [m for m in markets if m['spot']]
+        return [self._normalize_market_alias(m) for m in markets if m['spot']]
 
     def fetch_trades(self, symbol: str, since: Int = None, limit: Int = None, params={}) -> List[Trade]:
         if since is not None:
