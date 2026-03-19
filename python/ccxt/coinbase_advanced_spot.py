@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from ccxt.coinbase import coinbase
-from ccxt.base.types import Int, Trade
+from ccxt.base.types import Int, Market, Trade
 
 COINBASE_ADVANCED_SPOT = 'Coinbase Advanced Spot'
 
@@ -11,6 +11,10 @@ class coinbase_advanced_spot(coinbase):
         super().__init__(config)
         self.options['fetchBalance'] = 'v3PrivateGetBrokerageAccounts'
         self.options.setdefault('networksById', {})
+
+    def fetch_markets(self, params={}) -> List[Market]:
+        markets = super().fetch_markets(params)
+        return [m for m in markets if m['spot']]
 
     def fetch_trades(self, symbol: str, since: Int = None, limit: Int = None, params={}) -> List[Trade]:
         if since is not None:
