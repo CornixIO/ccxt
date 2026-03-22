@@ -1,5 +1,4 @@
-from ccxt.base.precise import Precise
-from ccxt.base.types import Balances, Num, OrderSide, OrderType
+from ccxt.base.types import Balances
 from ccxt.blofin_abs import blofin_abs
 
 BLOFIN_INVERSE = 'BloFin Inverse'

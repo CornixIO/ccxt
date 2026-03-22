@@ -107,10 +107,13 @@ class blofin_abs(blofin):
         }
 
     def parse_position_tiers(self, tiers: List[Dict], symbol: str, currency: str) -> List[Dict]:
-        return [
-            self.parse_position_tier(tier, index + 1, symbol, currency)
-            for index, tier in enumerate(tiers)
-        ]
+        parsed = [self.parse_position_tier(tier, index + 1, symbol, currency) for index, tier in enumerate(tiers)]
+        unique: Dict[float, Dict] = {}
+        for tier in parsed:
+            leverage = tier['maxLeverage']
+            if leverage not in unique or tier['minNotional'] < unique[leverage]['minNotional']:
+                unique[leverage] = tier
+        return [unique[leverage] for leverage in sorted(unique)]
 
     def fetch_position_tiers(self, inst_id: str, margin_mode: str, symbol: str, currency: str) -> List[Dict]:
         response = self.publicGetMarketPositionTiers({'instId': inst_id, 'marginMode': margin_mode})
