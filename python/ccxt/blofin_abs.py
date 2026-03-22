@@ -94,25 +94,35 @@ class blofin_abs(blofin):
         else:
             return self.get_trade_order_detail(symbol, params)
 
-    def parse_position_tiers(self, tiers: List[Dict]) -> List[Dict]:
+    def parse_position_tier(self, tier: Dict, index: int, symbol: str, currency: str) -> Dict:
+        return {
+            'tier': index,
+            'symbol': symbol,
+            'currency': currency,
+            'minNotional': self.safe_number(tier, 'minSize'),
+            'maxNotional': self.safe_number(tier, 'maxSize'),
+            'maintenanceMarginRate': self.safe_number(tier, 'maintenanceMarginRate'),
+            'maxLeverage': self.safe_number(tier, 'maxLeverage'),
+            'info': tier,
+        }
+
+    def parse_position_tiers(self, tiers: List[Dict], symbol: str, currency: str) -> List[Dict]:
         return [
-            {
-                'max_leverage': self.safe_number(tier, 'maxLeverage'),
-                'limit': self.safe_number(tier, 'maxSize'),
-            }
-            for tier in tiers
+            self.parse_position_tier(tier, index + 1, symbol, currency)
+            for index, tier in enumerate(tiers)
         ]
 
-    def fetch_position_tiers(self, inst_id: str, margin_mode: str) -> List[Dict]:
+    def fetch_position_tiers(self, inst_id: str, margin_mode: str, symbol: str, currency: str) -> List[Dict]:
         response = self.publicGetMarketPositionTiers({'instId': inst_id, 'marginMode': margin_mode})
         data = self.safe_list(response, 'data', [])
-        return self.parse_position_tiers(data)
+        return self.parse_position_tiers(data, symbol, currency)
 
     def fetch_market_leverage_tiers(self, symbol: str, params={}) -> List[Dict]:
         self.load_markets()
         market = self.market(symbol)
         margin_mode = self.safe_string(params, 'marginMode', 'cross')
-        return self.fetch_position_tiers(market['id'], margin_mode)
+        currency = self.safe_string(market, 'settle', self.safe_string(market, 'quote'))
+        return self.fetch_position_tiers(market['id'], margin_mode, market['symbol'], currency)
 
     def fetch_markets(self, params={}) -> List[Market]:
         markets = super().fetch_markets(params)
