@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from ccxt.base.errors import AuthenticationError, BadRequest, OrderNotFound, PermissionDenied
 from ccxt.base.precise import Precise
@@ -14,6 +14,11 @@ class blofin_abs(blofin):
     def describe(self) -> Any:
         return self.deep_extend(super().describe(), {
             'api': {
+                'public': {
+                    'get': {
+                        'market/position-tiers': 1,
+                    },
+                },
                 'private': {
                     'get': {
                         'trade/order-detail': 1,
@@ -88,6 +93,39 @@ class blofin_abs(blofin):
                 return algo_order
         else:
             return self.get_trade_order_detail(symbol, params)
+
+    def parse_position_tier(self, tier: Dict, index: int, market: Market, currency: str) -> Dict:
+        return {
+            'tier': index,
+            'symbol': market['symbol'],
+            'currency': currency,
+            'minNotional': self.safe_number(tier, 'minSize'),
+            'maxNotional': self.safe_number(tier, 'maxSize'),
+            'maintenanceMarginRate': self.safe_number(tier, 'maintenanceMarginRate'),
+            'maxLeverage': self.safe_number(tier, 'maxLeverage'),
+            'info': tier,
+        }
+
+    def parse_position_tiers(self, tiers: List[Dict], market: Market, currency: str) -> List[Dict]:
+        parsed = [self.parse_position_tier(tier, index + 1, market, currency) for index, tier in enumerate(tiers)]
+        unique: Dict[float, Dict] = {}
+        for tier in parsed:
+            leverage = tier['maxLeverage']
+            if leverage not in unique or tier['minNotional'] < unique[leverage]['minNotional']:
+                unique[leverage] = tier
+        return [unique[leverage] for leverage in sorted(unique)]
+
+    def fetch_position_tiers(self, inst_id: str, margin_mode: str, market: Market, currency: str) -> List[Dict]:
+        response = self.publicGetMarketPositionTiers({'instId': inst_id, 'marginMode': margin_mode})
+        data = self.safe_list(response, 'data', [])
+        return self.parse_position_tiers(data, market, currency)
+
+    def fetch_market_leverage_tiers(self, symbol: str, params={}) -> List[Dict]:
+        self.load_markets()
+        market = self.market(symbol)
+        margin_mode = self.safe_string(params, 'marginMode', 'cross')
+        currency = self.safe_string(market, 'settle', self.safe_string(market, 'quote'))
+        return self.fetch_position_tiers(market['id'], margin_mode, market, currency)
 
     def fetch_markets(self, params={}) -> List[Market]:
         markets = super().fetch_markets(params)
