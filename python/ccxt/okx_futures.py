@@ -79,6 +79,19 @@ class okx_futures(okx_abs):
             parsed_trade['amount'] = self.parse_number(amount)
         return parsed_trade
 
+    def parse_market_leverage_tiers(self, info, market: Market = None):
+        tiers = super().parse_market_leverage_tiers(info, market)
+        contract_size = self.safe_value(market, 'contractSize')
+        if contract_size is None:
+            return tiers
+        contract_size_string = self.number_to_string(contract_size)
+        for tier in tiers:
+            if tier['minNotional'] is not None:
+                tier['minNotional'] = self.parse_number(Precise.string_mul(self.number_to_string(tier['minNotional']), contract_size_string))
+            if tier['maxNotional'] is not None:
+                tier['maxNotional'] = self.parse_number(Precise.string_mul(self.number_to_string(tier['maxNotional']), contract_size_string))
+        return tiers
+
     def _calculate_position_quantity(self, position: dict, contracts: float, contract_size: float):
         contracts_string = self.number_to_string(contracts)
         quantity_abs_string = contracts_abs_string = Precise.string_abs(contracts_string)
