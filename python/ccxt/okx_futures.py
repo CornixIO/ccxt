@@ -32,6 +32,14 @@ class okx_futures(okx_abs):
                 if min_amount is not None:
                     min_amount = Precise.string_mul(min_amount, contract_size)
                     parsed_market['limits']['amount']['min'] = self.parse_number(min_amount)
+                max_amount = self.safe_string(parsed_market['limits']['amount'], 'max')
+                if max_amount is not None:
+                    max_amount = Precise.string_mul(max_amount, contract_size)
+                    parsed_market['limits']['amount']['max'] = self.parse_number(max_amount)
+                market_max = self.safe_string(parsed_market['limits'].get('market', {}), 'max')
+                if market_max is not None:
+                    market_max = Precise.string_mul(market_max, contract_size)
+                    parsed_market['limits']['market']['max'] = self.parse_number(market_max)
         return parsed_market
 
     def create_order(self, symbol, type, side, amount, price=None, params={}):
