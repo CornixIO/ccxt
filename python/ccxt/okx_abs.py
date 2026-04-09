@@ -50,6 +50,8 @@ class okx_abs(okx):
             tick_size = self.safe_string(market, 'tickSz')
             precision_price = self.parse_number(tick_size)
             parsed_market['limits']['price'] = {'min': precision_price, 'max': None}
+            parsed_market['limits']['amount']['max'] = self.safe_number(market, 'maxLmtSz')
+            parsed_market['limits']['market'] = {'min': None, 'max': self.safe_number(market, 'maxMktSz')}
         return parsed_market
 
     def parse_markets(self, markets):
