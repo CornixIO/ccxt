@@ -2,8 +2,6 @@
 
 
 class KucoinAbs:
-    """Shared customizations for kucoin_spot and kucoin_futures."""
-
     def get_private_ws_details(self, params={}):
         response = self.privatePostBulletPrivate(params)
         data = self.safe_value(response, 'data', [])

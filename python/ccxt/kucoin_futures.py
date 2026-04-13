@@ -103,6 +103,18 @@ class kucoin_futures(KucoinAbs, kucoinfutures):
         result['margin_type'] = 'cross' if crossMode or auto_deposit else 'isolated'
         return result
 
+    def parse_order(self, order, market=None):
+        result = super().parse_order(order, market)
+        market_id = self.safe_string(order, 'symbol') if order else None
+        mkt = self.safe_market(market_id, market)
+        cs = self.safe_string(mkt, 'contractSize') if mkt else None
+        if cs:
+            for key in ('amount', 'filled', 'remaining'):
+                value = result.get(key)
+                if value is not None:
+                    result[key] = self.parse_number(Precise.string_mul(str(value), cs))
+        return result
+
     def get_positions(self, symbol=None, params=None):
         return self.fetch_positions(symbol, params or {})
 
