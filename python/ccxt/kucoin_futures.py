@@ -4,6 +4,7 @@ from ccxt.kucoinfutures import kucoinfutures
 from ccxt.kucoin_abs import KucoinAbs
 from ccxt.base.errors import InvalidOrder
 from ccxt.base.precise import Precise
+from test.base.test_calculate_fee import market
 
 THIRTY_SECS_IN_MILLI = 1000 * 30
 
@@ -19,6 +20,7 @@ class kucoin_futures(KucoinAbs, kucoinfutures):
                 },
             },
             'options': {
+                'defaultType': 'linear',
                 'versions': {
                     'futuresPrivate': {
                         'GET': {
@@ -101,6 +103,17 @@ class kucoin_futures(KucoinAbs, kucoinfutures):
         crossMode = self.safe_value(position, 'crossMode')
         auto_deposit = self.safe_value(position, 'autoDeposit')
         result['margin_type'] = 'cross' if crossMode or auto_deposit else 'isolated'
+        return result
+
+    def parse_trade(self, trade, market=None):
+        result = super().parse_trade(trade, market)
+        market_id = self.safe_string(trade, 'symbol') if trade else None
+        market = self.safe_market(market_id, market)
+        cs = self.safe_string(market, 'contractSize') if market else None
+        if cs:
+            amount = result.get('amount')
+            if amount is not None:
+                result['amount'] = self.parse_number(Precise.string_mul(str(amount), cs))
         return result
 
     def parse_order(self, order, market=None):

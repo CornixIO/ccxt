@@ -7,6 +7,18 @@ KUCOIN_SPOT = 'KuCoin'
 
 
 class kucoin_spot(KucoinAbs, kucoin):
+    def describe(self):
+        return self.deep_extend(super().describe(), {
+            'options': {
+                'defaultType': 'spot',
+            },
+        })
+
+    def parse_order(self, order, market=None):
+        if order and order.get('stop') == '':
+            order = {**order, 'stop': None}
+        return super().parse_order(order, market)
+
     def set_markets(self, markets, currencies=None):
         for market in (markets or {}).values():
             precision = market.get('precision') or {}
