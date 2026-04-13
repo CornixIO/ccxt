@@ -48,6 +48,8 @@ class kucoin_futures(KucoinAbs, kucoinfutures):
             market['precision']['amount'] *= contract_size
             market['limits']['amount']['min'] *= contract_size
             market['limits']['amount']['max'] *= contract_size
+            market['limits']['orders'] = {'max': 100}
+            market['limits']['conditional_orders'] = {'max': 50}
             result.append(market)
         return result
 
