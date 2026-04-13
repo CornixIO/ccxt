@@ -9,6 +9,33 @@ THIRTY_SECS_IN_MILLI = 1000 * 30
 
 
 class kucoin_futures(KucoinAbs, kucoinfutures):
+    def describe(self):
+        return self.deep_extend(super().describe(), {
+            'api': {
+                'futuresPrivate': {
+                    'get': {
+                        'position/getPositionMode': 1,
+                    },
+                },
+            },
+            'options': {
+                'versions': {
+                    'futuresPrivate': {
+                        'GET': {
+                            'position/getPositionMode': 'v2',
+                        },
+                    },
+                },
+            },
+        })
+
+    def fetch_position_mode(self, symbol=None, params={}):
+        response = self.futuresPrivateGetPositionGetPositionMode(params)
+        data = self.safe_value(response, 'data', {})
+        positionMode = self.safe_string(data, 'positionMode')
+        hedged = positionMode == '1'
+        return {'hedged': hedged, 'info': response}
+
     def fetch_markets(self, params={}):
         markets = super().fetch_markets(params)
         result = []

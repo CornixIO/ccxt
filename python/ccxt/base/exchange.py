@@ -2258,6 +2258,11 @@ class Exchange(object):
         else:
             return False
 
+    def handle_param_bool(self, params, key, defaultValue=None):
+        value = self.safe_bool(params, key, defaultValue)
+        params = self.omit(params, key)
+        return value, params
+
     def handle_post_only(self, isMarketOrder: bool, exchangeSpecificPostOnlyOption: bool, params={}):
         """
          * @ignore
@@ -3205,8 +3210,11 @@ class Exchange(object):
     def market(self, symbol):
         if not self.markets:
             raise ExchangeError('Markets not loaded')
-        if isinstance(symbol, basestring) and (symbol in self.markets):
-            return self.markets[symbol]
+        if isinstance(symbol, basestring):
+            if symbol in self.markets:
+                return self.markets[symbol]
+            if self.markets_by_id is not None and symbol in self.markets_by_id:
+                return self.markets_by_id[symbol]
         raise BadSymbol('{} does not have market symbol {}'.format(self.id, symbol))
 
     def market_ids(self, symbols):
