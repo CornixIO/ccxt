@@ -166,9 +166,3 @@ class kucoin_futures(KucoinAbs, kucoinfutures):
         if stop_parsed_order:
             return stop_parsed_order
         return self.parse_order(responseData, market)
-
-
-if __name__ == '__main__':
-    from pprint import pprint
-    k = kucoin_futures()
-    pprint(k.load_markets()['BTC/USDT'])
