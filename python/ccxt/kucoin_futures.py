@@ -4,7 +4,6 @@ from ccxt.kucoinfutures import kucoinfutures
 from ccxt.kucoin_abs import KucoinAbs
 from ccxt.base.errors import InvalidOrder
 from ccxt.base.precise import Precise
-from test.base.test_calculate_fee import market
 
 THIRTY_SECS_IN_MILLI = 1000 * 30
 
