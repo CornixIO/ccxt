@@ -537,6 +537,16 @@ class BorrowInterest:
     datetime: Optional[Str]
 
 
+class ADL:
+    info: Any
+    symbol: Str
+    rank: Optional[Int]
+    rating: Optional[Str]
+    percentage: Optional[Num]
+    timestamp: Optional[Int]
+    datetime: Optional[Str]
+
+
 LastPrices = Dict[Str, LastPrice]
 Currencies = Dict[Str, CurrencyInterface]
 TradingFees = Dict[Str, TradingFeeInterface]

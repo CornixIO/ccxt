@@ -2258,6 +2258,11 @@ class Exchange(object):
         else:
             return False
 
+    def handle_param_bool(self, params, key, defaultValue=None):
+        value = self.safe_bool(params, key, defaultValue)
+        params = self.omit(params, key)
+        return value, params
+
     def handle_post_only(self, isMarketOrder: bool, exchangeSpecificPostOnlyOption: bool, params={}):
         """
          * @ignore
