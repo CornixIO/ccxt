@@ -2,6 +2,8 @@ from ccxt.base.precise import Precise
 from ccxt.base.types import Market
 from ccxt.mexc import mexc
 
+MEXC = 'MEXC'
+
 
 class mexc_abs(mexc):
     def parse_position(self, position: dict, market: Market = None):
