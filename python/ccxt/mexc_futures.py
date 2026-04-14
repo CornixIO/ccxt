@@ -12,8 +12,12 @@ class mexc_futures(mexc_abs):
 
     def fetch_markets(self, params={}) -> List[dict]:
         markets = self.fetch_swap_markets(params)
+        result = []
         for market in markets:
+            if not market.get('linear'):
+                continue
             symbol = market.get('symbol', '')
             if ':' in symbol:
                 market['symbol'] = symbol.split(':')[0]
-        return markets
+            result.append(market)
+        return result
