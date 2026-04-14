@@ -1,11 +1,11 @@
 from typing import List
 
-from ccxt.mexc import mexc
+from ccxt.mexc_abs import mexc_abs
 
 MEXC_FUTURES = 'MEXC Futures'
 
 
-class mexc_futures(mexc):
+class mexc_futures(mexc_abs):
     def __init__(self, config={}):
         super().__init__(config)
         self.options['defaultType'] = 'swap'
