@@ -37,7 +37,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
-from ccxt.base.types import IndexType, Market, Currency, Int, Str
+from ccxt.base.types import IndexType, Market, Currency, Int, Str, Strings
 # -----------------------------------------------------------------------------
 
 # ecdsa signing
@@ -1221,6 +1221,12 @@ class Exchange(object):
             return result
         return d
 
+    def resolve_path(self, path, params):
+        return [
+            self.implode_params(path, params),
+            self.omit(params, self.extract_params(path)),
+        ]
+
     @staticmethod
     def unique(array):
         return list(set(array))
@@ -2032,6 +2038,18 @@ class Exchange(object):
 
     def fetch_deposit_address(self, code=None, since=None, limit=None, params={}):
         raise NotSupported('fetch_deposit_address() is not supported yet')
+
+    def fetch_deposit_addresses(self, codes: Strings = None, params={}):
+        raise NotSupported(self.id + ' fetchDepositAddresses() is not supported yet')
+
+    def fetch_deposit_addresses_by_network(self, code: str, params={}):
+        raise NotSupported(self.id + ' fetchDepositAddressesByNetwork() is not supported yet')
+
+    def fetch_position(self, symbol: str, params={}):
+        raise NotSupported(self.id + ' fetchPosition() is not supported yet')
+
+    def fetch_positions(self, symbols: Strings = None, params={}):
+        raise NotSupported(self.id + ' fetchPositions() is not supported yet')
 
     def fetch_accounts(self, params={}):
         raise NotSupported(self.id + ' fetchAccounts() is not supported yet')
@@ -3972,3 +3990,82 @@ class Exchange(object):
 
     def create_safe_dictionary(self):
         return {}
+
+    def set_property(self, obj, property, value):
+        setattr(obj, property, value)
+
+    @staticmethod
+    def sort(array):
+        return sorted(array)
+
+    def handle_option(self, methodName: str, optionName: str, defaultValue=None):
+        res = self.handle_option_and_params({}, methodName, optionName, defaultValue)
+        return self.safe_value(res, 0)
+
+    def create_ccxt_trade_id(self, timestamp=None, side=None, amount=None, price=None, takerOrMaker=None):
+        id = None
+        if timestamp is not None:
+            id = self.number_to_string(timestamp)
+            if side is not None:
+                id += '-' + side
+            if amount is not None:
+                id += '-' + self.number_to_string(amount)
+            if price is not None:
+                id += '-' + self.number_to_string(price)
+            if takerOrMaker is not None:
+                id += '-' + takerOrMaker
+        return id
+
+    def parse_funding_rate(self, contract: str, market: Market = None):
+        raise NotSupported(self.id + ' parseFundingRate() is not supported yet')
+
+    def parse_leverage(self, leverage: dict, market: Market = None):
+        raise NotSupported(self.id + ' parseLeverage() is not supported yet')
+
+    def parse_deposit_withdraw_fee(self, fee, currency: Currency = None):
+        raise NotSupported(self.id + ' parseDepositWithdrawFee() is not supported yet')
+
+    def deposit_withdraw_fee(self, info):
+        return {
+            'info': info,
+            'withdraw': {
+                'fee': None,
+                'percentage': None,
+            },
+            'deposit': {
+                'fee': None,
+                'percentage': None,
+            },
+            'networks': {},
+        }
+
+    def parse_deposit_withdraw_fees(self, response, codes: Strings = None, currencyIdKey=None):
+        depositWithdrawFees = {}
+        isArray = isinstance(response, list)
+        responseKeys = response
+        if not isArray:
+            responseKeys = list(response.keys())
+        for i in range(0, len(responseKeys)):
+            entry = responseKeys[i]
+            dictionary = entry if isArray else response[entry]
+            currencyId = self.safe_string(dictionary, currencyIdKey) if isArray else entry
+            currency = self.safe_currency(currencyId)
+            code = self.safe_string(currency, 'code')
+            if (codes is None) or (self.in_array(code, codes)):
+                depositWithdrawFees[code] = self.parse_deposit_withdraw_fee(dictionary, currency)
+        return depositWithdrawFees
+
+    def assign_default_deposit_withdraw_fees(self, fee, currency=None):
+        networkKeys = list(fee['networks'].keys())
+        numNetworks = len(networkKeys)
+        if numNetworks == 1:
+            fee['withdraw'] = fee['networks'][networkKeys[0]]['withdraw']
+            fee['deposit'] = fee['networks'][networkKeys[0]]['deposit']
+            return fee
+        currencyCode = self.safe_string(currency, 'code')
+        for i in range(0, numNetworks):
+            network = networkKeys[i]
+            if network == currencyCode:
+                fee['withdraw'] = fee['networks'][networkKeys[i]]['withdraw']
+                fee['deposit'] = fee['networks'][networkKeys[i]]['deposit']
+        return fee
