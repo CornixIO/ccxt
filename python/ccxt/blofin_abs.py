@@ -28,6 +28,7 @@ class blofin_abs(blofin):
             },
             'exceptions': {
                 'exact': {
+                    '152013': AuthenticationError,  # {"code":"152013","msg":"Unmatched brokerId, please check your API key's bound broker"}
                     '152401': AuthenticationError,  # {"code":"152401","msg":"Access key does not exist"}
                     '152404': PermissionDenied,  # {"code":"152404","msg":"This operation is not supported"}
                     '152408': AuthenticationError,  # {"code":"152408","msg":"Passphrase error"}
