@@ -12,3 +12,10 @@ class mexc_spot(mexc):
 
     def fetch_markets(self, params={}) -> List[dict]:
         return self.fetch_spot_markets(params)
+
+    def fetch_trades(self, symbol, since=None, limit=None, params={}):
+        if since is not None:
+            since = int(since)
+            until = params.get('until', params.get('endTime', int(time.time() * 1000)))
+            params = {**{k: v for k, v in params.items() if k not in ('until', 'endTime')}, 'endTime': int(until)}
+        return super().fetch_trades(symbol, since=since, limit=limit, params=params)
