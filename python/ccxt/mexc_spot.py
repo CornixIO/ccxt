@@ -1,11 +1,11 @@
 from typing import List
 
-from ccxt.mexc import mexc
+from ccxt.mexc_abs import mexc_abs
 
 MEXC_SPOT = 'MEXC Spot'
 
 
-class mexc_spot(mexc):
+class mexc_spot(mexc_abs):
     def __init__(self, config={}):
         super().__init__(config)
         self.options['defaultType'] = 'spot'
