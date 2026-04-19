@@ -83,7 +83,7 @@ class mexc_futures(mexc_abs):
     def cancel_order(self, id: str, symbol=None, params={}):
         if not self.safe_bool(params, 'stop', False):
             return super().cancel_order(id, symbol, params)
-        response = self.contractPrivatePostPlanorderCancel([id])
+        response = self.contractPrivatePostPlanorderCancel([int(id)])
         data = self.safe_value(response, 'data')
         order = self.safe_value(data, 0)
         error_msg = self.safe_string(order, 'errorMsg', '')
