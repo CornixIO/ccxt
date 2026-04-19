@@ -80,6 +80,17 @@ class mexc_futures(mexc_abs):
                 return self.parse_order(order, market)
         raise OrderNotFound(self.id + ' fetchOrder() plan order not found: ' + str(id))
 
+    def cancel_order(self, id: str, symbol=None, params={}):
+        if not self.safe_bool(params, 'stop', False):
+            return super().cancel_order(id, symbol, params)
+        response = self.contractPrivatePostPlanorderCancel([id])
+        data = self.safe_value(response, 'data')
+        order = self.safe_value(data, 0)
+        error_msg = self.safe_string(order, 'errorMsg', '')
+        if error_msg != 'success':
+            raise OrderNotFound(self.id + ' cancelOrder() plan order not found or cannot be cancelled: ' + error_msg)
+        return self.parse_order(order)
+
     def parse_order(self, order: dict, market: Market = None):
         parsed = super().parse_order(order, market)
         symbol = parsed.get('symbol')
