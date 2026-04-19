@@ -32,6 +32,17 @@ class mexc_futures(mexc_abs):
                 precision = market.get('precision', {})
                 if precision.get('amount') is not None:
                     precision['amount'] = precision['amount'] * contract_size
+                info = market.get('info', {})
+                risk_limit_custom = self.safe_value(info, 'riskLimitCustom', [])
+                if risk_limit_custom:
+                    limits['risk'] = [
+                        {
+                            'id': self.safe_integer(tier, 'level'),
+                            'limit': self.safe_number(tier, 'maxVol') * contract_size,
+                            'max_leverage': self.safe_integer(tier, 'maxLeverage'),
+                        }
+                        for tier in risk_limit_custom
+                    ]
             result.append(market)
         return result
 
