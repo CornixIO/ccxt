@@ -21,6 +21,17 @@ class mexc_futures(mexc_abs):
             symbol = market.get('symbol', '')
             if ':' in symbol:
                 market['symbol'] = symbol.split(':')[0]
+            contract_size = market.get('contractSize')
+            if contract_size:
+                limits = market.get('limits', {})
+                amount = limits.get('amount', {})
+                if amount.get('min') is not None:
+                    amount['min'] = amount['min'] * contract_size
+                if amount.get('max') is not None:
+                    amount['max'] = amount['max'] * contract_size
+                precision = market.get('precision', {})
+                if precision.get('amount') is not None:
+                    precision['amount'] = precision['amount'] * contract_size
             result.append(market)
         return result
 
