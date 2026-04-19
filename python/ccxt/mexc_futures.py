@@ -2,6 +2,7 @@ from typing import List
 
 from ccxt.base.precise import Precise
 from ccxt.base.types import Market
+from ccxt.base.errors import OrderNotFound
 from ccxt.mexc_abs import mexc_abs
 
 MEXC_FUTURES = 'MEXC Futures'
@@ -65,6 +66,19 @@ class mexc_futures(mexc_abs):
             if 'triggerType' not in params:
                 params = self.extend(params, {'triggerType': 2 if side == 'sell' else 1})
         return super().create_swap_order(market, type, side, amount, price, marginMode, params)
+
+    def fetch_order(self, id: str, symbol=None, params={}):
+        if not self.safe_bool(params, 'stop', False):
+            return super().fetch_order(id, symbol, params)
+        if symbol is None:
+            raise OrderNotFound(self.id + ' fetchOrder() requires a symbol argument')
+        self.load_markets()
+        market = self.market(symbol)
+        plan_response = self.contractPrivateGetPlanorderListOrders({'symbol': market['id']})
+        for order in self.safe_value(plan_response, 'data', []):
+            if self.safe_string(order, 'id') == str(id):
+                return self.parse_order(order, market)
+        raise OrderNotFound(self.id + ' fetchOrder() plan order not found: ' + str(id))
 
     def parse_order(self, order: dict, market: Market = None):
         parsed = super().parse_order(order, market)
