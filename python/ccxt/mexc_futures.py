@@ -92,6 +92,15 @@ class mexc_futures(mexc_abs):
                     parsed['amount'] = float(Precise.string_mul(str(parsed['amount']), contract_size_str))
                 if parsed.get('filled') is not None:
                     parsed['filled'] = float(Precise.string_mul(str(parsed['filled']), contract_size_str))
+        info = parsed.get('info') or {}
+        if info.get('triggerPrice') is not None:
+            order_type_int = self.safe_integer(info, 'orderType')
+            parsed['type'] = 'market' if order_type_int == 5 else 'limit'
+            side_int = self.safe_integer(info, 'side')
+            parsed['side'] = 'buy' if side_int in (1, 2) else 'sell'
+            state_map = {'1': 'open', '2': 'closed', '3': 'canceled', '4': 'canceled'}
+            parsed['status'] = state_map.get(str(self.safe_integer(info, 'state')), parsed.get('status'))
+            parsed['reduceOnly'] = self.safe_bool(info, 'reduceOnly', False)
         return parsed
 
     def parse_trade(self, trade: dict, market: Market = None):
