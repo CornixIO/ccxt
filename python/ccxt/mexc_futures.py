@@ -60,6 +60,32 @@ class mexc_futures(mexc_abs):
             amount = float(Precise.string_div(str(amount), str(contract_size)))
         return super().create_swap_order(market, type, side, amount, price, marginMode, params)
 
+    def parse_order(self, order: dict, market: Market = None):
+        parsed = super().parse_order(order, market)
+        symbol = parsed.get('symbol')
+        if symbol:
+            market_data = self.safe_value(self.markets, symbol, {})
+            contract_size = market_data.get('contractSize')
+            if contract_size:
+                contract_size_str = str(contract_size)
+                if parsed.get('amount') is not None:
+                    parsed['amount'] = float(Precise.string_mul(str(parsed['amount']), contract_size_str))
+                if parsed.get('filled') is not None:
+                    parsed['filled'] = float(Precise.string_mul(str(parsed['filled']), contract_size_str))
+        return parsed
+
+    def parse_trade(self, trade: dict, market: Market = None):
+        parsed = super().parse_trade(trade, market)
+        symbol = parsed.get('symbol')
+        if symbol:
+            market_data = self.safe_value(self.markets, symbol, {})
+            contract_size = market_data.get('contractSize')
+            if contract_size:
+                contract_size_str = str(contract_size)
+                if parsed.get('amount') is not None:
+                    parsed['amount'] = float(Precise.string_mul(str(parsed['amount']), contract_size_str))
+        return parsed
+
     def parse_position(self, position: dict, market: Market = None):
         position = super().parse_position(position, market)
         info = position['info']
