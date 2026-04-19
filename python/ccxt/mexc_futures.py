@@ -25,20 +25,21 @@ class mexc_futures(mexc_abs):
             if contract_size:
                 limits = market.get('limits', {})
                 amount = limits.get('amount', {})
+                contract_size = str(contract_size)
                 if amount.get('min') is not None:
-                    amount['min'] = amount['min'] * contract_size
+                    amount['min'] = float(Precise.string_mul(str(amount['min']), contract_size))
                 if amount.get('max') is not None:
-                    amount['max'] = amount['max'] * contract_size
+                    amount['max'] = float(Precise.string_mul(str(amount['max']), contract_size))
                 precision = market.get('precision', {})
                 if precision.get('amount') is not None:
-                    precision['amount'] = precision['amount'] * contract_size
+                    precision['amount'] = float(Precise.string_mul(str(precision['amount']), contract_size))
                 info = market.get('info', {})
                 risk_limit_custom = self.safe_value(info, 'riskLimitCustom', [])
                 if risk_limit_custom:
                     limits['risk'] = [
                         {
                             'id': self.safe_integer(tier, 'level'),
-                            'limit': self.safe_number(tier, 'maxVol') * contract_size,
+                            'limit': float(Precise.string_mul(str(self.safe_number(tier, 'maxVol')), contract_size)),
                             'max_leverage': self.safe_integer(tier, 'maxLeverage'),
                         }
                         for tier in risk_limit_custom
@@ -54,6 +55,10 @@ class mexc_futures(mexc_abs):
             params = self.extend(params, {'positionMode': 1})
         elif not hedged:
             params = self.extend(params, {'positionMode': 2})
+        market_data = self.market(market)
+        contract_size = market_data.get('contractSize')
+        if contract_size:
+            amount = float(Precise.string_div(str(amount), str(contract_size)))
         return super().create_swap_order(market, type, side, amount, price, marginMode, params)
 
     def parse_position(self, position: dict, market: Market = None):
