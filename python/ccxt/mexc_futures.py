@@ -58,6 +58,12 @@ class mexc_futures(mexc_abs):
         contract_size = market.get('contractSize')
         if contract_size:
             amount = float(Precise.string_div(str(amount), str(contract_size)))
+        trigger_price = self.safe_number_2(params, 'triggerPrice', 'stopPrice')
+        if trigger_price:
+            if type == 'market':
+                params = self.extend(params, {'orderType': 5})
+            if 'triggerType' not in params:
+                params = self.extend(params, {'triggerType': 2 if side == 'sell' else 1})
         return super().create_swap_order(market, type, side, amount, price, marginMode, params)
 
     def parse_order(self, order: dict, market: Market = None):

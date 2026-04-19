@@ -491,11 +491,6 @@ class mexc(Exchange, ImplicitAPI):
             'options': {
                 'adjustForTimeDifference': False,
                 'timeDifference': 0,
-                'unavailableContracts': {
-                    'BTC/USDT:USDT': True,
-                    'LTC/USDT:USDT': True,
-                    'ETH/USDT:USDT': True,
-                },
                 'fetchMarkets': {
                     'types': {
                         'spot': True,
@@ -2250,6 +2245,7 @@ class mexc(Exchange, ImplicitAPI):
         create a trade order
 
         https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
         https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
         https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
 
@@ -2387,6 +2383,7 @@ class mexc(Exchange, ImplicitAPI):
  @ignore
         create a trade order
 
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
         https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
         https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
         https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
@@ -2412,10 +2409,6 @@ class mexc(Exchange, ImplicitAPI):
         """
         self.load_markets()
         symbol = market['symbol']
-        unavailableContracts = self.safe_value(self.options, 'unavailableContracts', {})
-        isContractUnavaiable = self.safe_bool(unavailableContracts, symbol, False)
-        if isContractUnavaiable:
-            raise NotSupported(self.id + ' createSwapOrder() does not support yet self symbol:' + symbol)
         openType = None
         if marginMode is not None:
             if marginMode == 'cross':
