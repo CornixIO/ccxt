@@ -55,8 +55,7 @@ class mexc_futures(mexc_abs):
             params = self.extend(params, {'positionMode': 1})
         elif not hedged:
             params = self.extend(params, {'positionMode': 2})
-        market_data = self.market(market)
-        contract_size = market_data.get('contractSize')
+        contract_size = market.get('contractSize')
         if contract_size:
             amount = float(Precise.string_div(str(amount), str(contract_size)))
         return super().create_swap_order(market, type, side, amount, price, marginMode, params)
