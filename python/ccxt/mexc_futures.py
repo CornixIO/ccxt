@@ -83,13 +83,17 @@ class mexc_futures(mexc_abs):
     def cancel_order(self, id: str, symbol=None, params={}):
         if not self.safe_bool(params, 'stop', False):
             return super().cancel_order(id, symbol, params)
-        response = self.contractPrivatePostPlanorderCancel([int(id)])
-        data = self.safe_value(response, 'data')
-        order = self.safe_value(data, 0)
-        error_msg = self.safe_string(order, 'errorMsg', '')
-        if error_msg != 'success':
-            raise OrderNotFound(self.id + ' cancelOrder() plan order not found or cannot be cancelled: ' + error_msg)
-        return self.parse_order(order)
+        if symbol is None:
+            raise OrderNotFound(self.id + ' cancelOrder() requires a symbol argument for plan orders')
+        self.load_markets()
+        market = self.market(symbol)
+        response = self.contractPrivatePostPlanorderCancel([{'symbol': market['id'], 'orderId': id}])
+        if not self.safe_bool(response, 'success', False):
+            raise OrderNotFound(self.id + ' cancelOrder() plan order cancel failed')
+        fetched = self.fetch_order(id, symbol, {'stop': True})
+        if fetched.get('status') != 'canceled':
+            raise OrderNotFound(self.id + ' cancelOrder() plan order could not be cancelled, status: ' + str(fetched.get('status')))
+        return fetched
 
     def parse_order(self, order: dict, market: Market = None):
         parsed = super().parse_order(order, market)
