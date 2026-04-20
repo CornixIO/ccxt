@@ -113,8 +113,8 @@ class mexc_futures(mexc_abs):
             parsed['type'] = 'market' if order_type_int == 5 else 'limit'
             side_int = self.safe_integer(info, 'side')
             parsed['side'] = 'buy' if side_int in (1, 2) else 'sell'
-            state_map = {'1': 'open', '2': 'closed', '3': 'canceled', '4': 'canceled'}
-            parsed['status'] = state_map.get(str(self.safe_integer(info, 'state')), parsed.get('status'))
+            plan_state_map = {'1': 'open', '2': 'canceled', '3': 'closed', '4': 'canceled', '5': 'rejected'}
+            parsed['status'] = self.safe_string(plan_state_map, self.safe_string(info, 'state'), parsed.get('status'))
             parsed['reduceOnly'] = self.safe_bool(info, 'reduceOnly', False)
         return parsed
 
