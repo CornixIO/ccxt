@@ -160,8 +160,9 @@ class mexc_futures(mexc_abs):
         position['unrealizedPnl'] = float(info.get('unrealizedProfit', 0))
 
         entry_price = position['entryPrice'] or 0
-        position['notional'] = float(
-            Precise.string_mul(str(actual_amount), str(entry_price))
-        )
+        if position['notional'] is None:
+            position['notional'] = float(
+                Precise.string_mul(str(actual_amount), str(entry_price))
+            )
 
         return position
