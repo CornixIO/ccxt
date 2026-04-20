@@ -187,6 +187,9 @@ from ccxt.livecoin import livecoin                          # noqa: F401
 from ccxt.luno import luno                                  # noqa: F401
 from ccxt.lykke import lykke                                # noqa: F401
 from ccxt.mercado import mercado                            # noqa: F401
+from ccxt.mexc_abs import mexc_abs                          # noqa: F401
+from ccxt.mexc_futures import mexc_futures                  # noqa: F401
+from ccxt.mexc_spot import mexc_spot                        # noqa: F401
 from ccxt.mixcoins import mixcoins                          # noqa: F401
 from ccxt.oceanex import oceanex                            # noqa: F401
 from ccxt.okcoin import okcoin                              # noqa: F401
@@ -327,6 +330,9 @@ exchanges = [
     'luno',
     'lykke',
     'mercado',
+    'mexc_abs',
+    'mexc_futures',
+    'mexc_spot',
     'mixcoins',
     'oceanex',
     'okcoin',
