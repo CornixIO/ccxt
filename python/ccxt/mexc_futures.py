@@ -152,15 +152,17 @@ class mexc_futures(mexc_abs):
         position['display_maintenance_margin'] = position['maintenance_margin']
 
         contracts = position['contracts'] or 0
-        quantity = contracts * (1 if position['side'] == 'long' else -1)
+        symbol = position.get('symbol')
+        contract_size = self.safe_number(self.safe_value(self.markets, symbol, {}), 'contractSize', 1)
+        actual_amount = float(Precise.string_mul(str(contracts), str(contract_size)))
+        quantity = actual_amount * (1 if position['side'] == 'long' else -1)
         position['quantity'] = quantity
-
         position['unrealizedPnl'] = float(info.get('unrealizedProfit', 0))
 
         if position['notional'] is None:
             entry_price = position['entryPrice'] or 0
             position['notional'] = float(
-                Precise.string_mul(str(contracts), str(entry_price))
+                Precise.string_mul(str(actual_amount), str(entry_price))
             )
 
         return position
