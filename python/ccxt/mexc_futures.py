@@ -112,8 +112,6 @@ class mexc_futures(mexc_abs):
             free = self.safe_string(entry, 'availableBalance')
             account['total'] = total
             account['free'] = free
-            if total is not None and free is not None:
-                account['used'] = str(float(total) - float(free))
             result[code] = account
         return self.safe_balance(result)
 
