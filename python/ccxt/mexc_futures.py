@@ -98,6 +98,25 @@ class mexc_futures(mexc_abs):
             raise OrderNotFound(self.id + ' cancelOrder() plan order could not be cancelled, status: ' + str(fetched.get('status')))
         return fetched
 
+    def custom_parse_balance(self, response, marketType):
+        wallet = self.safe_value(response, 'data', [])
+        linear_quotes = {self.safe_string(m, 'quote') for m in self.markets.values() if m.get('linear')}
+        result = {'info': response}
+        for entry in wallet:
+            currencyId = self.safe_string(entry, 'currency')
+            code = self.safe_currency_code(currencyId)
+            if code not in linear_quotes:
+                continue
+            account = self.account()
+            total = self.safe_string(entry, 'equity')
+            free = self.safe_string(entry, 'availableBalance')
+            account['total'] = total
+            account['free'] = free
+            if total is not None and free is not None:
+                account['used'] = str(float(total) - float(free))
+            result[code] = account
+        return self.safe_balance(result)
+
     def parse_order(self, order: dict, market: Market = None):
         parsed = super().parse_order(order, market)
         symbol = parsed.get('symbol')
