@@ -77,6 +77,9 @@ class mexc_futures(mexc_abs):
         plan_response = self.contractPrivateGetPlanorderListOrders({'symbol': market['id']})
         for order in self.safe_value(plan_response, 'data', []):
             if self.safe_string(order, 'id') == str(id):
+                triggered_id = self.safe_string(order, 'orderId')
+                if triggered_id and triggered_id != str(id):
+                    return super().fetch_order(triggered_id, symbol, self.omit(params, 'stop'))
                 return self.parse_order(order, market)
         raise OrderNotFound(self.id + ' fetchOrder() plan order not found: ' + str(id))
 
