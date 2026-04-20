@@ -108,10 +108,8 @@ class mexc_futures(mexc_abs):
             if code not in linear_quotes:
                 continue
             account = self.account()
-            total = self.safe_string(entry, 'equity')
-            free = self.safe_string(entry, 'availableBalance')
-            account['total'] = total
-            account['free'] = free
+            account['total'] = self.safe_string(entry, 'equity')
+            account['free'] = self.safe_string(entry, 'availableBalance')
             result[code] = account
         return self.safe_balance(result)
 
