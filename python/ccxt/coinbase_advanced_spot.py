@@ -21,13 +21,9 @@ class coinbase_advanced_spot(coinbase):
                       requestHeaders, requestBody):
         if response is None:
             return None
-        errorCode = self.safe_string(response, 'error')
-        if errorCode == 'unknown':
-            feedback = self.id + ' ' + body
-            for field in ('error_details', 'message'):
-                errorMessage = self.safe_string(response, field)
-                if errorMessage is not None:
-                    self.throw_broadly_matched_exception(self.exceptions['broad'], errorMessage, feedback)
+        error_details = self.safe_string(response, 'error_details')
+        if self.safe_string(response, 'error_description') is None and error_details is not None:
+            response = self.extend(response, {'error_description': error_details})
         return super().handle_errors(code, reason, url, method, headers, body, response, requestHeaders, requestBody)
 
     def __init__(self, config={}):
