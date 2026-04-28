@@ -111,8 +111,7 @@ class mexc_futures(mexc_abs):
         return fetched
 
     def parse_leverage(self, leverage: dict, market: Market = None):
-        longLeverage = None
-        shortLeverage = None
+        parsed = super().parse_leverage(leverage, market)
         longMarginMode = None
         shortMarginMode = None
         for entry in leverage:
@@ -120,20 +119,12 @@ class mexc_futures(mexc_abs):
             positionType = self.safe_integer(entry, 'positionType')
             margin_mode = 'isolated' if (openType == 1) else 'cross'
             if positionType == 1:
-                longLeverage = self.safe_integer(entry, 'leverage')
                 longMarginMode = margin_mode
             elif positionType == 2:
-                shortLeverage = self.safe_integer(entry, 'leverage')
                 shortMarginMode = margin_mode
-        return {
-            'info': leverage,
-            'symbol': market['symbol'],
-            'marginMode': longMarginMode or shortMarginMode,
-            'longMarginMode': longMarginMode,
-            'shortMarginMode': shortMarginMode,
-            'longLeverage': longLeverage,
-            'shortLeverage': shortLeverage,
-        }
+        parsed['longMarginMode'] = longMarginMode
+        parsed['shortMarginMode'] = shortMarginMode
+        return parsed
 
     def custom_parse_balance(self, response, marketType):
         wallet = self.safe_value(response, 'data', [])
