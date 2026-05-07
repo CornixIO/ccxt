@@ -1,12 +1,31 @@
 from typing import List, Optional
 
 from ccxt.coinbase import coinbase
+from ccxt.base.errors import PermissionDenied
 from ccxt.base.types import Int, Market, Trade
 
 COINBASE_ADVANCED_SPOT = 'Coinbase Advanced Spot'
 
 
 class coinbase_advanced_spot(coinbase):
+    def describe(self):
+        return self.deep_extend(super().describe(), {
+            'exceptions': {
+                'broad': {
+                    'Missing required scopes': PermissionDenied,
+                },
+            },
+        })
+
+    def handle_errors(self, code: int, reason: str, url: str, method: str, headers: dict, body: str, response,
+                      requestHeaders, requestBody):
+        if response is None:
+            return None
+        error_details = self.safe_string(response, 'error_details')
+        if self.safe_string(response, 'error_description') is None and error_details is not None:
+            response = self.extend(response, {'error_description': error_details})
+        return super().handle_errors(code, reason, url, method, headers, body, response, requestHeaders, requestBody)
+
     def __init__(self, config={}):
         super().__init__(config)
         self.options['fetchBalance'] = 'v3PrivateGetBrokerageAccounts'
