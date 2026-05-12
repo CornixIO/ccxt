@@ -1,5 +1,3 @@
-import datetime
-
 from ccxt.mexc import mexc
 from ccxt.base.errors import DDoSProtection, AuthenticationError
 
