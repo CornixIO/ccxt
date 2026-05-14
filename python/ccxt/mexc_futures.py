@@ -36,6 +36,20 @@ class mexc_futures(mexc_abs):
                     precision['amount'] = float(Precise.string_mul(str(precision['amount']), contract_size))
                 info = market.get('info', {})
                 risk_limit_custom = self.safe_value(info, 'riskLimitCustom', [])
+                if not risk_limit_custom:
+                    risk_base_vol = self.safe_number(info, 'riskBaseVol')
+                    risk_incr_vol = self.safe_number(info, 'riskIncrVol', 0)
+                    risk_level_limit = self.safe_integer(info, 'riskLevelLimit')
+                    risk_incr_imr = self.safe_number(info, 'riskIncrImr', 0)
+                    initial_margin_rate = self.safe_number(info, 'initialMarginRate')
+                    if risk_base_vol and risk_level_limit and initial_margin_rate:
+                        for i in range(risk_level_limit):
+                            tier_imr = initial_margin_rate + i * risk_incr_imr
+                            risk_limit_custom.append({
+                                'level': i + 1,
+                                'maxVol': risk_base_vol + i * risk_incr_vol,
+                                'maxLeverage': int(1 / tier_imr) if tier_imr > 0 else self.safe_integer(info, 'maxLeverage'),
+                            })
                 if risk_limit_custom:
                     limits['risk'] = [
                         {
@@ -59,13 +73,9 @@ class mexc_futures(mexc_abs):
         return str(float(Precise.string_div(str(precise_amount), str(contract_size))))
 
     def create_swap_order(self, market, type, side, amount, price=None, marginMode=None, params={}):
-        hedged = self.safe_bool(params, 'hedged', False)
-        reduceOnly = self.safe_bool(params, 'reduceOnly', False)
-        if hedged and reduceOnly:
+        if 'hedged' in params:
             params = self.omit(params, 'hedged')
-            params = self.extend(params, {'positionMode': 1})
-        elif not hedged:
-            params = self.extend(params, {'positionMode': 2})
+        params = self.extend(params, {'positionMode': 1})
         contract_size = market.get('contractSize')
         if contract_size:
             amount = float(Precise.string_div(str(amount), str(contract_size)))
