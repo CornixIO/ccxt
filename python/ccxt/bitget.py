@@ -1292,6 +1292,7 @@ class bitget(Exchange, ImplicitAPI):
                 'JADE': 'Jade Protocol',
             },
             'options': {
+                'timeDifference': 0,  # the difference between system clock and exchange clock
                 'timeframes': {
                     'spot': {
                         '1m': '1min',
