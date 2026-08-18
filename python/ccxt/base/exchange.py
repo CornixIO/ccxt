@@ -4164,3 +4164,27 @@ class Exchange(object):
         firstMarket = self.safe_string(symbols, 0)
         market = self.market(firstMarket)
         return market
+
+    def integer_precision_to_amount(self, precision: Str):
+        """
+ @ignore
+        handles positive & negative numbers too. parsePrecision() does not handle negative numbers, but self method handles
+        :param str precision: The number of digits to the right of the decimal
+        :returns str: a string number equal to 1e-precision
+        """
+        if precision is None:
+            return None
+        if Precise.string_ge(precision, '0'):
+            return self.parse_precision(precision)
+        else:
+            positivePrecisionString = Precise.string_abs(precision)
+            if positivePrecisionString is None:
+                return None
+            positivePrecision = int(positivePrecisionString)
+            parsedPrecision = '1'
+            for i in range(0, positivePrecision - 1):
+                parsedPrecision = parsedPrecision + '0'
+            return parsedPrecision + '0'
+
+    def map_to_safe_map(self, dictionary):
+        return dictionary  # wrapper for go
