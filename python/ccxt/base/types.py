@@ -338,6 +338,27 @@ class Option(TypedDict):
 
 OptionChain = Dict[str, Option]
 
+class DepositWithdrawFeeNetwork(TypedDict):
+    fee: NotRequired[Num]
+    percentage: NotRequired[Bool]
+
+
+class DepositWithdrawFee(TypedDict):
+    info: dict[str, Any]
+    withdraw: NotRequired[DepositWithdrawFeeNetwork]
+    deposit: NotRequired[DepositWithdrawFeeNetwork]
+    networks: NotRequired[dict[str, DepositWithdrawFeeNetwork]]
+
+
+class MarginLoan(TypedDict):
+    id: Str
+    currency: Str
+    amount: Num
+    symbol: Str
+    timestamp: Int
+    datetime: Str
+    info: dict[str, Any]
+
 
 class MarketMarginModes(TypedDict):
     cross: bool
@@ -549,3 +570,4 @@ OpenInterests = Dict[Str, OpenInterest]
 IsolatedBorrowRates = Dict[Str, IsolatedBorrowRate]
 CrossBorrowRates = Dict[Str, CrossBorrowRate]
 LeverageTiers = Dict[Str, List[LeverageTier]]
+DepositWithdrawFees = dict[str, DepositWithdrawFee]
