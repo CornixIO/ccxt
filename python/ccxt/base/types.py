@@ -72,6 +72,18 @@ class TradingFeeInterface(TypedDict):
     tierBased: Bool
 
 
+class DepositWithdrawFeeNetwork(TypedDict):
+    fee: NotRequired[Num]
+    percentage: NotRequired[Bool]
+
+
+class DepositWithdrawFee(TypedDict):
+    info: Dict[str, Any]
+    withdraw: NotRequired[DepositWithdrawFeeNetwork]
+    deposit: NotRequired[DepositWithdrawFeeNetwork]
+    networks: NotRequired[Dict[str, DepositWithdrawFeeNetwork]]
+
+
 class Balance(TypedDict):
     free: Num
     used: Num
@@ -129,6 +141,11 @@ class Position(TypedDict):
     percentage: Num
     stopLossPrice: Num
     takeProfitPrice: Num
+
+
+class PositionModeInfo(TypedDict):
+    info: Dict[str, Any]
+    hedged: Bool
 
 
 class OrderRequest(TypedDict):
@@ -450,6 +467,14 @@ class FundingRate(TypedDict):
     interval: Str
 
 
+class FundingRateHistory(TypedDict):
+    info: Dict[str, Any]
+    symbol: Str
+    fundingRate: Num
+    timestamp: Int
+    datetime: Str
+
+
 class CancellationRequest(TypedDict):
     id: Str
     symbol: Str
@@ -537,6 +562,24 @@ class BorrowInterest:
     datetime: Optional[Str]
 
 
+class MarginLoan(TypedDict):
+    id: Str
+    currency: Str
+    amount: Num
+    symbol: Str
+    timestamp: Int
+    datetime: Str
+    info: Dict[str, Any]
+
+
+class Status(TypedDict):
+    status: Str
+    updated: Int
+    eta: Int
+    url: Str
+    info: Dict[str, Any]
+
+
 class ADL:
     info: Any
     symbol: Str
@@ -550,6 +593,8 @@ class ADL:
 LastPrices = Dict[Str, LastPrice]
 Currencies = Dict[Str, CurrencyInterface]
 TradingFees = Dict[Str, TradingFeeInterface]
+DepositAddresses = Dict[str, DepositAddress]
+DepositWithdrawFees = Dict[str, DepositWithdrawFee]
 
 Market = Optional[MarketInterface]
 Currency = Optional[CurrencyInterface]
