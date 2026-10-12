@@ -2311,6 +2311,34 @@ class Exchange(object):
         else:
             return False
 
+    def filter_out_by_array(self, objects: object, key: str, values: Optional[list] = None, indexed: bool = True) -> object:
+        entries = self.to_array(objects)
+        filtered = [entry for entry in entries if not values or entry[key] not in values]
+        return self.index_by(filtered, key) if indexed else filtered
+
+    def safe_number_omit_zero(self, obj: dict, key: str, defaultValue: Optional[float] = None) -> Optional[float]:
+        value = self.parse_number(self.omit_zero(self.safe_string(obj, key)))
+        return defaultValue if value is None else value
+
+    def handle_option_bool_and_params(self, params: dict, methodName: str, optionName: str, defaultValue: Optional[bool] = None) -> list:
+        return self.handle_option_and_params(params, methodName, optionName, defaultValue)
+
+    def handle_option_string_and_params(self, params: dict, methodName: str, optionName: str, defaultValue: Optional[str] = None) -> list:
+        return self.handle_option_and_params(params, methodName, optionName, defaultValue)
+
+    def handle_option_string_and_params_2(self, params: dict, methodName: str, optionName1: str, optionName2: str, defaultValue: Optional[str] = None) -> list:
+        return self.handle_option_and_params_2(params, methodName, optionName1, optionName2, defaultValue)
+
+    def handle_param_string_2(self, params: dict, paramName1: str, paramName2: str, defaultValue: Optional[str] = None) -> list:
+        value = self.safe_string_2(params, paramName1, paramName2, defaultValue)
+        paramsOmitted = self.omit(params, [paramName1, paramName2]) if value is not None else params
+        return [value, paramsOmitted]
+
+    def handle_param_bool(self, params, key, defaultValue=None):
+        value = self.safe_bool(params, key, defaultValue)
+        params = self.omit(params, key)
+        return value, params
+
     def handle_post_only(self, isMarketOrder: bool, exchangeSpecificPostOnlyOption: bool, params={}):
         """
          * @ignore
